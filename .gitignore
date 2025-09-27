@@ -48,3 +48,8 @@ vite.config.ts.*
 mobile/ios/TranquilSupport/GoogleService-Info.plist
 mobile/android/app/google-services.json
 mobile/android/app/debug.keystore
+
+# Local DB files
+*.sqlite
+*.db
+data/*.db

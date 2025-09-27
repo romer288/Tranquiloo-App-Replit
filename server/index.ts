@@ -1,3 +1,5 @@
+import cors from "cors";
+import chatRoutes from "./routes/chat";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -6,6 +8,14 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+
+app.use(cors({
+  origin: ["http://localhost:5173", "http://localhost:4173"],
+  credentials: true,
+}));
+
+
+app.use("/api/chat", chatRoutes);
 
 // Trust proxy to get correct protocol/host from Replit's HTTPS proxy
 app.set('trust proxy', true);

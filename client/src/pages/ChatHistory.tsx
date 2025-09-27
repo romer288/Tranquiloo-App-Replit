@@ -1,3 +1,5 @@
+
+import { parseDateSafe, formatDate, formatDateTime } from "../utils/date";
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +10,19 @@ import { Calendar, MessageSquare, Clock, Brain, History } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 
+
+const getWhen = (obj: any) =>
+  parseDateSafe(
+    obj?.createdAt ??
+    obj?.updatedAt ??
+    obj?.created_at ??
+    obj?.updated_at ??
+    obj?.timestamp ??
+    obj?.time ??
+    obj?.date ??
+    null
+  );
+
 interface ChatSession {
   id: string;
   userId: string;
@@ -15,8 +30,8 @@ interface ChatSession {
   title?: string;
   sessionSummary?: string;
   anxietyLevel?: number;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string | number;
+  updatedAt?: string | number;
 }
 
 interface ChatMessage {
@@ -24,7 +39,7 @@ interface ChatMessage {
   sessionId: string;
   content: string;
   sender: 'user' | 'assistant';
-  createdAt: string;
+  createdAt?: string | number;
 }
 
 interface AnxietyAnalysis {
@@ -34,7 +49,7 @@ interface AnxietyAnalysis {
   copingStrategies: string[];
   personalizedResponse: string;
   analysisSource: string;
-  createdAt: string;
+  createdAt?: string | number;
 }
 
 const ChatHistory = () => {
@@ -148,7 +163,7 @@ const ChatHistory = () => {
                         <div className="flex items-center text-sm text-muted-foreground">
                           <Calendar className="h-4 w-4 mr-1" />
                           <span data-testid={`text-session-date-${session.id}`}>
-                            {format(new Date(session.createdAt), 'MMM d, yyyy')}
+                           {formatDate(getWhen(session))}
                           </span>
                         </div>
                       </div>
@@ -221,16 +236,26 @@ const ChatHistory = () => {
                         <div className="flex items-center text-sm text-muted-foreground">
                           <Clock className="h-4 w-4 mr-1" />
                           <span data-testid={`text-analysis-date-${analysis.id}`}>
-                            {format(new Date(analysis.createdAt), 'MMM d, HH:mm')}
+                            {formatDateTime(
+                             parseDateSafe(
+                              session.createdAt ??
+                               session.updatedAt ??
+                                (analysis as any).created_at ??
+                                (analysis as any).updated_at ??
+                                (analysis as any).timestamp ??
+                                (analysis as any).time ??
+                                (analysis as any).date
+                              )
+                            )} 
                           </span>
                         </div>
                       </div>
 
-                      {analysis.anxietyTriggers.length > 0 && (
+                      {(analysis.anxietyTriggers ?? []).length > 0 && (
                         <div>
                           <h4 className="text-sm font-medium mb-2">Identified Triggers:</h4>
                           <div className="flex flex-wrap gap-1" data-testid={`triggers-${analysis.id}`}>
-                            {analysis.anxietyTriggers.map((trigger, index) => (
+                            {(analysis.anxietyTriggers ?? []).map((trigger, index) => (
                               <Badge key={index} variant="outline" className="text-xs">
                                 {trigger}
                               </Badge>
