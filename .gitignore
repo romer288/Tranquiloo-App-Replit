@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.out/
+.next/
+.vercel/
+.expo/
+expo-build/
+build/
+coverage/
+.env
+.env.*
+.DS_Store
