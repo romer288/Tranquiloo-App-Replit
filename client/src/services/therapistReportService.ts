@@ -4,11 +4,46 @@
 export const therapistReportService = {
   async shareAnalyticsWithTherapist(): Promise<{ success: boolean; message: string }> {
     try {
-      // For now, return a placeholder implementation
-      // In a full migration, this would integrate with email services
+      const { AuthService } = await import('@/services/authService');
+      const currentUser = await AuthService.getCurrentUser();
+
+      if (!currentUser?.id) {
+        return {
+          success: false,
+          message: 'Please sign in again before sharing your analytics.'
+        };
+      }
+
+      const response = await fetch('/api/therapist/share-analytics', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: currentUser.id })
+      });
+
+      const parseResponse = async () => {
+        try {
+          return await response.json();
+        } catch (error) {
+          console.warn('Share analytics response was not JSON:', error);
+          return null;
+        }
+      };
+
+      const data = await parseResponse();
+
+      if (!response.ok) {
+        const message = data?.message || 'We could not send your report right now. Please try again later.';
+        return {
+          success: false,
+          message,
+        };
+      }
+
       return {
-        success: false,
-        message: 'Therapist reporting feature is being migrated. Please check back soon.'
+        success: Boolean(data?.success),
+        message: data?.message || 'Your analytics were shared successfully.'
       };
     } catch (error) {
       console.error('Error sharing analytics with therapist:', error);
