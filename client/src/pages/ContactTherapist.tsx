@@ -5,149 +5,204 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Download, Mail, Phone, MapPin, User, MessageCircle, FileText, Calendar } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Download, Phone, MapPin, User, FileText, Calendar } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { AuthService } from '@/services/authService';
 
 const ContactTherapist = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [hasTherapist, setHasTherapist] = useState<boolean | null>(null);
-  const [therapistCode, setTherapistCode] = useState('');
+  const [choice, setChoice] = useState<'yes' | 'no' | ''>('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
 
+  const handleChoice = (value: 'yes' | 'no') => {
+    setChoice(value);
+  };
+
   const handleDownloadAnxietyData = async () => {
     try {
-      // Download both History and Conversation Summary as requested
       const { downloadPDFReport } = await import('@/services/analyticsExportService');
       const { downloadSummaryReport } = await import('@/services/summaryReportService');
-      
-      // For users without therapist, download their data
+
       toast({
-        title: "Download Started",
-        description: "Downloading your anxiety data and conversation summary...",
+        title: 'Download Started',
+        description: 'Downloading your anxiety data and conversation summary...'
       });
-      
-      // Simulate data download - in real app this would fetch user's data
-      downloadPDFReport([]); // Empty array - would be user's actual analyses
-      downloadSummaryReport([], [], []); // Empty arrays - would be user's actual data
-      
+
+      downloadPDFReport('current-user-id');
+      downloadSummaryReport([], [], []);
     } catch (error) {
       toast({
-        title: "Download Error",
-        description: "Failed to download anxiety data",
-        variant: "destructive",
+        title: 'Download Error',
+        description: 'Failed to download anxiety data',
+        variant: 'destructive'
       });
     }
   };
 
   const handleConnectToTherapist = async () => {
-    if (!email) {
+    if (!email.trim()) {
       toast({
-        title: "Missing Information",
-        description: "Please provide your therapist's email address",
-        variant: "destructive",
+        title: 'Email required',
+        description: "Please enter your therapist's email address",
+        variant: 'destructive'
       });
       return;
     }
 
     setIsConnecting(true);
-    
+
     try {
-      // Get current user from localStorage to include their email and patient code
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      
-      // Send connection request to therapist
+      const authUser = await AuthService.getCurrentUser();
+      const currentUserEmail =
+        localStorage.getItem('userEmail') ||
+        authUser?.email ||
+        import.meta.env.VITE_FALLBACK_USER_EMAIL ||
+        '';
+
+      const therapistDisplayName = email.split('@')[0] || 'Therapist';
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
-      const response = await fetch(`${apiBaseUrl}/api/therapist-connections`, {
+      const apiUrl = apiBaseUrl ? `${apiBaseUrl}/api/therapist-connections` : '/api/therapist-connections';
+
+      console.log('ContactTherapist fetch', {
+        apiBaseUrl,
+        apiUrl,
+        envValue: import.meta.env.VITE_API_BASE_URL,
+        locationOrigin: window.location.origin,
+      });
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        credentials: 'same-origin',
         body: JSON.stringify({
           userId: user?.id || `user_${Date.now()}`,
-          therapistName: 'Dr Becker', // Default name, can be extracted from email
+          therapistName: therapistDisplayName,
           contactValue: email,
           shareReport: 'yes',
           notes: message || '',
-          patientEmail: currentUser.email || 'Patient email not available',
-          patientCode: currentUser.patientCode || 'Code not available'
+          patientEmail: currentUserEmail
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send connection request');
+        const errorText = await response.text();
+        let errorMessage = 'Failed to send connection request';
+        try {
+          const parsed = JSON.parse(errorText);
+          errorMessage = parsed?.error || parsed?.message || errorMessage;
+        } catch {
+          if (errorText) {
+            errorMessage = errorText;
+          }
+        }
+        throw new Error(errorMessage);
       }
-      
+
       toast({
-        title: "Connection Request Sent",
-        description: "Your therapist will receive a notification to approve the connection",
+        title: 'Connection Request Sent',
+        description: 'Your therapist will receive a notification to approve the connection'
       });
-      
-      setTherapistCode('');
+
       setEmail('');
       setMessage('');
+      setChoice('');
     } catch (error) {
       toast({
-        title: "Connection Error",
-        description: "Failed to connect with therapist. Please try again.",
-        variant: "destructive",
+        title: 'Connection Error',
+        description: error instanceof Error ? error.message : 'Failed to connect with therapist. Please try again.',
+        variant: 'destructive'
       });
     } finally {
       setIsConnecting(false);
     }
   };
 
+  const resetChoice = () => {
+    setChoice('');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6" data-testid="contact-therapist-container">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2" data-testid="text-page-title">
+    <div className="min-h-screen bg-slate-50 py-10" data-testid="contact-therapist-container">
+      <div className="max-w-4xl mx-auto px-4 md:px-6">
+        <div className="mb-10 text-center md:text-left">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2" data-testid="text-page-title">
             Contact Therapist
           </h1>
-          <p className="text-gray-600" data-testid="text-page-description">
+          <p className="text-slate-600" data-testid="text-page-description">
             Connect with your therapist or download your anxiety data for professional consultation
           </p>
         </div>
 
-        {/* Therapist Status Question */}
-        {hasTherapist === null && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5 text-blue-600" />
-                Do you currently have a therapist?
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4">
-                <Button 
-                  onClick={() => setHasTherapist(true)}
-                  variant="outline"
-                  className="flex-1"
-                  data-testid="button-has-therapist"
-                >
-                  Yes, I have a therapist
-                </Button>
-                <Button 
-                  onClick={() => setHasTherapist(false)}
-                  variant="outline"
-                  className="flex-1"
-                  data-testid="button-no-therapist"
-                >
-                  No, I don't have a therapist
-                </Button>
+        <Card className="mb-10 border border-blue-100 bg-white">
+          <CardContent className="px-6 py-8 md:px-10">
+            <div className="flex flex-col items-center text-center space-y-6">
+              <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center">
+                <User className="w-8 h-8 text-blue-600" />
               </div>
-            </CardContent>
-          </Card>
-        )}
+              <div className="space-y-3 max-w-2xl">
+                <h2 className="text-3xl font-semibold text-slate-900">Do you currently have a therapist?</h2>
+                <p className="text-slate-600">
+                  If you have a therapist, we can connect your account so they can track your progress and provide better support.
+                </p>
+              </div>
+              <RadioGroup
+                value={choice}
+                onValueChange={(value) => handleChoice(value as 'yes' | 'no')}
+                className="w-full max-w-2xl space-y-3"
+              >
+                {[
+                  {
+                    value: 'yes' as const,
+                    label: "Yes, I have a therapist I'd like to connect",
+                    description: 'Send them a secure request to review your progress.'
+                  },
+                  {
+                    value: 'no' as const,
+                    label: "No, I don't have a therapist",
+                    description: 'Download your data or explore professional options.'
+                  }
+                ].map((option) => {
+                  const isSelected = choice === option.value;
+                  return (
+                    <label
+                      key={option.value}
+                      htmlFor={`contact-choice-${option.value}`}
+                      className={`flex cursor-pointer items-start gap-4 rounded-xl border bg-white px-5 py-4 transition-colors ${
+                        isSelected ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-200 hover:border-blue-300'
+                      }`}
+                      data-testid={
+                        option.value === 'yes' ? 'button-has-therapist' : 'button-no-therapist'
+                      }
+                    >
+                      <RadioGroupItem
+                        value={option.value}
+                        id={`contact-choice-${option.value}`}
+                        className="mt-1 h-5 w-5 text-blue-600"
+                      />
+                      <div className="text-left">
+                        <p className="font-medium text-slate-900">{option.label}</p>
+                        <p className="text-sm text-slate-600">{option.description}</p>
+                      </div>
+                    </label>
+                  );
+                })}
+              </RadioGroup>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* For users WITH a therapist */}
-        {hasTherapist === true && (
-          <Card className="mb-8">
+        {choice === 'yes' && (
+          <Card className="mb-8 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MessageCircle className="w-5 h-5 text-green-600" />
                 Connect with Your Therapist
               </CardTitle>
               <p className="text-gray-600">
@@ -163,7 +218,6 @@ const ContactTherapist = () => {
                   placeholder="therapist@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  data-testid="input-therapist-email"
                 />
               </div>
               <div>
@@ -174,23 +228,18 @@ const ContactTherapist = () => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   rows={3}
-                  data-testid="textarea-message"
                 />
               </div>
-              <div className="flex gap-4">
-                <Button 
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button
                   onClick={handleConnectToTherapist}
+                  className="sm:flex-1"
                   disabled={isConnecting}
-                  className="flex-1"
                   data-testid="button-connect-therapist"
                 >
                   {isConnecting ? 'Connecting...' : 'Send Connection Request'}
                 </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setHasTherapist(null)}
-                  data-testid="button-back"
-                >
+                <Button variant="outline" className="sm:flex-1" onClick={resetChoice}>
                   Back
                 </Button>
               </div>
@@ -198,10 +247,8 @@ const ContactTherapist = () => {
           </Card>
         )}
 
-        {/* For users WITHOUT a therapist */}
-        {hasTherapist === false && (
+        {choice === 'no' && (
           <div className="space-y-6">
-            {/* Self-guided mode banner */}
             <Card className="bg-blue-50 border-blue-200">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
@@ -218,8 +265,7 @@ const ContactTherapist = () => {
               </CardContent>
             </Card>
 
-            {/* Download anxiety data option */}
-            <Card>
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5 text-purple-600" />
@@ -240,29 +286,19 @@ const ContactTherapist = () => {
                     <li>• Clinical assessment results</li>
                   </ul>
                 </div>
-                <Button 
-                  onClick={handleDownloadAnxietyData}
-                  className="w-full"
-                  data-testid="button-download-data"
-                >
+                <Button onClick={handleDownloadAnxietyData} className="w-full" data-testid="button-download-data">
                   <Download className="w-4 h-4 mr-2" />
                   Download My Anxiety Data
                 </Button>
                 <div className="mt-4">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setHasTherapist(null)}
-                    className="w-full"
-                    data-testid="button-back-choice"
-                  >
+                  <Button variant="outline" onClick={resetChoice} className="w-full" data-testid="button-back-choice">
                     Back to Options
                   </Button>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Find a therapist section */}
-            <Card>
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-green-600" />
@@ -284,11 +320,7 @@ const ContactTherapist = () => {
                       <li>• Long-term recovery and coping strategies</li>
                     </ul>
                   </div>
-                  <Button 
-                    onClick={() => window.open('/find-therapist', '_self')}
-                    className="w-full"
-                    data-testid="button-find-therapist"
-                  >
+                  <Button onClick={() => window.location.href = '/find-therapist'} className="w-full" data-testid="button-find-therapist">
                     <MapPin className="w-4 h-4 mr-2" />
                     Find Therapists Near Me
                   </Button>
@@ -298,7 +330,6 @@ const ContactTherapist = () => {
           </div>
         )}
 
-        {/* Emergency Resources */}
         <Card className="mt-8 border-red-200 bg-red-50">
           <CardHeader>
             <CardTitle className="text-red-900 flex items-center gap-2">

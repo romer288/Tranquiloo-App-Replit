@@ -56,3 +56,4 @@ data/*.db
 
 # Editor backup files
 *~
+config.bat

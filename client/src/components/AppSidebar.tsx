@@ -48,7 +48,7 @@ const navigationItems = [
   },
   {
     title: 'Contact Therapist',
-    url: '/find-therapist',
+    url: '/contact-therapist',
     icon: Users,
   },
   {

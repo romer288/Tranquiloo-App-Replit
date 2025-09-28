@@ -8,21 +8,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Calendar, MessageSquare, Clock, Brain, History } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { format } from 'date-fns';
-
-
-const getWhen = (obj: any) =>
-  parseDateSafe(
-    obj?.createdAt ??
-    obj?.updatedAt ??
-    obj?.created_at ??
-    obj?.updated_at ??
-    obj?.timestamp ??
-    obj?.time ??
-    obj?.date ??
-    null
-  );
-
 interface ChatSession {
   id: string;
   userId: string;
@@ -163,7 +148,17 @@ const ChatHistory = () => {
                         <div className="flex items-center text-sm text-muted-foreground">
                           <Calendar className="h-4 w-4 mr-1" />
                           <span data-testid={`text-session-date-${session.id}`}>
-                           {formatDate(getWhen(session))}
+                            {formatDate(
+                              parseDateSafe(
+                                session.createdAt ??
+                                  session.updatedAt ??
+                                  (session as any).created_at ??
+                                  (session as any).updated_at ??
+                                  (session as any).timestamp ??
+                                  (session as any).time ??
+                                  (session as any).date
+                              )
+                            )}
                           </span>
                         </div>
                       </div>
@@ -237,16 +232,16 @@ const ChatHistory = () => {
                           <Clock className="h-4 w-4 mr-1" />
                           <span data-testid={`text-analysis-date-${analysis.id}`}>
                             {formatDateTime(
-                             parseDateSafe(
-                              session.createdAt ??
-                               session.updatedAt ??
-                                (analysis as any).created_at ??
-                                (analysis as any).updated_at ??
-                                (analysis as any).timestamp ??
-                                (analysis as any).time ??
-                                (analysis as any).date
+                              parseDateSafe(
+                                analysis.createdAt ??
+                                  analysis.updatedAt ??
+                                  (analysis as any).created_at ??
+                                  (analysis as any).updated_at ??
+                                  (analysis as any).timestamp ??
+                                  (analysis as any).time ??
+                                  (analysis as any).date
                               )
-                            )} 
+                            )}
                           </span>
                         </div>
                       </div>

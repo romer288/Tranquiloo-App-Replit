@@ -96,6 +96,72 @@ const parseJsonWithRepair = (provider: string, rawJson: string): any | null => {
   }
 };
 
+const escapeHtml = (value: unknown): string => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
+const toDate = (value: unknown): Date | null => {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  const directDate = new Date(value as any);
+  if (!Number.isNaN(directDate.getTime())) {
+    return directDate;
+  }
+
+  const numericValue = typeof value === 'string' ? Number(value) : value;
+  if (typeof numericValue === 'number' && Number.isFinite(numericValue)) {
+    const fromNumber = new Date(numericValue);
+    if (!Number.isNaN(fromNumber.getTime())) {
+      return fromNumber;
+    }
+  }
+
+  return null;
+};
+
+const formatDate = (value: unknown): string => {
+  const date = toDate(value);
+  if (!date) {
+    return 'N/A';
+  }
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric'
+  }).format(date);
+};
+
+const formatDateRange = (start: unknown, end: unknown): string => {
+  const startFormatted = formatDate(start);
+  const endFormatted = formatDate(end);
+
+  if (startFormatted === 'N/A' && endFormatted === 'N/A') {
+    return 'Date not available';
+  }
+
+  if (endFormatted === 'N/A') {
+    return startFormatted;
+  }
+
+  return `${startFormatted} - ${endFormatted}`;
+};
+
 const extractAndParseJson = (provider: string, text: string): any | null => {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
@@ -527,6 +593,303 @@ Key therapeutic themes addressed:
       res.status(500).json({ 
         success: false, 
         error: 'Failed to send connection request: ' + error.message 
+      });
+    }
+  });
+
+  app.post('/api/therapist/share-analytics', async (req, res) => {
+    try {
+      const { userId } = req.body;
+
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Missing userId - please sign in again and retry.'
+        });
+      }
+
+      const profile = await storage.getProfile(userId);
+      if (!profile) {
+        return res.status(404).json({
+          success: false,
+          message: 'We could not find your profile. Please refresh and try again.'
+        });
+      }
+
+      const therapistConnections = await storage.getUserTherapistsByUser(userId);
+      const shareableTherapists = (therapistConnections || []).filter(connection => {
+        if (connection?.isActive === false) {
+          return false;
+        }
+
+        if (connection?.shareReport === false) {
+          return false;
+        }
+
+        return connection?.contactMethod === 'email' && Boolean(connection?.contactValue);
+      });
+
+      if (shareableTherapists.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'No therapist connections with sharing enabled. Visit “Contact Therapist” to invite your therapist.'
+        });
+      }
+
+      const [analyses, sessions, summaries] = await Promise.all([
+        storage.getAnxietyAnalysesByUser(userId),
+        storage.getChatSessionsByUser(userId),
+        storage.getInterventionSummariesByUser(userId)
+      ]);
+
+      const normalizeTriggerList = (input: any): string[] => {
+        if (!input) {
+          return [];
+        }
+
+        if (Array.isArray(input)) {
+          return input.filter(Boolean).map((item) => String(item).trim()).filter(Boolean);
+        }
+
+        if (typeof input === 'string') {
+          return input.split(',').map((item) => item.trim()).filter(Boolean);
+        }
+
+        return [];
+      };
+
+      const normalizeStrategyList = (analysis: any): string[] => {
+        if (!analysis) {
+          return [];
+        }
+
+        if (Array.isArray(analysis.copingStrategies)) {
+          return analysis.copingStrategies.map((item: any) => String(item).trim()).filter(Boolean);
+        }
+
+        if (Array.isArray(analysis.recommendedInterventions)) {
+          return analysis.recommendedInterventions.map((item: any) => String(item).trim()).filter(Boolean);
+        }
+
+        if (typeof analysis.copingStrategies === 'string') {
+          return analysis.copingStrategies.split(',').map((item: string) => item.trim()).filter(Boolean);
+        }
+
+        if (typeof analysis.recommendedInterventions === 'string') {
+          return analysis.recommendedInterventions.split(',').map((item: string) => item.trim()).filter(Boolean);
+        }
+
+        return [];
+      };
+
+      type NormalizedAnalysis = {
+        anxietyLevel: number | null;
+        createdAt: Date | null;
+        triggers: string[];
+        personalizedResponse?: string;
+        copingStrategies: string[];
+      };
+
+      const normalizedAnalyses: NormalizedAnalysis[] = (analyses || []).map((analysis: any) => {
+        const anxietyLevelValue = analysis?.anxietyLevel ?? analysis?.anxiety_level ?? null;
+        const levelNumber = Number(anxietyLevelValue);
+
+        return {
+          anxietyLevel: Number.isFinite(levelNumber) ? levelNumber : null,
+          createdAt: toDate(
+            analysis?.createdAt ??
+            analysis?.created_at ??
+            analysis?.updatedAt ??
+            analysis?.timestamp ??
+            analysis?.time ??
+            analysis?.date ??
+            null
+          ),
+          triggers: normalizeTriggerList(
+            analysis?.anxietyTriggers ??
+            analysis?.triggers ??
+            analysis?.triggerList ??
+            []
+          ),
+          personalizedResponse: analysis?.personalizedResponse ?? analysis?.personalized_response ?? '',
+          copingStrategies: normalizeStrategyList(analysis)
+        };
+      }).filter((analysis) => Boolean(analysis.createdAt));
+
+      normalizedAnalyses.sort((a, b) => {
+        const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+        const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+        return bTime - aTime;
+      });
+
+      const analysisCount = normalizedAnalyses.length;
+      const averageAnxiety = analysisCount
+        ? Number((normalizedAnalyses.reduce((total, current) => total + (current.anxietyLevel ?? 0), 0) / analysisCount).toFixed(1))
+        : null;
+
+      const latestAnalysis = normalizedAnalyses[0];
+
+      const triggerFrequency = new Map<string, number>();
+      normalizedAnalyses.slice(0, 30).forEach((analysis) => {
+        analysis.triggers.forEach((trigger) => {
+          const key = trigger || 'General anxiety';
+          triggerFrequency.set(key, (triggerFrequency.get(key) || 0) + 1);
+        });
+      });
+
+      const topTriggers = Array.from(triggerFrequency.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([trigger]) => trigger);
+
+      const strategyFrequency = new Map<string, number>();
+      normalizedAnalyses.slice(0, 30).forEach((analysis) => {
+        analysis.copingStrategies.forEach((strategy) => {
+          const key = strategy || 'General coping strategy';
+          strategyFrequency.set(key, (strategyFrequency.get(key) || 0) + 1);
+        });
+      });
+
+      const topStrategies = Array.from(strategyFrequency.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([strategy]) => strategy);
+
+      const lastSessionDate = sessions
+        .map((session: any) => toDate(session?.updatedAt ?? session?.createdAt ?? session?.created_at))
+        .filter((value): value is Date => Boolean(value))
+        .sort((a, b) => b.getTime() - a.getTime())[0] || null;
+
+      const recentSummaries = (summaries || [])
+        .filter((summary: any) => Boolean(summary?.weekStart || summary?.weekEnd || summary?.keyPoints))
+        .sort((a: any, b: any) => {
+          const aDate = toDate(a?.weekEnd ?? a?.weekStart ?? 0)?.getTime() || 0;
+          const bDate = toDate(b?.weekEnd ?? b?.weekStart ?? 0)?.getTime() || 0;
+          return bDate - aDate;
+        })
+        .slice(0, 3);
+
+      const displayName = [profile?.firstName, profile?.lastName]
+        .filter(Boolean)
+        .join(' ')
+        .trim() || profile?.email || 'Your patient';
+
+      const patientCode = profile?.patientCode || 'Not provided';
+      const patientEmail = profile?.email || 'Not provided';
+      const reportGeneratedAt = new Date();
+
+      const buildReportHtml = (therapistName?: string): string => {
+        const greeting = therapistName ? `Hi ${escapeHtml(therapistName)},` : 'Hello,';
+
+        const keyMetrics = [
+          `<li><strong>Average anxiety level:</strong> ${averageAnxiety !== null ? `${averageAnxiety}/10` : 'Not enough data yet'}</li>`,
+          `<li><strong>Total sessions logged:</strong> ${sessions?.length || 0}</li>`,
+          `<li><strong>Last session recorded:</strong> ${lastSessionDate ? formatDate(lastSessionDate) : 'No sessions recorded yet'}</li>`
+        ];
+
+        const latestAnalysisBlock = latestAnalysis
+          ? `
+            <h3 style="margin-top: 24px; color: #0f172a;">Latest AI insight (${formatDate(latestAnalysis.createdAt)})</h3>
+            <ul style="padding-left: 18px; margin: 12px 0; color: #111827;">
+              <li><strong>Anxiety level:</strong> ${latestAnalysis.anxietyLevel !== null ? `${latestAnalysis.anxietyLevel}/10` : 'Not captured'}</li>
+              ${topTriggers.length ? `<li><strong>Top triggers observed:</strong> ${topTriggers.map((trigger) => escapeHtml(trigger)).join(', ')}</li>` : ''}
+              ${topStrategies.length ? `<li><strong>Effective interventions:</strong> ${topStrategies.map((strategy) => escapeHtml(strategy)).join(', ')}</li>` : ''}
+              ${latestAnalysis.personalizedResponse ? `<li><strong>AI summary:</strong> ${escapeHtml(latestAnalysis.personalizedResponse)}</li>` : ''}
+            </ul>
+          `
+          : `
+            <h3 style="margin-top: 24px; color: #0f172a;">Latest AI insight</h3>
+            <p style="color: #4b5563;">No AI analyses have been logged yet. Encourage your patient to complete additional sessions.</p>
+          `;
+
+        const summariesBlock = recentSummaries.length
+          ? `
+            <h3 style="margin-top: 24px; color: #0f172a;">Weekly progress highlights</h3>
+            <ul style="padding-left: 18px; margin: 12px 0; color: #111827;">
+              ${recentSummaries.map((summary: any) => `
+                <li>
+                  <strong>${formatDateRange(summary?.weekStart, summary?.weekEnd)}:</strong>
+                  ${summary?.keyPoints ? escapeHtml(summary.keyPoints) : 'No summary recorded'}
+                </li>
+              `).join('')}
+            </ul>
+          `
+          : '';
+
+        const triggersBlock = topTriggers.length
+          ? `
+            <h3 style="margin-top: 24px; color: #0f172a;">Most common triggers observed</h3>
+            <ul style="padding-left: 18px; margin: 12px 0; color: #111827;">
+              ${topTriggers.map((trigger) => `<li>${escapeHtml(trigger)}</li>`).join('')}
+            </ul>
+          `
+          : '';
+
+        return `
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111827;">
+            <p style="color: #0f172a; font-weight: 600;">${greeting}</p>
+            <p style="color: #374151;">
+              You are receiving this update because your patient <strong>${escapeHtml(displayName)}</strong>
+              (patient code: <strong>${escapeHtml(patientCode)}</strong>, email: <strong>${escapeHtml(patientEmail)}</strong>)
+              gave consent for you to view their anxiety analytics in Tranquil Support.
+            </p>
+
+            <h2 style="margin-top: 24px; color: #0f172a;">Patient analytics summary</h2>
+            <p style="color: #4b5563;">Report generated on ${formatDate(reportGeneratedAt)}.</p>
+
+            <h3 style="margin-top: 16px; color: #0f172a;">Key metrics</h3>
+            <ul style="padding-left: 18px; margin: 12px 0; color: #111827;">
+              ${keyMetrics.join('')}
+            </ul>
+
+            ${latestAnalysisBlock}
+            ${summariesBlock}
+            ${triggersBlock}
+
+            <p style="margin-top: 24px; color: #4b5563;">
+              Visit the therapist portal to view detailed session transcripts and track ongoing progress.
+            </p>
+
+            <p style="margin-top: 24px; font-size: 12px; color: #6b7280;">
+              This secure update was generated automatically by the Tranquil Support platform because the patient enabled "Share with therapist" in their account settings.
+            </p>
+          </div>
+        `;
+      };
+
+      for (const therapist of shareableTherapists) {
+        const htmlContent = buildReportHtml(therapist?.therapistName);
+        const metadata = {
+          userId,
+          therapistConnectionId: therapist.id,
+          therapistEmail: therapist.contactValue,
+          generatedAt: reportGeneratedAt.toISOString(),
+          analysisCount,
+          shareAnalytics: true
+        };
+
+        await storage.createEmailNotification({
+          toEmail: therapist.contactValue,
+          subject: `Patient analytics update - ${displayName}`,
+          htmlContent,
+          emailType: 'therapist_report',
+          metadata: JSON.stringify(metadata)
+        });
+
+        console.log(`📤 Queued therapist analytics email for ${therapist.contactValue}`);
+      }
+
+      return res.json({
+        success: true,
+        message: shareableTherapists.length === 1
+          ? `Shared your analytics with ${shareableTherapists[0].therapistName || 'your therapist'}.`
+          : `Shared your analytics with ${shareableTherapists.length} therapists.`
+      });
+    } catch (error) {
+      console.error('Error sharing analytics with therapist:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'We could not send the report right now. Please try again later.'
       });
     }
   });
