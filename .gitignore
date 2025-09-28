@@ -53,3 +53,6 @@ mobile/android/app/debug.keystore
 *.sqlite
 *.db
 data/*.db
+
+# Editor backup files
+*~
