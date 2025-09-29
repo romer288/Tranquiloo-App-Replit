@@ -43,6 +43,7 @@ const AnalyticsContent = () => {
   const [weeklyTrendsRange, setWeeklyTrendsRange] = React.useState<DateRange>();
   const [averageAnxietyRange, setAverageAnxietyRange] = React.useState<DateRange>();
   const [monthlyTrendsRange, setMonthlyTrendsRange] = React.useState<DateRange>();
+  const [monthlyActivityRange, setMonthlyActivityRange] = React.useState<DateRange>();
   const [weeklyOutcomesRange, setWeeklyOutcomesRange] = React.useState<DateRange>();
   const [triggerAnalysisRange, setTriggerAnalysisRange] = React.useState<DateRange>();
   const [goalProgressRange, setGoalProgressRange] = React.useState<DateRange>();
@@ -60,6 +61,11 @@ const AnalyticsContent = () => {
   const monthlyTrendAnalyses = React.useMemo(
     () => filterAnalysesByRange(allAnalyses, monthlyTrendsRange),
     [allAnalyses, monthlyTrendsRange]
+  );
+
+  const monthlyActivityAnalyses = React.useMemo(
+    () => filterAnalysesByRange(allAnalyses, monthlyActivityRange),
+    [allAnalyses, monthlyActivityRange]
   );
 
   const weeklyOutcomeAnalyses = React.useMemo(
@@ -313,7 +319,14 @@ const AnalyticsContent = () => {
 
             {/* 6️⃣ Monthly Session Activity */}
             <div className="w-full">
-              <MonthlyChartsSection analyses={allAnalyses} showOnly="activity" />
+              <MonthlyChartsSection 
+                analyses={monthlyActivityAnalyses} 
+                showOnly="activity" 
+                dateRange={monthlyActivityRange}
+                onDateRangeChange={setMonthlyActivityRange}
+                minDate={analysisBounds.min}
+                maxDate={analysisBounds.max}
+              />
             </div>
 
             {/* 7️⃣ Goal Progress Section */}

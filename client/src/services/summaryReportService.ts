@@ -1,7 +1,8 @@
 import { InterventionSummary } from '@/types/goals';
 import { GoalWithProgress } from '@/types/goals';
 import { ClaudeAnxietyAnalysisWithDate } from '@/services/analyticsService';
-import { processTriggerData, TriggerData } from '@/utils/analyticsDataProcessor';
+import { processTriggerData, TriggerData, processSeverityDistribution, SeverityDistribution } from '@/utils/analyticsDataProcessor';
+import { buildWeeklyTrendsData, WeeklyTrendData } from '@/utils/buildWeeklyTrendsData';
 
 type Period = 'session' | 'week' | 'month' | 'year';
 
@@ -174,6 +175,154 @@ const aggregateAnalysesByPeriod = (
   });
 };
 
+interface TreatmentOutcomeSummary {
+  period: string;
+  averageAnxiety: number;
+  improvement: number;
+  effectiveness: 'improving' | 'stable' | 'declining';
+}
+
+interface MonthlyActivitySummary {
+  monthKey: string;
+  label: string;
+  conversationCount: number;
+  sessionCount: number;
+  averageAnxiety: number;
+}
+
+const calculateTreatmentOutcomesSummary = (analyses: ClaudeAnxietyAnalysisWithDate[] = []): TreatmentOutcomeSummary[] => {
+  if (!analyses.length) return [];
+
+  const weeklyMap = new Map<string, number[]>();
+
+  analyses.forEach((analysis) => {
+    if (!analysis?.created_at) return;
+    const date = new Date(analysis.created_at);
+    if (Number.isNaN(date.getTime())) return;
+    const weekStart = new Date(date);
+    const day = weekStart.getDay();
+    weekStart.setDate(weekStart.getDate() - day + (day === 0 ? -6 : 1));
+    weekStart.setHours(0, 0, 0, 0);
+    const key = weekStart.toISOString().split('T')[0];
+    if (!weeklyMap.has(key)) {
+      weeklyMap.set(key, []);
+    }
+    weeklyMap.get(key)!.push(analysis.anxietyLevel ?? 0);
+  });
+
+  const orderedWeeks = Array.from(weeklyMap.keys()).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+  return orderedWeeks.map((weekKey, index) => {
+    const values = weeklyMap.get(weekKey) ?? [];
+    const average = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+    const previousKey = index > 0 ? orderedWeeks[index - 1] : undefined;
+    let improvement = 0;
+    let effectiveness: TreatmentOutcomeSummary['effectiveness'] = 'stable';
+
+    if (previousKey) {
+      const previousValues = weeklyMap.get(previousKey) ?? [];
+      const previousAverage = previousValues.length ? previousValues.reduce((sum, value) => sum + value, 0) / previousValues.length : 0;
+      if (previousAverage !== 0) {
+        improvement = Math.round(((previousAverage - average) / previousAverage) * 100);
+      } else {
+        improvement = Math.round(previousAverage - average);
+      }
+
+      if (improvement > 10) effectiveness = 'improving';
+      else if (improvement < -10) effectiveness = 'declining';
+    }
+
+    const periodLabel = new Date(weekKey).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+
+    return {
+      period: periodLabel,
+      averageAnxiety: Number(average.toFixed(1)),
+      improvement,
+      effectiveness,
+    };
+  });
+};
+
+const buildMonthlySessionActivitySummary = (
+  summaries: InterventionSummary[] = [],
+  analyses: ClaudeAnxietyAnalysisWithDate[] = []
+): MonthlyActivitySummary[] => {
+  if (!summaries.length && !analyses.length) return [];
+
+  const activityMap = new Map<string, MonthlyActivitySummary>();
+
+  const registerMonth = (date: Date) => {
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    if (!activityMap.has(key)) {
+      const label = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      activityMap.set(key, {
+        monthKey: key,
+        label,
+        conversationCount: 0,
+        sessionCount: 0,
+        averageAnxiety: 0,
+      });
+    }
+    return key;
+  };
+
+  summaries.forEach((summary) => {
+    if (!summary?.week_start) return;
+    const date = new Date(summary.week_start);
+    if (Number.isNaN(date.getTime())) return;
+    const key = registerMonth(date);
+    const record = activityMap.get(key);
+    if (!record) return;
+    const conversations = Number(summary.conversation_count ?? 0);
+    record.conversationCount += Number.isFinite(conversations) ? conversations : 0;
+  });
+
+  const anxietyAccumulator = new Map<string, { total: number; count: number }>();
+
+  analyses.forEach((analysis) => {
+    if (!analysis?.created_at) return;
+    const date = new Date(analysis.created_at);
+    if (Number.isNaN(date.getTime())) return;
+    const key = registerMonth(date);
+    const record = activityMap.get(key);
+    if (!record) return;
+    record.sessionCount += 1;
+
+    if (!anxietyAccumulator.has(key)) {
+      anxietyAccumulator.set(key, { total: 0, count: 0 });
+    }
+    const bucket = anxietyAccumulator.get(key)!;
+    bucket.total += analysis.anxietyLevel ?? 0;
+    bucket.count += 1;
+  });
+
+  for (const [key, record] of activityMap.entries()) {
+    const bucket = anxietyAccumulator.get(key);
+    if (bucket && bucket.count > 0) {
+      record.averageAnxiety = Number((bucket.total / bucket.count).toFixed(1));
+    }
+  }
+
+  return Array.from(activityMap.values()).sort((a, b) => new Date(a.monthKey).getTime() - new Date(b.monthKey).getTime());
+};
+
+const ensureArray = (value: any): string[] => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {}
+    return value.split(/[\n•\-]+/).map((item) => item.trim()).filter(Boolean);
+  }
+  return [];
+};
+
 interface ReportOptions {
   title?: string;
 }
@@ -196,6 +345,71 @@ export const generateSummaryReport = (
   const highAnxietySessions = analyses?.filter(a => a.anxietyLevel >= 7).length || 0;
   const crisisRiskSessions = analyses?.filter(a => a.crisisRiskLevel === 'high').length || 0;
   const escalationCount = analyses?.filter(a => a.escalationDetected).length || 0;
+  const severityDistribution: SeverityDistribution[] = processSeverityDistribution((analyses ?? []) as any);
+  const weeklyTrendData: WeeklyTrendData[] = buildWeeklyTrendsData(analyses ?? []);
+  const treatmentOutcomeSummary = calculateTreatmentOutcomesSummary(analyses ?? []);
+  const monthlyActivitySummary = buildMonthlySessionActivitySummary(summaries, analyses ?? []);
+
+  const therapyTypeCounts = summaries.reduce((acc, summary) => {
+    const key = summary.intervention_type?.toLowerCase() || 'unspecified';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const topTherapyTypes = Object.entries(therapyTypeCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([type, count]) => `${type.replace(/_/g, ' ')} (${count})`);
+
+  const weeklyTrendHighlights = weeklyTrendData
+    .slice(-6)
+    .map((week) => {
+      const categories = [
+        { label: 'Work/Career', value: week.workCareer },
+        { label: 'Social', value: week.social },
+        { label: 'Health', value: week.health },
+        { label: 'Financial', value: week.financial },
+        { label: 'Relationships', value: week.relationships },
+        { label: 'Future/Uncertainty', value: week.future },
+        { label: 'Family', value: week.family },
+      ]
+        .filter((item) => item.value > 0)
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 3)
+        .map((item) => `${item.label}: ${(item.value).toFixed(1)}`)
+        .join('; ');
+
+      return `• ${week.displayLabel}: ${categories || 'No category data recorded'}`;
+    })
+    .join('\n');
+
+  const severityTotals = severityDistribution.reduce((sum, bucket) => sum + bucket.count, 0);
+  const severityHighlights = severityDistribution
+    .map((bucket) => {
+      const percent = severityTotals > 0 ? Math.round((bucket.count / severityTotals) * 100) : 0;
+      return `• ${bucket.range}: ${bucket.count} sessions (${percent}%)`;
+    })
+    .join('\n');
+
+  const treatmentOutcomeHighlights = treatmentOutcomeSummary
+    .slice(-8)
+    .map((outcome) => {
+      const direction = outcome.improvement > 0 ? `Improvement +${outcome.improvement}%` : outcome.improvement < 0 ? `Increase ${Math.abs(outcome.improvement)}%` : 'No change';
+      return `• ${outcome.period}: Avg anxiety ${outcome.averageAnxiety}/10 (${direction}, ${outcome.effectiveness.toUpperCase()})`;
+    })
+    .join('\n');
+
+  const monthlyActivityHighlights = monthlyActivitySummary
+    .slice(-12)
+    .map((month) => {
+      return `• ${month.label}: ${month.conversationCount} conversations, ${month.sessionCount} analyses, avg anxiety ${month.averageAnxiety || 0}/10`;
+    })
+    .join('\n');
+
+  const weeklyTrendText = weeklyTrendHighlights || '• Not enough weekly data to determine trend patterns yet.';
+  const severityText = severityDistribution.length ? severityHighlights : '• No severity distribution data recorded yet.';
+  const treatmentOutcomeText = treatmentOutcomeSummary.length ? treatmentOutcomeHighlights : '• Weekly outcomes will appear once more sessions are recorded.';
+  const monthlyActivityText = monthlyActivitySummary.length ? monthlyActivityHighlights : '• Monthly activity data will populate after consistent usage.';
   
   let report = `${heading}
 Generated on: ${today}
@@ -272,6 +486,29 @@ THERAPEUTIC PROGRESS:
 • Goals Completed: ${goals?.filter(g => (g.completion_rate || 0) >= 90).length || 0}
 • Average Goal Progress: ${goals && goals.length > 0 ? 
     Math.round(goals.reduce((sum, g) => sum + (g.completion_rate || 0), 0) / goals.length) : 0}%
+
+TRACK OUTCOMES & TREATMENT SUMMARY
+==================================
+
+• Weekly Intervention Summaries: ${summaries.length}
+• Average Conversations per Summary: ${(summaries.length ? (totalConversations / summaries.length).toFixed(1) : '0.0')}
+• Dominant Intervention Types: ${topTherapyTypes.length ? topTherapyTypes.join(', ') : 'Not yet recorded'}
+• Reporting Window: ${sortedSummaries.length ? `${sortedSummaries[sortedSummaries.length - 1].week_start} → ${sortedSummaries[0].week_end}` : 'N/A'}
+
+ANALYTICS DASHBOARD INSIGHTS
+============================
+
+WEEKLY ANXIETY TYPE TRENDS:
+${weeklyTrendText}
+
+ANXIETY LEVEL DISTRIBUTION:
+${severityText}
+
+WEEKLY TREATMENT OUTCOMES:
+${treatmentOutcomeText}
+
+MONTHLY SESSION ACTIVITY:
+${monthlyActivityText}
 
 ==================================================
 
