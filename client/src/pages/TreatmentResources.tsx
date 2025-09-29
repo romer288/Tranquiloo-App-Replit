@@ -147,7 +147,10 @@ const TreatmentResources = () => {
       
       // Use the summary report service to download as PDF-like format
       const { downloadSummaryReport } = await import('@/services/summaryReportService');
-      downloadSummaryReport(summaries, summariesData.goals || [], allAnalyses);
+      downloadSummaryReport(summaries, summariesData.goals || [], allAnalyses, {
+        fileName: 'conversation-summary',
+        title: 'Conversation Summary & Intervention Report'
+      });
       
       toast({
         title: "Success",

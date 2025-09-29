@@ -2872,7 +2872,55 @@ ${recentHistory}`;
       const goal = await storage.createUserGoal(validatedData);
       res.status(201).json(goal);
     } catch (error) {
-      res.status(400).json({ error: "Invalid user goal data", details: error.message });
+      console.error('Invalid user goal payload:', req.body, error);
+      res.status(400).json({ error: "Invalid user goal data", details: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.put("/api/user-goals/:id", async (req, res) => {
+    try {
+      const goalId = req.params.id;
+      const existingGoal = await storage.getUserGoal(goalId);
+      if (!existingGoal) {
+        return res.status(404).json({ error: 'Goal not found' });
+      }
+
+      const mergedData = {
+        userId: req.body.userId ?? req.body.user_id ?? existingGoal.userId,
+        title: req.body.title ?? existingGoal.title,
+        description: req.body.description ?? existingGoal.description,
+        category: req.body.category ?? existingGoal.category,
+        frequency: req.body.frequency ?? existingGoal.frequency,
+        targetValue: req.body.targetValue ?? existingGoal.targetValue,
+        unit: req.body.unit ?? existingGoal.unit,
+        startDate: req.body.startDate ?? existingGoal.startDate,
+        endDate: req.body.endDate ?? existingGoal.endDate,
+        isActive: typeof req.body.isActive === 'boolean' ? req.body.isActive : existingGoal.isActive,
+      };
+
+      const validatedData = insertUserGoalSchema.parse(mergedData);
+
+      const updated = await storage.updateUserGoal(goalId, validatedData);
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating user goal:', error);
+      res.status(400).json({ error: 'Invalid user goal data', details: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.delete("/api/user-goals/:id", async (req, res) => {
+    try {
+      const goalId = req.params.id;
+      const existingGoal = await storage.getUserGoal(goalId);
+      if (!existingGoal) {
+        return res.status(404).json({ error: 'Goal not found' });
+      }
+
+      await storage.deleteUserGoal(goalId);
+      res.status(204).end();
+    } catch (error) {
+      console.error('Error deleting user goal:', error);
+      res.status(500).json({ error: 'Failed to delete goal' });
     }
   });
 

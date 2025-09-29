@@ -109,6 +109,9 @@ sqliteDb.exec(`
     user_id TEXT NOT NULL,
     note TEXT,
     progress_value INTEGER,
+    score INTEGER,
+    recorded_at TEXT,
+    notes TEXT,
     created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
   );
 

@@ -3,13 +3,190 @@ import { GoalWithProgress } from '@/types/goals';
 import { ClaudeAnxietyAnalysisWithDate } from '@/services/analyticsService';
 import { processTriggerData, TriggerData } from '@/utils/analyticsDataProcessor';
 
+type Period = 'session' | 'week' | 'month' | 'year';
+
+interface PeriodSummary {
+  label: string;
+  snapshot: {
+    sessions: number;
+    average: number;
+    min: number;
+    max: number;
+    trend: string;
+  };
+  patientProblem: string;
+  triggers: { name: string; count: number }[];
+  therapies: { name: string; count: number; adherence: '✔' | 'Partial' | '✖' }[];
+  progress: string;
+  clinicalNotes: string[];
+  codes: string[];
+  homework: string;
+}
+
+const formatDate = (date: Date) =>
+  new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(date);
+
+const formatRange = (start: Date, end?: Date) => {
+  if (!end || start.toDateString() === end.toDateString()) {
+    return formatDate(start);
+  }
+  return `${formatDate(start)} — ${formatDate(end)}`;
+};
+
+const getPeriodKey = (date: Date, period: Period) => {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  switch (period) {
+    case 'session':
+      return date.toISOString();
+    case 'week': {
+      const firstDay = new Date(date);
+      const day = firstDay.getDay();
+      const diff = firstDay.getDate() - day + (day === 0 ? -6 : 1);
+      firstDay.setDate(diff);
+      firstDay.setHours(0, 0, 0, 0);
+      return `${firstDay.toISOString().slice(0, 10)}`;
+    }
+    case 'month':
+      return `${year}-${String(month + 1).padStart(2, '0')}`;
+    case 'year':
+      return `${year}`;
+    default:
+      return date.toISOString();
+  }
+};
+
+const sortDesc = <T,>(arr: T[], getter: (item: T) => number) =>
+  [...arr].sort((a, b) => getter(b) - getter(a));
+
+const aggregateAnalysesByPeriod = (
+  analyses: ClaudeAnxietyAnalysisWithDate[] = [],
+  period: Period
+): PeriodSummary[] => {
+  if (!analyses.length) return [];
+
+  const groups = new Map<string, ClaudeAnxietyAnalysisWithDate[]>();
+  analyses.forEach((analysis) => {
+    const key = getPeriodKey(new Date(analysis.created_at), period);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(analysis);
+  });
+
+  const orderedKeys = sortDesc(Array.from(groups.keys()), (key) => new Date(key).getTime());
+
+  return orderedKeys.map((key, index) => {
+    const analysesForPeriod = groups.get(key) ?? [];
+    const ordered = analysesForPeriod.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    const sessions = ordered.length;
+    const start = new Date(ordered[0].created_at);
+    const end = new Date(ordered[ordered.length - 1].created_at);
+
+    const values = ordered.map((a) => a.anxietyLevel ?? 0);
+    const average = Number((values.reduce((sum, value) => sum + value, 0) / Math.max(values.length, 1)).toFixed(1));
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+
+    const previousKey = orderedKeys[index + 1];
+    let trend = 'No prior period';
+    if (previousKey) {
+      const previousGroup = groups.get(previousKey) ?? [];
+      if (previousGroup.length) {
+        const previousAverage = previousGroup.reduce((sum, a) => sum + (a.anxietyLevel ?? 0), 0) / previousGroup.length;
+        const delta = Number((average - previousAverage).toFixed(1));
+        trend = delta > 0 ? `↑ +${delta} vs prior` : delta < 0 ? `↓ ${delta} vs prior` : 'No change vs prior';
+      }
+    }
+
+    const triggerCounts = new Map<string, number>();
+    ordered.forEach((analysis) => {
+      (analysis.triggers || []).forEach((trigger) => {
+        const normalized = trigger?.trim();
+        if (!normalized) return;
+        triggerCounts.set(normalized, (triggerCounts.get(normalized) ?? 0) + 1);
+      });
+    });
+    const triggers = Array.from(triggerCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([name, count]) => ({ name, count }));
+
+    const therapyCounts = new Map<string, number>();
+    ordered.forEach((analysis) => {
+      const interventions = analysis.recommendedInterventions ?? analysis.copingStrategies ?? [];
+      interventions.forEach((therapy) => {
+        const normalized = therapy?.trim();
+        if (!normalized) return;
+        therapyCounts.set(normalized, (therapyCounts.get(normalized) ?? 0) + 1);
+      });
+    });
+    const therapies = Array.from(therapyCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([name, count]) => ({
+        name,
+        count,
+        adherence: count >= sessions ? '✔' : count >= Math.ceil(sessions / 2) ? 'Partial' : '✖',
+      }));
+
+    const topTrigger = triggers[0]?.name;
+    const patientProblem = topTrigger
+      ? `Patient experienced significant anxiety around ${topTrigger}. Severity averaged ${average.toFixed(1)}/10.`
+      : `Patient reported anxiety averaging ${average.toFixed(1)}/10 without a specific trigger.`;
+
+    const progressDirection = trend.startsWith('↓')
+      ? 'Improving'
+      : trend.startsWith('↑')
+        ? 'Worsening; additional support recommended'
+        : 'Stable';
+    const progress = `${progressDirection}. Trend: ${trend.toLowerCase()}.`;
+
+    const notes = ordered
+      .map((analysis) => analysis.personalizedResponse?.trim())
+      .filter((note): note is string => Boolean(note))
+      .slice(0, 3);
+
+    const codes = Array.from(
+      new Set(
+        ordered
+          .flatMap((analysis) => analysis.dsm5Indicators || [])
+          .filter((code): code is string => Boolean(code))
+      )
+    );
+
+    const homeworkTechnique = therapies[0]?.name || 'Continue agreed coping plan';
+    const homework = `Action: ${homeworkTechnique}. Practice 3×/day or as assigned.`;
+
+    return {
+      label: formatRange(start, period === 'session' ? undefined : end),
+      snapshot: { sessions, average, min, max, trend },
+      patientProblem,
+      triggers,
+      therapies,
+      progress,
+      clinicalNotes: notes.length ? notes : ['No clinician notes documented this period.'],
+      codes,
+      homework,
+    } satisfies PeriodSummary;
+  });
+};
+
+interface ReportOptions {
+  title?: string;
+}
+
 export const generateSummaryReport = (
   summaries: InterventionSummary[],
   goals: GoalWithProgress[],
-  analyses?: ClaudeAnxietyAnalysisWithDate[]
+  analyses?: ClaudeAnxietyAnalysisWithDate[],
+  options: ReportOptions = {}
 ): string => {
   const today = new Date().toLocaleDateString();
-  
+  const heading = options.title ?? 'COMPREHENSIVE MENTAL HEALTH REPORT';
+
   // Calculate comprehensive statistics
   const totalAnalyses = analyses?.length || 0;
   const totalConversations = summaries.reduce((sum, s) => sum + s.conversation_count, 0);
@@ -20,7 +197,7 @@ export const generateSummaryReport = (
   const crisisRiskSessions = analyses?.filter(a => a.crisisRiskLevel === 'high').length || 0;
   const escalationCount = analyses?.filter(a => a.escalationDetected).length || 0;
   
-  let report = `COMPREHENSIVE MENTAL HEALTH REPORT
+  let report = `${heading}
 Generated on: ${today}
 
 ==================================================
@@ -369,6 +546,58 @@ completionRate >= 50 ?
     });
   }
 
+  // Intervention summaries (session/weekly/monthly/yearly)
+  const sessionSummaries = aggregateAnalysesByPeriod(analyses ?? [], 'session').slice(0, 5);
+  const weeklySummaries = aggregateAnalysesByPeriod(analyses ?? [], 'week').slice(0, 4);
+  const monthlySummaries = aggregateAnalysesByPeriod(analyses ?? [], 'month').slice(0, 4);
+  const yearlySummaries = aggregateAnalysesByPeriod(analyses ?? [], 'year').slice(0, 3);
+
+  const formatPeriodSummaries = (label: string, summaries: PeriodSummary[]) => {
+    if (!summaries.length) {
+      return `${label}: No intervention summaries available.\n\n`;
+    }
+
+    return `${label}\n${'-'.repeat(label.length)}\n${summaries
+      .map((summary) => {
+        const triggersText = summary.triggers.length
+          ? summary.triggers.map((t) => `${t.name} (${t.count})`).join(', ')
+          : 'No specific triggers documented.';
+
+        const therapiesText = summary.therapies.length
+          ? summary.therapies
+              .map((therapy) => `${therapy.name} ${therapy.count}× (adherence ${therapy.adherence})`)
+              .join('; ')
+          : 'No interventions documented.';
+
+        const notes = summary.clinicalNotes.join(' • ');
+        const codes = summary.codes.length ? `For clinicians: ${summary.codes.join(', ')}` : '';
+
+        return `
+${summary.label} — Avg anxiety ${summary.snapshot.average}/10 (range ${summary.snapshot.min}–${summary.snapshot.max})
+What happened: ${summary.patientProblem}
+Top triggers: ${triggersText}
+Therapy used: ${therapiesText}
+Progress: ${summary.progress}
+Clinical notes: ${notes}
+Next: ${summary.homework}
+${codes}
+`;
+      })
+      .join('\n')}\n`;
+  };
+
+  report += `
+
+INTERVENTION SUMMARIES
+======================
+
+${formatPeriodSummaries('Per Session', sessionSummaries)}
+${formatPeriodSummaries('Weekly', weeklySummaries)}
+${formatPeriodSummaries('Monthly', monthlySummaries)}
+${formatPeriodSummaries('Yearly', yearlySummaries)}
+==================================================
+`;
+
   // Enhanced conclusion and recommendations
   report += `
 
@@ -430,8 +659,18 @@ visit the Analytics Dashboard in your application.
   return report;
 };
 
-export const downloadSummaryReport = (summaries: InterventionSummary[], goals: GoalWithProgress[], analyses?: ClaudeAnxietyAnalysisWithDate[]) => {
-  const report = generateSummaryReport(summaries, goals, analyses);
+interface DownloadOptions {
+  fileName?: string;
+  title?: string;
+}
+
+export const downloadSummaryReport = (
+  summaries: InterventionSummary[],
+  goals: GoalWithProgress[],
+  analyses?: ClaudeAnxietyAnalysisWithDate[],
+  options: DownloadOptions = {}
+) => {
+  const report = generateSummaryReport(summaries, goals, analyses, { title: options.title });
   
   // Convert to HTML for better formatting (PDF-like)
   const htmlContent = convertToPDFFormat(report);
@@ -439,8 +678,9 @@ export const downloadSummaryReport = (summaries: InterventionSummary[], goals: G
   const blob = new Blob([htmlContent], { type: 'text/html' });
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
+  const baseFileName = options.fileName ?? 'conversation-summaries';
   a.href = url;
-  a.download = `conversation-summaries-${new Date().toISOString().split('T')[0]}.html`;
+  a.download = `${baseFileName}-${new Date().toISOString().split('T')[0]}.html`;
   document.body.appendChild(a);
   a.click();
   window.URL.revokeObjectURL(url);

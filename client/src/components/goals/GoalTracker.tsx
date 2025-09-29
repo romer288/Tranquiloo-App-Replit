@@ -98,7 +98,7 @@ export const GoalTracker: React.FC = () => {
 
   const handleDeleteGoal = async (goalId: string) => {
     try {
-      await goalsService.deactivateGoal(goalId);
+      await goalsService.deleteGoal(goalId);
       await loadGoals();
       toast({
         title: 'Success',
@@ -178,8 +178,8 @@ export const GoalTracker: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {goals.map(goal => (
-          <Card key={goal.id} className="p-6">
+        {goals.map((goal, index) => (
+          <Card key={goal.id ?? `${goal.title}-${index}`} className="p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">

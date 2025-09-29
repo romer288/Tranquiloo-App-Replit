@@ -25,7 +25,6 @@ const ContactTherapist = () => {
 
   const handleDownloadAnxietyData = async () => {
     try {
-      const { downloadPDFReport } = await import('@/services/analyticsExportService');
       const { downloadSummaryReport } = await import('@/services/summaryReportService');
 
       toast({
@@ -33,8 +32,10 @@ const ContactTherapist = () => {
         description: 'Downloading your anxiety data and conversation summary...'
       });
 
-      downloadPDFReport('current-user-id');
-      downloadSummaryReport([], [], []);
+      downloadSummaryReport([], [], [], {
+        fileName: 'anxiety-data-package',
+        title: 'Anxiety Data & Intervention Summary'
+      });
     } catch (error) {
       toast({
         title: 'Download Error',
@@ -320,7 +321,11 @@ const ContactTherapist = () => {
                       <li>• Long-term recovery and coping strategies</li>
                     </ul>
                   </div>
-                  <Button onClick={() => window.location.href = '/find-therapist'} className="w-full" data-testid="button-find-therapist">
+                  <Button
+                    onClick={() => window.open('https://www.psychologytoday.com/us', '_blank', 'noopener,noreferrer')}
+                    className="w-full"
+                    data-testid="button-find-therapist"
+                  >
                     <MapPin className="w-4 h-4 mr-2" />
                     Find Therapists Near Me
                   </Button>

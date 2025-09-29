@@ -1,6 +1,45 @@
 // Goals service - migrated from Supabase to new API endpoints
 import { Goal, GoalProgress, GoalWithProgress } from '@/types/goals';
 
+const mapGoalPayload = (
+  goal: any,
+  userId?: string
+) => {
+  const payload: Record<string, unknown> = {
+    title: goal.title,
+    category: goal.category,
+    frequency: goal.frequency,
+    startDate: goal.start_date,
+    isActive: goal.is_active ?? goal.isActive ?? true,
+  };
+
+  if (goal.description) {
+    payload.description = goal.description;
+  }
+
+  if (goal.target_value !== undefined && goal.target_value !== '') {
+    const numericTarget = Number(goal.target_value);
+    if (!Number.isNaN(numericTarget)) {
+      // API expects this as a string since the column is stored as TEXT in SQLite
+      payload.targetValue = numericTarget.toString();
+    }
+  }
+
+  if (goal.unit) {
+    payload.unit = goal.unit;
+  }
+
+  if (goal.end_date) {
+    payload.endDate = goal.end_date;
+  }
+
+  if (userId) {
+    payload.userId = userId;
+  }
+
+  return payload;
+};
+
 const calculateCompletionRate = (goal: any): number => {
   if (!goal.goal_progress || goal.goal_progress.length === 0) return 0;
   
@@ -71,15 +110,15 @@ export const goalsService = {
       
       const user = JSON.parse(authUser);
 
+      const payload = mapGoalPayload(goal, user.id);
+      console.log('createGoal payload', payload);
+
       const response = await fetch('/api/user-goals', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...goal,
-          userId: user.id
-        })
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
@@ -95,12 +134,16 @@ export const goalsService = {
 
   async updateGoal(goalId: string, updates: Partial<Goal>): Promise<Goal> {
     try {
+      const authUser = localStorage.getItem('auth_user');
+      const user = authUser ? JSON.parse(authUser) : null;
+
+      const updatePayload = mapGoalPayload(updates, updates.user_id || updates.userId || user?.id);
       const response = await fetch(`/api/user-goals/${goalId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updates)
+        body: JSON.stringify(updatePayload)
       });
 
       if (!response.ok) {
@@ -112,6 +155,52 @@ export const goalsService = {
       console.error('Error updating goal:', error);
       throw error;
     }
+  },
+
+  async addGoalProgress(goalId: string, progress: { userId: string; score: number; recordedAt: string; notes?: string }): Promise<GoalProgress> {
+    try {
+      const payload: Record<string, unknown> = {
+        userId: progress.userId,
+        goalId,
+        score: progress.score,
+        recordedAt: progress.recordedAt,
+      };
+
+      if (progress.notes && progress.notes.trim().length > 0) {
+        payload.notes = progress.notes;
+      }
+      const response = await fetch('/api/goal-progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add goal progress');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error adding goal progress:', error);
+      throw error;
+    }
+  },
+
+  async recordProgress(goalId: string, score: number, notes?: string) {
+    const authUser = localStorage.getItem('auth_user');
+    if (!authUser) {
+      throw new Error('User not authenticated');
+    }
+    const user = JSON.parse(authUser);
+    return this.addGoalProgress(goalId, {
+      userId: user.id,
+      goalId,
+      score,
+      notes,
+      recordedAt: new Date().toISOString().split('T')[0],
+    } as any);
   },
 
   async deleteGoal(goalId: string): Promise<boolean> {
@@ -127,30 +216,6 @@ export const goalsService = {
       return true;
     } catch (error) {
       console.error('Error deleting goal:', error);
-      throw error;
-    }
-  },
-
-  async addGoalProgress(goalId: string, progress: Omit<GoalProgress, 'id' | 'created_at'>): Promise<GoalProgress> {
-    try {
-      const response = await fetch('/api/goal-progress', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...progress,
-          goalId
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add goal progress');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error adding goal progress:', error);
       throw error;
     }
   }

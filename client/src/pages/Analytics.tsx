@@ -12,7 +12,7 @@ import EmptyAnalyticsState from '@/components/analytics/EmptyAnalyticsState';
 import GoalProgressSection from '@/components/analytics/GoalProgressSection';
 
 import { processTriggerData, processSeverityDistribution, getAnalyticsMetrics } from '@/utils/analyticsDataProcessor';
-import { downloadPDFReport, shareWithTherapist } from '@/services/analyticsExportService';
+import { shareWithTherapist } from '@/services/analyticsExportService';
 import { buildWeeklyTrendsData } from '@/utils/buildWeeklyTrendsData';
 import { useGoalsData } from '@/hooks/useGoalsData';
 import { useToast } from '@/hooks/use-toast';
@@ -43,8 +43,26 @@ const AnalyticsContent = () => {
   );
 
 
-  const handleDownloadReport = () => {
-    downloadPDFReport('current-user-id');
+  const handleDownloadReport = async () => {
+    try {
+      const { downloadSummaryReport } = await import('@/services/summaryReportService');
+      downloadSummaryReport(summaries, goals || [], allAnalyses, {
+        fileName: 'analytics-history',
+        title: 'Analytics & Intervention History Report'
+      });
+
+      toast({
+        title: 'Download started',
+        description: 'Analytics history report is downloading.'
+      });
+    } catch (error) {
+      console.error('Error downloading history:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to download analytics history.',
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleDownloadSummary = async () => {

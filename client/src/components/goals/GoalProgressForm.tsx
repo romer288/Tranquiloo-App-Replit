@@ -23,7 +23,11 @@ export const GoalProgressForm: React.FC<GoalProgressFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(goalId, score[0], notes || undefined);
+    onSubmit(
+      goalId,
+      score[0],
+      notes && notes.trim().length > 0 ? notes : undefined
+    );
   };
 
   const getScoreDescription = (value: number) => {

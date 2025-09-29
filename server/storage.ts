@@ -58,6 +58,7 @@ export interface IStorage {
   getUserGoalsByUser(userId: string): Promise<UserGoal[]>;
   createUserGoal(goal: InsertUserGoal): Promise<UserGoal>;
   updateUserGoal(id: string, goal: Partial<InsertUserGoal>): Promise<UserGoal | undefined>;
+  deleteUserGoal(id: string): Promise<void>;
 
   // Goal progress
   getGoalProgressByGoal(goalId: string): Promise<GoalProgress[]>;
@@ -284,11 +285,37 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserGoalsByUser(userId: string): Promise<UserGoal[]> {
-    return await db.select().from(userGoals).where(eq(userGoals.userId, userId));
+    const goals = await db.select().from(userGoals).where(eq(userGoals.userId, userId));
+
+    // Backfill missing IDs for legacy rows created before UUID support
+    for (const goal of goals) {
+      if (!goal.id) {
+        const generatedId = randomUUID();
+        await db
+          .update(userGoals)
+          .set({ id: generatedId, updatedAt: Date.now() })
+          .where(
+            and(
+              eq(userGoals.userId, goal.userId),
+              eq(userGoals.title, goal.title),
+              eq(userGoals.startDate, goal.startDate)
+            )
+          );
+        goal.id = generatedId;
+      }
+    }
+
+    return goals;
   }
 
   async createUserGoal(goal: InsertUserGoal): Promise<UserGoal> {
-    const result = await db.insert(userGoals).values(goal).returning();
+    const goalId = (goal as any).id || randomUUID();
+    const result = await db.insert(userGoals).values({
+      ...goal,
+      id: goalId,
+      createdAt: goal.createdAt ?? Date.now(),
+      updatedAt: goal.updatedAt ?? Date.now()
+    }).returning();
     return result[0];
   }
 
@@ -298,6 +325,10 @@ export class DatabaseStorage implements IStorage {
       updatedAt: Date.now()
     }).where(eq(userGoals.id, id)).returning();
     return result[0];
+  }
+
+  async deleteUserGoal(id: string): Promise<void> {
+    await db.delete(userGoals).where(eq(userGoals.id, id));
   }
 
   // Goal progress
