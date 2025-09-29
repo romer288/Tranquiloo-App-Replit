@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,8 @@ import InterventionSummariesSection from '@/components/analytics/InterventionSum
 import { interventionSummaryService } from '@/services/interventionSummaryService';
 import { useGoalsData } from '@/hooks/useGoalsData';
 import { useToast } from '@/hooks/use-toast';
+import { DateRange } from 'react-day-picker';
+import { filterAnalysesByRange, getAnalysisDateBounds } from '@/utils/filterAnalysesByRange';
 
 const TreatmentResources = () => {
   const { data, getAllAnalyses } = useAnalyticsData();
@@ -36,6 +38,15 @@ const TreatmentResources = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const allAnalyses = getAllAnalyses();
+  const analysisBounds = useMemo(
+    () => getAnalysisDateBounds(allAnalyses),
+    [allAnalyses]
+  );
+  const [treatmentRange, setTreatmentRange] = useState<DateRange>();
+  const filteredAnalyses = useMemo(
+    () => filterAnalysesByRange(allAnalyses, treatmentRange),
+    [allAnalyses, treatmentRange]
+  );
 
   // Auto-generate summaries when component mounts and we have analyses
   useEffect(() => {
@@ -231,7 +242,13 @@ const TreatmentResources = () => {
 
         {/* Treatment Outcomes */}
         <div className="mb-8">
-          <TreatmentOutcomes analyses={allAnalyses} />
+          <TreatmentOutcomes 
+            analyses={filteredAnalyses}
+            dateRange={treatmentRange}
+            onDateRangeChange={setTreatmentRange}
+            minDate={analysisBounds.min}
+            maxDate={analysisBounds.max}
+          />
         </div>
 
         {/* Weekly Intervention Summaries Section */}

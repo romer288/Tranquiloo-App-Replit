@@ -2,6 +2,7 @@ import React from 'react';
 import AnxietyTrendsChart from './AnxietyTrendsChart';
 import AnxietyDistributionChart from './AnxietyDistributionChart';
 import { buildWeeklyTrendsData } from '@/utils/buildWeeklyTrendsData';
+import { DateRange } from 'react-day-picker';
 
 interface TriggerData {
   trigger: string;
@@ -21,13 +22,21 @@ interface AnxietyChartsSectionProps {
   severityDistribution: SeverityData[];
   analyses: any[];
   showOnly?: 'trends' | 'distribution' | 'all';
+  dateRange?: DateRange;
+  onDateRangeChange?: (range: DateRange | undefined) => void;
+  minDate?: Date;
+  maxDate?: Date;
 }
 
 const AnxietyChartsSection: React.FC<AnxietyChartsSectionProps> = ({
   triggerData,
   severityDistribution,
   analyses,
-  showOnly = 'all'
+  showOnly = 'all',
+  dateRange,
+  onDateRangeChange,
+  minDate,
+  maxDate,
 }) => {
   console.log('🚀 AnxietyChartsSection render - Received analyses:', analyses.length);
   console.log('First few analyses:', (analyses ?? []).slice(0, 3));
@@ -43,7 +52,15 @@ const AnxietyChartsSection: React.FC<AnxietyChartsSectionProps> = ({
 
   // When only showing one chart, return it directly without extra wrapper
   if (showOnly === 'trends') {
-    return <AnxietyTrendsChart weeklyTrends={weeklyTrends} />;
+    return (
+      <AnxietyTrendsChart
+        weeklyTrends={weeklyTrends}
+        dateRange={dateRange}
+        onDateRangeChange={onDateRangeChange}
+        minDate={minDate}
+        maxDate={maxDate}
+      />
+    );
   }
 
   if (showOnly === 'distribution') {

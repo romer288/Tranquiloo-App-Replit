@@ -3,17 +3,30 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { TrendingUp, TrendingDown, Minus, Target, Calendar } from 'lucide-react';
-import { ClaudeAnxietyAnalysis } from '@/utils/claudeAnxietyAnalysis';
-import { analyticsService, AnxietyTrend, TreatmentOutcome, ClaudeAnxietyAnalysisWithDate } from '@/services/analyticsService';
+import { DateRange } from 'react-day-picker';
+
+import ChartDateRangePicker from '@/components/analytics/ChartDateRangePicker';
+import { analyticsService, TreatmentOutcome, ClaudeAnxietyAnalysisWithDate } from '@/services/analyticsService';
 
 interface TreatmentOutcomesProps {
   analyses: ClaudeAnxietyAnalysisWithDate[];
   showOnly?: 'trends' | 'outcomes' | 'all';
+  dateRange?: DateRange;
+  onDateRangeChange?: (range: DateRange | undefined) => void;
+  minDate?: Date;
+  maxDate?: Date;
 }
 
-const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({ analyses, showOnly = 'all' }) => {
+const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
+  analyses,
+  showOnly = 'all',
+  dateRange,
+  onDateRangeChange,
+  minDate,
+  maxDate,
+}) => {
   // Create weekly aggregated anxiety level data
   const weeklyAnxietyData = React.useMemo(() => {
     if (analyses.length === 0) return [];
@@ -72,7 +85,6 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({ analyses, showOnl
       .slice(-5); // Last 5 weeks
   }, [analyses]);
 
-  const dailyTrends = analyticsService.generateAnxietyTrends(analyses);
   const outcomes = analyticsService.calculateTreatmentOutcomes(analyses);
 
   const getTrendIcon = (effectiveness: string) => {
@@ -136,13 +148,24 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({ analyses, showOnl
       {(showOnly === 'trends' || showOnly === 'all') && (
         <Card className="bg-gradient-to-br from-background to-muted/20 border-primary/20 shadow-lg">
           <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Target className="w-5 h-5 text-primary" />
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Target className="w-5 h-5 text-primary" />
+                </div>
+                <CardTitle className="text-xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+                  Average Anxiety Level Trends
+                </CardTitle>
               </div>
-              <CardTitle className="text-xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-                Anxiety Level Trends
-              </CardTitle>
+              {onDateRangeChange && (
+                <ChartDateRangePicker
+                  value={dateRange}
+                  onChange={onDateRangeChange}
+                  minDate={minDate}
+                  maxDate={maxDate}
+                  label="Range"
+                />
+              )}
             </div>
           </CardHeader>
           <CardContent>
@@ -253,13 +276,24 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({ analyses, showOnl
       {(showOnly === 'outcomes' || showOnly === 'all') && outcomes.length > 0 && (
         <Card className="bg-gradient-to-br from-background to-muted/20 border-secondary/20 shadow-lg">
           <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-secondary" />
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-secondary" />
+                </div>
+                <CardTitle className="text-xl font-bold text-gray-900">
+                  Weekly Treatment Outcomes
+                </CardTitle>
               </div>
-              <CardTitle className="text-xl font-bold text-gray-900">
-                Weekly Treatment Outcomes
-              </CardTitle>
+              {onDateRangeChange && (
+                <ChartDateRangePicker
+                  value={dateRange}
+                  onChange={onDateRangeChange}
+                  minDate={minDate}
+                  maxDate={maxDate}
+                  label="Range"
+                />
+              )}
             </div>
           </CardHeader>
           <CardContent className="space-y-6">

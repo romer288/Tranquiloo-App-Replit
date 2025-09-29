@@ -2,14 +2,149 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { GoalWithProgress } from '@/types/goals';
+import { GoalProgress, GoalWithProgress } from '@/types/goals';
 import { Target, Trophy, TrendingUp, Star, CheckCircle2 } from 'lucide-react';
+import { DateRange } from 'react-day-picker';
+
+import ChartDateRangePicker from '@/components/analytics/ChartDateRangePicker';
+
+type EnrichedGoal = GoalWithProgress & {
+  averageScoreForRange: number;
+  completionRateForRange: number;
+  filteredHistory: GoalProgress[];
+};
+
+const startOfDay = (date: Date) => {
+  const copy = new Date(date);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+};
+
+const endOfDay = (date: Date) => {
+  const copy = new Date(date);
+  copy.setHours(23, 59, 59, 999);
+  return copy;
+};
+
+const parseDate = (value?: string) => {
+  if (!value) return undefined;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+};
+
+const filterProgressHistory = (history: GoalProgress[] = [], range?: DateRange): GoalProgress[] => {
+  if (!range?.from && !range?.to) {
+    return history;
+  }
+
+  const from = range.from ? startOfDay(range.from) : undefined;
+  const to = range.to ? endOfDay(range.to) : undefined;
+
+  return history.filter((entry) => {
+    const recorded = parseDate(entry.recorded_at) ?? parseDate(entry.created_at);
+    if (!recorded) {
+      return false;
+    }
+
+    if (from && recorded < from) {
+      return false;
+    }
+
+    if (to && recorded > to) {
+      return false;
+    }
+
+    return true;
+  });
+};
+
+const calculateRangeCompletionRate = (
+  goal: GoalWithProgress,
+  history: GoalProgress[],
+  range?: DateRange
+): number => {
+  if (!range) {
+    return goal.completion_rate ?? 0;
+  }
+
+  if (!history.length) {
+    return 0;
+  }
+
+  const goalStart = parseDate(goal.start_date);
+  if (!goalStart) {
+    return 0;
+  }
+
+  const rangeStart = range.from ? startOfDay(range.from) : startOfDay(goalStart);
+  const effectiveStart = rangeStart < goalStart ? startOfDay(goalStart) : rangeStart;
+  const effectiveEnd = range.to ? endOfDay(range.to) : new Date();
+
+  if (effectiveEnd < effectiveStart) {
+    return 0;
+  }
+
+  const millisecondsPerDay = 1000 * 60 * 60 * 24;
+  const diffDays = Math.max(
+    1,
+    Math.floor((effectiveEnd.getTime() - effectiveStart.getTime()) / millisecondsPerDay) + 1
+  );
+
+  let expectedEntries = 1;
+  switch (goal.frequency) {
+    case 'daily':
+      expectedEntries = diffDays;
+      break;
+    case 'weekly':
+      expectedEntries = Math.max(1, Math.ceil(diffDays / 7));
+      break;
+    case 'monthly':
+      expectedEntries = Math.max(1, Math.ceil(diffDays / 30));
+      break;
+    default:
+      expectedEntries = diffDays;
+  }
+
+  return Math.min(100, (history.length / expectedEntries) * 100);
+};
 
 interface GoalProgressSectionProps {
   goals: GoalWithProgress[];
+  dateRange?: DateRange;
+  onDateRangeChange?: (range: DateRange | undefined) => void;
+  minDate?: Date;
+  maxDate?: Date;
 }
 
-const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({ goals }) => {
+const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({
+  goals,
+  dateRange,
+  onDateRangeChange,
+  minDate,
+  maxDate,
+}) => {
+  const displayGoals = React.useMemo<EnrichedGoal[]>(() => {
+    return goals.map((goal) => {
+      const history = Array.isArray(goal.progress_history) ? goal.progress_history : [];
+      const filteredHistory = filterProgressHistory(history, dateRange);
+
+      const averageScoreRaw = filteredHistory.length > 0
+        ? filteredHistory.reduce((sum, entry) => sum + Number(entry.score ?? 0), 0) / filteredHistory.length
+        : goal.average_score ?? 0;
+      const averageScoreForRange = Number.isFinite(averageScoreRaw) ? averageScoreRaw : 0;
+
+      const completionRateRaw = calculateRangeCompletionRate(goal, filteredHistory, dateRange);
+      const completionRateForRange = Number.isFinite(completionRateRaw) ? completionRateRaw : 0;
+
+      return {
+        ...goal,
+        averageScoreForRange,
+        completionRateForRange,
+        filteredHistory,
+      };
+    });
+  }, [goals, dateRange]);
+
   if (goals.length === 0) {
     return (
       <Card className="bg-gradient-to-br from-background to-muted/20 border-primary/20 shadow-lg">
@@ -45,21 +180,34 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({ goals }) => {
     };
   };
 
-  const totalGoals = goals.length;
-  const completedGoals = goals.filter(goal => goal.completion_rate >= 80).length;
-  const averageProgress = goals.reduce((sum, goal) => sum + goal.average_score, 0) / goals.length;
-  const inProgressGoals = goals.filter(goal => goal.completion_rate > 0 && goal.completion_rate < 80).length;
+  const totalGoals = displayGoals.length;
+  const completedGoals = displayGoals.filter(goal => goal.completionRateForRange >= 80).length;
+  const averageProgress = totalGoals > 0
+    ? displayGoals.reduce((sum, goal) => sum + (goal.averageScoreForRange ?? 0), 0) / totalGoals
+    : 0;
+  const inProgressGoals = displayGoals.filter(goal => goal.completionRateForRange > 0 && goal.completionRateForRange < 80).length;
 
   return (
     <Card className="bg-gradient-to-br from-background to-muted/20 border-primary/20 shadow-lg">
       <CardHeader className="pb-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <Target className="w-5 h-5 text-primary" />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Target className="w-5 h-5 text-primary" />
+            </div>
+            <CardTitle className="text-xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+              Goal Progress Overview
+            </CardTitle>
           </div>
-          <CardTitle className="text-xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-            Goal Progress Overview
-          </CardTitle>
+          {onDateRangeChange && (
+            <ChartDateRangePicker
+              value={dateRange}
+              onChange={onDateRangeChange}
+              minDate={minDate}
+              maxDate={maxDate}
+              label="Range"
+            />
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -124,12 +272,12 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({ goals }) => {
 
         {/* Goals List */}
         <div className="space-y-4">
-          {goals.map(goal => {
+          {displayGoals.map(goal => {
             const config = getCategoryConfig(goal.category);
             const Icon = config.icon;
-            const completionStatus = goal.completion_rate >= 80 ? 'completed' : 
-                                   goal.completion_rate >= 50 ? 'good' : 
-                                   goal.completion_rate > 0 ? 'started' : 'new';
+            const completionStatus = goal.completionRateForRange >= 80 ? 'completed' : 
+                                   goal.completionRateForRange >= 50 ? 'good' : 
+                                   goal.completionRateForRange > 0 ? 'started' : 'new';
             
             return (
               <Card key={goal.id} className="bg-gradient-to-r from-muted/30 to-background hover:from-muted/50 hover:to-muted/10 transition-all duration-200 border-l-4" 
@@ -160,17 +308,17 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({ goals }) => {
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold text-foreground">
-                        {(goal?.average_score !== null && goal?.average_score !== undefined && !isNaN(Number(goal.average_score)) ? Number(goal.average_score).toFixed(1) : '0.0')}/10
+                        {(goal?.averageScoreForRange !== null && goal?.averageScoreForRange !== undefined && !isNaN(Number(goal.averageScoreForRange)) ? Number(goal.averageScoreForRange).toFixed(1) : '0.0')}/10
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {(Number(goal.completion_rate ?? 0)).toFixed(2)}% complete
+                        {(Number(goal.completionRateForRange ?? 0)).toFixed(2)}% complete
                       </p>
                     </div>
                   </div>
                   
                   <div className="space-y-2">
                     <Progress 
-                      value={Number(goal.completion_rate ?? 0)} 
+                      value={Number(goal.completionRateForRange ?? 0)} 
                       className="h-3"
                       style={{ 
                         '--progress-background': config.color + '20',
@@ -178,8 +326,8 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({ goals }) => {
                       } as React.CSSProperties}
                     />
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Progress: {Number(goal.completion_rate ?? 0).toFixed(0)}%</span>
-                      <span>Score: {(goal?.average_score !== null && goal?.average_score !== undefined && !isNaN(Number(goal.average_score)) ? Number(goal.average_score).toFixed(1) : '0.0')}/10</span>
+                      <span>Progress: {Number(goal.completionRateForRange ?? 0).toFixed(0)}%</span>
+                      <span>Score: {(goal?.averageScoreForRange !== null && goal?.averageScoreForRange !== undefined && !isNaN(Number(goal.averageScoreForRange)) ? Number(goal.averageScoreForRange).toFixed(1) : '0.0')}/10</span>
                     </div>
                   </div>
                 </CardContent>

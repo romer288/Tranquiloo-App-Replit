@@ -2,7 +2,6 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
-import ChartDownloader from './ChartDownloader';
 import { TrendingUp } from 'lucide-react';
 
 interface SeverityData {
@@ -92,7 +91,7 @@ const AnxietyDistributionChart: React.FC<AnxietyDistributionChartProps> = ({ sev
   return (
     <Card className="bg-gradient-to-br from-background to-muted/20 border-primary/20 shadow-lg">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-primary" />
@@ -101,11 +100,6 @@ const AnxietyDistributionChart: React.FC<AnxietyDistributionChartProps> = ({ sev
               Anxiety Levels Distribution
             </CardTitle>
           </div>
-          <ChartDownloader 
-            chartData={severityDistribution}
-            chartType="severity-distribution"
-            fileName="Anxiety-Levels-Distribution"
-          />
         </div>
       </CardHeader>
       <CardContent>

@@ -6,6 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, ChevronRight, Brain, AlertTriangle, Target, Lightbulb } from 'lucide-react';
+import { DateRange } from 'react-day-picker';
+
+import ChartDateRangePicker from './ChartDateRangePicker';
 
 interface TriggerData {
   trigger: string;
@@ -29,11 +32,19 @@ interface TriggerData {
 interface TriggerAnalysisTableProps {
   triggerData: TriggerData[];
   totalEntries: number;
+  dateRange?: DateRange;
+  onDateRangeChange?: (range: DateRange | undefined) => void;
+  minDate?: Date;
+  maxDate?: Date;
 }
 
 const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
   triggerData,
-  totalEntries
+  totalEntries,
+  dateRange,
+  onDateRangeChange,
+  minDate,
+  maxDate
 }) => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
@@ -66,14 +77,25 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
 
   return (
     <Card className="p-6 bg-gradient-to-br from-white to-blue-50/30">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-blue-100 rounded-lg">
-          <Brain className="w-5 h-5 text-blue-600" />
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <Brain className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-gray-900">Clinical Trigger Analysis</h3>
+            <p className="text-sm text-gray-600">Deep psychological insights into anxiety patterns</p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-xl font-bold text-gray-900">Clinical Trigger Analysis</h3>
-          <p className="text-sm text-gray-600">Deep psychological insights into anxiety patterns</p>
-        </div>
+        {onDateRangeChange && (
+          <ChartDateRangePicker
+            value={dateRange}
+            onChange={onDateRangeChange}
+            minDate={minDate}
+            maxDate={maxDate}
+            label="Range"
+          />
+        )}
       </div>
 
       <div className="space-y-4">

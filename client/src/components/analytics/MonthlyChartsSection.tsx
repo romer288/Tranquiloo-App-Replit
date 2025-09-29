@@ -4,15 +4,27 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { ClaudeAnxietyAnalysisWithDate } from '@/services/analyticsService';
-import ChartDownloader from './ChartDownloader';
+import ChartDateRangePicker from './ChartDateRangePicker';
 import { Calendar, TrendingUp } from 'lucide-react';
+import { DateRange } from 'react-day-picker';
 
 interface MonthlyChartsSectionProps {
   analyses: ClaudeAnxietyAnalysisWithDate[];
   showOnly?: 'trends' | 'activity' | 'all';
+  dateRange?: DateRange;
+  onDateRangeChange?: (range: DateRange | undefined) => void;
+  minDate?: Date;
+  maxDate?: Date;
 }
 
-const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({ analyses, showOnly = 'all' }) => {
+const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
+  analyses,
+  showOnly = 'all',
+  dateRange,
+  onDateRangeChange,
+  minDate,
+  maxDate,
+}) => {
   // Helper to ensure triggers is always an array
   const ensureTriggersArray = (triggers: any): string[] => {
     if (!triggers) return [];
@@ -201,7 +213,7 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({ analyses, s
       {(showOnly === 'trends' || showOnly === 'all') && (
         <Card className="bg-gradient-to-br from-background to-muted/20 border-primary/20 shadow-lg">
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <Calendar className="w-5 h-5 text-primary" />
@@ -210,11 +222,15 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({ analyses, s
                   Monthly Anxiety Type Trends
                 </CardTitle>
               </div>
-              <ChartDownloader 
-                 chartData={monthlyData}
-                 chartType="monthly-anxiety-type-trends"
-                 fileName="Monthly-Anxiety-Type-Trends"
-              />
+              {onDateRangeChange && (
+                <ChartDateRangePicker
+                  value={dateRange}
+                  onChange={onDateRangeChange}
+                  minDate={minDate}
+                  maxDate={maxDate}
+                  label="Range"
+                />
+              )}
             </div>
           </CardHeader>
           <CardContent>
@@ -366,7 +382,7 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({ analyses, s
       {(showOnly === 'activity' || showOnly === 'all') && (
         <Card className="bg-gradient-to-br from-background to-muted/20 border-secondary/20 shadow-lg">
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center">
                   <TrendingUp className="w-5 h-5 text-secondary" />
@@ -375,11 +391,15 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({ analyses, s
                   Monthly Session Activity
                 </CardTitle>
               </div>
-              <ChartDownloader 
-                chartData={monthlyData}
-                chartType="monthly-session-activity"
-                fileName="Monthly-Session-Activity"
-              />
+              {onDateRangeChange && (
+                <ChartDateRangePicker
+                  value={dateRange}
+                  onChange={onDateRangeChange}
+                  minDate={minDate}
+                  maxDate={maxDate}
+                  label="Range"
+                />
+              )}
             </div>
           </CardHeader>
           <CardContent>

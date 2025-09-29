@@ -1,16 +1,28 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import ChartDownloader from './ChartDownloader';
-import { WeeklyTrendData } from '@/utils/buildWeeklyTrendsData';
 import { TrendingUp, Activity } from 'lucide-react';
+import { DateRange } from 'react-day-picker';
+
+import ChartDateRangePicker from './ChartDateRangePicker';
+import { WeeklyTrendData } from '@/utils/buildWeeklyTrendsData';
 
 interface AnxietyTrendsChartProps {
   weeklyTrends: WeeklyTrendData[];
+  dateRange?: DateRange;
+  onDateRangeChange?: (range: DateRange | undefined) => void;
+  minDate?: Date;
+  maxDate?: Date;
 }
 
-const AnxietyTrendsChart: React.FC<AnxietyTrendsChartProps> = ({ weeklyTrends }) => {
+const AnxietyTrendsChart: React.FC<AnxietyTrendsChartProps> = ({
+  weeklyTrends,
+  dateRange,
+  onDateRangeChange,
+  minDate,
+  maxDate,
+}) => {
   console.log('📈 AnxietyTrendsChart render - weeklyTrends:', weeklyTrends);
   
   // Safety check for data
@@ -98,7 +110,7 @@ const AnxietyTrendsChart: React.FC<AnxietyTrendsChartProps> = ({ weeklyTrends })
   return (
     <Card className="bg-gradient-to-br from-background to-muted/20 border-primary/20 shadow-lg">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <Activity className="w-5 h-5 text-primary" />
@@ -107,11 +119,15 @@ const AnxietyTrendsChart: React.FC<AnxietyTrendsChartProps> = ({ weeklyTrends })
               Weekly Anxiety Type Trends
             </CardTitle>
           </div>
-          <ChartDownloader 
-            chartData={weeklyTrends}
-            chartType="weekly-anxiety-trends"
-            fileName="Weekly-Anxiety-Type-Trends"
-          />
+          {onDateRangeChange && (
+            <ChartDateRangePicker
+              value={dateRange}
+              onChange={onDateRangeChange}
+              minDate={minDate}
+              maxDate={maxDate}
+              label="Range"
+            />
+          )}
         </div>
       </CardHeader>
       <CardContent>
