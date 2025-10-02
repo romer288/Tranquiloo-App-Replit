@@ -4,15 +4,16 @@ import { Badge } from '@/components/ui/badge';
 import { MessageSquare, TrendingUp } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
+import { ensureTriggersArray } from '@/utils/analyticsDataProcessor';
 
 interface Analysis {
   created_at: string;
   anxietyLevel: number;
-  triggers: string[];
-  recommendedInterventions?: string[];
-  copingStrategies?: string[];
+  triggers: string[] | string | null | undefined;
+  recommendedInterventions?: string[] | string | null;
+  copingStrategies?: string[] | string | null;
   personalizedResponse?: string;
-  dsm5Indicators?: string[];
+  dsm5Indicators?: string[] | string | null;
 }
 
 type Period = 'session' | 'week' | 'month' | 'year';
@@ -133,7 +134,8 @@ const buildSummaries = (analyses: Analysis[], period: Period): SummaryContent[] 
 
     const triggerCounts = new Map<string, number>();
     ordered.forEach((analysis) => {
-      (analysis.triggers || []).forEach((trigger) => {
+      const normalizedTriggers = ensureTriggersArray(analysis.triggers);
+      normalizedTriggers.forEach((trigger) => {
         if (!trigger) return;
         const normalized = trigger.trim();
         if (!normalized) return;
@@ -147,7 +149,10 @@ const buildSummaries = (analyses: Analysis[], period: Period): SummaryContent[] 
 
     const therapyCounts = new Map<string, number>();
     ordered.forEach((analysis) => {
-      const interventions = analysis.recommendedInterventions ?? analysis.copingStrategies ?? [];
+      const interventionsRaw = analysis.recommendedInterventions ?? analysis.copingStrategies ?? [];
+      const interventions = Array.isArray(interventionsRaw)
+        ? interventionsRaw
+        : ensureTriggersArray(interventionsRaw);
       interventions.forEach((item) => {
         if (!item) return;
         const normalized = item.trim();
@@ -182,7 +187,7 @@ const buildSummaries = (analyses: Analysis[], period: Period): SummaryContent[] 
     const codes = Array.from(
       new Set(
         ordered
-          .flatMap((analysis) => analysis.dsm5Indicators || [])
+          .flatMap((analysis) => ensureTriggersArray(analysis.dsm5Indicators))
           .filter((code): code is string => Boolean(code))
       )
     );

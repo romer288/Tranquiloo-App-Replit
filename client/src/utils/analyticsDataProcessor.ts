@@ -26,7 +26,7 @@ export interface SeverityDistribution {
 }
 
 // Helper to ensure triggers is always an array
-const ensureTriggersArray = (triggers: any): string[] => {
+export const ensureTriggersArray = (triggers: any): string[] => {
   if (!triggers) return [];
   if (Array.isArray(triggers)) return triggers;
   if (typeof triggers === 'string') {

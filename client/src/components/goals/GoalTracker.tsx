@@ -180,6 +180,11 @@ export const GoalTracker: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {goals.map((goal, index) => (
           <Card key={goal.id ?? `${goal.title}-${index}`} className="p-6">
+            {goal.source === 'treatment-plan' && (
+              <div className="mb-2 flex items-center justify-end">
+                <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">Assigned by Therapist</Badge>
+              </div>
+            )}
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
@@ -261,21 +266,25 @@ export const GoalTracker: React.FC = () => {
                 <Calendar className="w-4 h-4 mr-2" />
                 Record Progress
               </Button>
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => setEditingGoal(goal)}
-              >
-                <Edit className="w-4 h-4" />
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => handleDeleteGoal(goal.id)}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              {goal.source !== 'treatment-plan' && (
+                <>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setEditingGoal(goal)}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleDeleteGoal(goal.id)}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </>
+              )}
             </div>
           </Card>
         ))}

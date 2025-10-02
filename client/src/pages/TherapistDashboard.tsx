@@ -5,8 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Users, TrendingUp, Download, FileText, Share, MessageCircle, Clipboard, Bell, Settings, HeartHandshake } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/routes';
+import { Search, Users, TrendingUp, FileText, MessageCircle, Clipboard, Bell } from 'lucide-react';
 
 // Import therapist components
 import TherapistChatInterface from '@/components/therapist/TherapistChatInterface';
@@ -24,7 +27,8 @@ import GoalProgressSection from '@/components/analytics/GoalProgressSection';
 import TriggerAnalysisTable from '@/components/analytics/TriggerAnalysisTable';
 import InterventionSummariesSection from '@/components/analytics/InterventionSummariesSection';
 import { processTriggerData, processSeverityDistribution, getAnalyticsMetrics } from '@/utils/analyticsDataProcessor';
-import { buildWeeklyTrendsData } from '@/utils/buildWeeklyTrendsData';
+import { DateRange } from 'react-day-picker';
+import { filterAnalysesByRange, getAnalysisDateBounds } from '@/utils/filterAnalysesByRange';
 
 interface PatientRecord {
   id: string;
@@ -40,8 +44,9 @@ interface PatientRecord {
 }
 
 const TherapistDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [searchEmail, setSearchEmail] = useState('');
   const [searchCode, setSearchCode] = useState('');
   const [patientRecords, setPatientRecords] = useState<PatientRecord[]>([]);
@@ -50,6 +55,8 @@ const TherapistDashboard: React.FC = () => {
   const [selectedPatientData, setSelectedPatientData] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('search');
   const [therapistEmail, setTherapistEmail] = useState('');
+  const [vanessaOpen, setVanessaOpen] = useState(false);
+  const [latestTreatmentPlan, setLatestTreatmentPlan] = useState<any>(null);
 
   // Initialize therapist email when component loads
   React.useEffect(() => {
@@ -58,12 +65,124 @@ const TherapistDashboard: React.FC = () => {
     }
   }, [user?.email]);
 
-  // Process analytics data unconditionally at top level
-  const analysesForTrends = selectedPatientData?.analyses ?? [];
-  const weeklyTrends = React.useMemo(
-    () => buildWeeklyTrendsData(analysesForTrends),
-    [analysesForTrends]
+  const analyses = selectedPatientData?.analyses ?? [];
+  const goals = selectedPatientData?.goals ?? [];
+  const summaries = selectedPatientData?.summaries ?? [];
+
+  const analysisBounds = React.useMemo(
+    () => getAnalysisDateBounds(analyses),
+    [analyses]
   );
+
+  const [weeklyTrendsRange, setWeeklyTrendsRange] = React.useState<DateRange>();
+  const [averageAnxietyRange, setAverageAnxietyRange] = React.useState<DateRange>();
+  const [monthlyTrendsRange, setMonthlyTrendsRange] = React.useState<DateRange>();
+  const [monthlyActivityRange, setMonthlyActivityRange] = React.useState<DateRange>();
+  const [weeklyOutcomesRange, setWeeklyOutcomesRange] = React.useState<DateRange>();
+  const [triggerAnalysisRange, setTriggerAnalysisRange] = React.useState<DateRange>();
+  const [goalProgressRange, setGoalProgressRange] = React.useState<DateRange>();
+
+  React.useEffect(() => {
+    setWeeklyTrendsRange(undefined);
+    setAverageAnxietyRange(undefined);
+    setMonthlyTrendsRange(undefined);
+    setMonthlyActivityRange(undefined);
+    setWeeklyOutcomesRange(undefined);
+    setTriggerAnalysisRange(undefined);
+    setGoalProgressRange(undefined);
+  }, [selectedPatientId]);
+
+  React.useEffect(() => {
+    setLatestTreatmentPlan(null);
+  }, [selectedPatientId]);
+
+  const weeklyTrendAnalyses = React.useMemo(
+    () => filterAnalysesByRange(analyses, weeklyTrendsRange),
+    [analyses, weeklyTrendsRange]
+  );
+
+  const averageAnxietyAnalyses = React.useMemo(
+    () => filterAnalysesByRange(analyses, averageAnxietyRange),
+    [analyses, averageAnxietyRange]
+  );
+
+  const monthlyTrendAnalyses = React.useMemo(
+    () => filterAnalysesByRange(analyses, monthlyTrendsRange),
+    [analyses, monthlyTrendsRange]
+  );
+
+  const monthlyActivityAnalyses = React.useMemo(
+    () => filterAnalysesByRange(analyses, monthlyActivityRange),
+    [analyses, monthlyActivityRange]
+  );
+
+  const weeklyOutcomeAnalyses = React.useMemo(
+    () => filterAnalysesByRange(analyses, weeklyOutcomesRange),
+    [analyses, weeklyOutcomesRange]
+  );
+
+  const triggerAnalyses = React.useMemo(
+    () => filterAnalysesByRange(analyses, triggerAnalysisRange),
+    [analyses, triggerAnalysisRange]
+  );
+
+  const triggerData = React.useMemo(
+    () => processTriggerData(analyses || []),
+    [analyses]
+  );
+
+  const filteredTriggerData = React.useMemo(
+    () => processTriggerData(triggerAnalyses || []),
+    [triggerAnalyses]
+  );
+
+  const filteredTriggerEntries = triggerAnalyses.length;
+
+  const severityDistribution = React.useMemo(
+    () => processSeverityDistribution(analyses || []),
+    [analyses]
+  );
+
+  const { totalEntries, averageAnxiety, mostCommonTrigger } = React.useMemo(
+    () => getAnalyticsMetrics(analyses, triggerData, goals),
+    [analyses, triggerData, goals]
+  );
+
+  const goalProgressBounds = React.useMemo(() => {
+    if (!goals || goals.length === 0) {
+      return {} as { min?: Date; max?: Date };
+    }
+
+    const timestamps: number[] = [];
+
+    goals.forEach((goal: any) => {
+      const start = goal?.start_date ? new Date(goal.start_date) : undefined;
+      if (start && !Number.isNaN(start.getTime())) {
+        timestamps.push(start.getTime());
+      }
+
+      const history = Array.isArray(goal.progress_history) ? goal.progress_history : [];
+      history.forEach((entry: any) => {
+        const recorded = entry?.recorded_at
+          ? new Date(entry.recorded_at)
+          : entry?.created_at
+            ? new Date(entry.created_at)
+            : undefined;
+        if (recorded && !Number.isNaN(recorded.getTime())) {
+          timestamps.push(recorded.getTime());
+        }
+      });
+    });
+
+    if (!timestamps.length) {
+      return {} as { min?: Date; max?: Date };
+    }
+
+    return {
+      min: new Date(Math.min(...timestamps)),
+      max: new Date(Math.max(...timestamps)),
+    };
+  }, [goals]);
 
   const handlePatientSearch = async () => {
     if (!searchEmail || !searchCode) {
@@ -203,12 +322,12 @@ const TherapistDashboard: React.FC = () => {
   // Memoize handlers to prevent re-renders
   const handlePatientSearchMemo = React.useCallback(handlePatientSearch, [searchEmail, searchCode, therapistEmail, toast]);
   const handleSelectPatientMemo = React.useCallback(handleSelectPatient, [therapistEmail, user?.email]);
-
-
-
-  const handleLogout = () => {
-    // Redirect to logout endpoint which handles the logout flow
-    window.location.href = '/api/logout';
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } finally {
+      navigate(ROUTES.therapistLogin);
+    }
   };
 
   return (
@@ -229,6 +348,14 @@ const TherapistDashboard: React.FC = () => {
             </Badge>
             <Button 
               variant="outline" 
+              size="sm"
+              onClick={() => setVanessaOpen(true)}
+              className="border-blue-200 text-blue-600 hover:bg-blue-50"
+            >
+              Ask Banessa
+            </Button>
+            <Button 
+              variant="outline" 
               size="sm" 
               onClick={handleLogout}
               className="text-gray-600 hover:text-gray-900"
@@ -240,35 +367,62 @@ const TherapistDashboard: React.FC = () => {
       </div>
 
       <div className="flex-1 p-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="search" className="flex items-center gap-2">
-              <Search className="w-4 h-4" />
-              Search
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          orientation="vertical"
+          className="flex flex-col lg:flex-row gap-6 w-full"
+        >
+          <TabsList className="flex h-auto flex-col gap-2 bg-transparent p-0 w-full lg:w-72">
+            <TabsTrigger
+              value="search"
+              className="w-full justify-start px-4 py-3 text-left text-sm font-semibold rounded-md border border-transparent data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-blue-200"
+            >
+              <Search className="w-4 h-4 mr-2" />
+              Find Patient
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2" disabled={!selectedPatientId}>
-              <TrendingUp className="w-4 h-4" />
-              Analytics
+            <TabsTrigger
+              value="analytics"
+              disabled={!selectedPatientId}
+              className="w-full justify-start px-4 py-3 text-left text-sm font-semibold rounded-md border border-transparent data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-blue-200"
+            >
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Patient Analytics
             </TabsTrigger>
-            <TabsTrigger value="treatment" className="flex items-center gap-2" disabled={!selectedPatientId}>
-              <Clipboard className="w-4 h-4" />
-              Treatment
+            <TabsTrigger
+              value="treatment"
+              disabled={!selectedPatientId}
+              className="w-full justify-start px-4 py-3 text-left text-sm font-semibold rounded-md border border-transparent data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-blue-200"
+            >
+              <Clipboard className="w-4 h-4 mr-2" />
+              Treatment Plan
             </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center gap-2" disabled={!selectedPatientId}>
-              <FileText className="w-4 h-4" />
-              Reports
+            <TabsTrigger
+              value="medical-report"
+              disabled={!selectedPatientId}
+              className="w-full justify-start px-4 py-3 text-left text-sm font-semibold rounded-md border border-transparent data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-blue-200"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Patient's Medical Situation Report
             </TabsTrigger>
-            <TabsTrigger value="chat" className="flex items-center gap-2" disabled={!selectedPatientId}>
-              <MessageCircle className="w-4 h-4" />
-              AI Chat
+            <TabsTrigger
+              value="chat"
+              disabled={!selectedPatientId}
+              className="w-full justify-start px-4 py-3 text-left text-sm font-semibold rounded-md border border-transparent data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-blue-200"
+            >
+              <MessageCircle className="w-4 h-4 mr-2" />
+              Case Chat
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2">
-              <Bell className="w-4 h-4" />
+            <TabsTrigger
+              value="notifications"
+              className="w-full justify-start px-4 py-3 text-left text-sm font-semibold rounded-md border border-transparent data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-blue-200"
+            >
+              <Bell className="w-4 h-4 mr-2" />
               Notifications
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="search" className="space-y-6 mt-6">
+          <TabsContent value="search" className="space-y-6 mt-6 lg:mt-0 flex-1">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -352,11 +506,11 @@ const TherapistDashboard: React.FC = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="analytics" className="space-y-6 mt-6">
+          <TabsContent value="analytics" className="space-y-6 mt-6 lg:mt-0 flex-1">
             {selectedPatientData ? (
               <div className="min-h-screen bg-gray-50">
                 <AnalyticsHeader 
-                  analysesCount={selectedPatientData.analyses?.length || 0}
+                  analysesCount={analyses.length}
                   onDownloadHistory={() => {}}
                   onShareWithTherapist={() => {}}
                   onDownloadSummary={() => {}}
@@ -364,9 +518,9 @@ const TherapistDashboard: React.FC = () => {
 
                 <div className="max-w-7xl mx-auto px-8 py-8">
                   {/* Anxiety Analytics Tracker */}
-                  <AnxietyAnalyticsTracker analyses={selectedPatientData.analyses || []} />
+                  <AnxietyAnalyticsTracker analyses={analyses} />
 
-                  {(selectedPatientData.analyses?.length || 0) === 0 ? (
+                  {analyses.length === 0 ? (
                     <div className="flex items-center justify-center py-12">
                       <div className="text-center">
                         <p className="text-gray-600 text-lg mb-4">No analytics data available for this patient</p>
@@ -378,18 +532,22 @@ const TherapistDashboard: React.FC = () => {
                     <div className="space-y-12">
                       {/* Key Metrics */}
                       <AnalyticsMetrics 
-                        totalEntries={selectedPatientData.analyses?.length || 0}
-                        averageAnxiety={selectedPatientData.analyses?.reduce((sum: number, a: any) => sum + (a.anxietyLevel || 0), 0) / (selectedPatientData.analyses?.length || 1)}
-                        mostCommonTrigger={processTriggerData(selectedPatientData.analyses || [])[0]}
+                        totalEntries={totalEntries}
+                        averageAnxiety={averageAnxiety}
+                        mostCommonTrigger={mostCommonTrigger ?? { trigger: '', count: 0 }}
                       />
 
                       {/* 1️⃣ Anxiety Type Trends Over Time */}
                       <div className="w-full">
                         <AnxietyChartsSection 
-                          triggerData={processTriggerData(selectedPatientData.analyses || [])}
+                          triggerData={triggerData}
                           severityDistribution={[]}
-                          analyses={selectedPatientData.analyses || []}
+                          analyses={weeklyTrendAnalyses}
                           showOnly="trends"
+                          dateRange={weeklyTrendsRange}
+                          onDateRangeChange={setWeeklyTrendsRange}
+                          minDate={analysisBounds.min}
+                          maxDate={analysisBounds.max}
                         />
                       </div>
 
@@ -397,49 +555,87 @@ const TherapistDashboard: React.FC = () => {
                       <div className="w-full">
                         <AnxietyChartsSection 
                           triggerData={[]}
-                          severityDistribution={processSeverityDistribution(selectedPatientData.analyses || [])}
-                          analyses={selectedPatientData.analyses || []}
+                          severityDistribution={severityDistribution}
+                          analyses={analyses}
                           showOnly="distribution"
                         />
                       </div>
 
                       {/* 3️⃣ Anxiety Level Trends */}
                       <div className="w-full">
-                        <TreatmentOutcomes analyses={selectedPatientData.analyses || []} showOnly="trends" />
+                        <TreatmentOutcomes 
+                          analyses={averageAnxietyAnalyses} 
+                          showOnly="trends"
+                          dateRange={averageAnxietyRange}
+                          onDateRangeChange={setAverageAnxietyRange}
+                          minDate={analysisBounds.min}
+                          maxDate={analysisBounds.max}
+                        />
                       </div>
 
                       {/* 4️⃣ Monthly Anxiety Trends */}
                       <div className="w-full">
-                        <MonthlyChartsSection analyses={selectedPatientData.analyses || []} showOnly="trends" />
+                        <MonthlyChartsSection 
+                          analyses={monthlyTrendAnalyses}
+                          showOnly="trends"
+                          dateRange={monthlyTrendsRange}
+                          onDateRangeChange={setMonthlyTrendsRange}
+                          minDate={analysisBounds.min}
+                          maxDate={analysisBounds.max}
+                        />
                       </div>
 
                       {/* 5️⃣ Weekly Treatment Outcomes */}
                       <div className="w-full">
-                        <TreatmentOutcomes analyses={selectedPatientData.analyses || []} showOnly="outcomes" />
+                        <TreatmentOutcomes 
+                          analyses={weeklyOutcomeAnalyses}
+                          showOnly="outcomes"
+                          dateRange={weeklyOutcomesRange}
+                          onDateRangeChange={setWeeklyOutcomesRange}
+                          minDate={analysisBounds.min}
+                          maxDate={analysisBounds.max}
+                        />
                       </div>
 
                       {/* 6️⃣ Monthly Session Activity */}
                       <div className="w-full">
-                        <MonthlyChartsSection analyses={selectedPatientData.analyses || []} showOnly="activity" />
+                        <MonthlyChartsSection 
+                          analyses={monthlyActivityAnalyses}
+                          showOnly="activity"
+                          dateRange={monthlyActivityRange}
+                          onDateRangeChange={setMonthlyActivityRange}
+                          minDate={analysisBounds.min}
+                          maxDate={analysisBounds.max}
+                        />
                       </div>
 
                       {/* 7️⃣ Goal Progress Section */}
                       <div className="w-full">
-                        <GoalProgressSection goals={selectedPatientData.goals || []} />
+                        <GoalProgressSection 
+                          goals={goals} 
+                          dateRange={goalProgressRange}
+                          onDateRangeChange={setGoalProgressRange}
+                          minDate={goalProgressBounds.min ?? analysisBounds.min}
+                          maxDate={goalProgressBounds.max ?? analysisBounds.max}
+                        />
                       </div>
                     </div>
 
                     {/* Detailed Trigger Analysis Table */}
                     <TriggerAnalysisTable 
-                      triggerData={processTriggerData(selectedPatientData.analyses || [])}
-                      totalEntries={selectedPatientData.analyses?.length || 0}
+                      triggerData={filteredTriggerData}
+                      totalEntries={filteredTriggerEntries}
+                      dateRange={triggerAnalysisRange}
+                      onDateRangeChange={setTriggerAnalysisRange}
+                      minDate={analysisBounds.min}
+                      maxDate={analysisBounds.max}
                     />
                     
                     {/* Intervention Summaries Section - Below Clinical Trigger Analysis */}
                     <div className="w-full mt-8">
                       <InterventionSummariesSection 
-                        summaries={selectedPatientData.summaries || []}
-                        analyses={selectedPatientData.analyses || []}
+                        summaries={summaries}
+                        analyses={analyses}
                       />
                     </div>
                     </div>
@@ -455,7 +651,7 @@ const TherapistDashboard: React.FC = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="chat" className="space-y-6 mt-6">
+          <TabsContent value="chat" className="space-y-6 mt-6 lg:mt-0 flex-1">
             {selectedPatientId && selectedPatientData ? (
               <TherapistChatInterface 
                 patientId={selectedPatientId}
@@ -471,12 +667,87 @@ const TherapistDashboard: React.FC = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="treatment" className="space-y-6 mt-6">
+          <TabsContent value="treatment" className="space-y-6 mt-6 lg:mt-0 flex-1">
             {selectedPatientId && selectedPatientData ? (
-              <TreatmentCreation 
-                patientId={selectedPatientId}
-                patientName={`${selectedPatientData.profile?.first_name || ''} ${selectedPatientData.profile?.last_name || ''}`.trim() || 'Patient'}
-              />
+              <div className="space-y-6">
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] items-start">
+                  <TreatmentCreation 
+                    patientId={selectedPatientId}
+                    patientName={`${selectedPatientData.profile?.first_name || ''} ${selectedPatientData.profile?.last_name || ''}`.trim() || 'Patient'}
+                    onPlanUpdate={setLatestTreatmentPlan}
+                  />
+
+                  <div className="space-y-6">
+                    <Card className="border-blue-200 bg-blue-50">
+                      <CardHeader>
+                        <CardTitle className="text-blue-900">Vanessa – AI Treatment Assistant</CardTitle>
+                        <p className="text-sm text-blue-700">
+                          Ask Banessa for treatment ideas, homework suggestions, or quick summaries while you build the plan.
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <Button onClick={() => setVanessaOpen(true)} className="w-full bg-blue-600 hover:bg-blue-700">
+                          Ask Banessa
+                        </Button>
+                        <ul className="space-y-2 text-sm text-blue-800">
+                          <li>• Generate exposure hierarchies tailored to current goals</li>
+                          <li>• Draft follow-up homework or journaling prompts</li>
+                          <li>• Ask for patient-friendly explanations of session topics</li>
+                        </ul>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Current Plan Overview</CardTitle>
+                        <p className="text-sm text-gray-600">Snapshot of the latest goals and session notes saved for this patient.</p>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {latestTreatmentPlan ? (
+                          <>
+                            <div>
+                              <h3 className="text-sm font-semibold text-gray-900">Primary Goals</h3>
+                              {latestTreatmentPlan.goals && latestTreatmentPlan.goals.length > 0 ? (
+                                <ul className="mt-2 space-y-2 text-sm text-gray-700">
+                                  {latestTreatmentPlan.goals.slice(0, 3).map((goal: any) => (
+                                    <li key={goal.id} className="flex items-start gap-2">
+                                      <Target className="w-4 h-4 text-blue-500 mt-1" />
+                                      <span>
+                                        <span className="font-medium text-gray-900">{goal.title}</span>
+                                        {goal.description ? ` – ${goal.description}` : ''}
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p className="text-sm text-gray-600">No goals saved in the current treatment plan.</p>
+                              )}
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-semibold text-gray-900">Recent Session Notes</h3>
+                              {latestTreatmentPlan.sessionNotes && latestTreatmentPlan.sessionNotes.length > 0 ? (
+                                <ul className="mt-2 space-y-2 text-sm text-gray-700">
+                                  {latestTreatmentPlan.sessionNotes.slice(0, 2).map((note: any) => (
+                                    <li key={note.id} className="border rounded-md p-2 bg-gray-50">
+                                      <p className="font-medium text-gray-900">{note.meetingTitle || 'Session'}</p>
+                                      {note.meetingDate && <p className="text-xs text-gray-500">{new Date(note.meetingDate).toLocaleDateString()}</p>}
+                                      <p className="text-xs text-gray-600 mt-1 whitespace-pre-line">{note.notes}</p>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p className="text-sm text-gray-600">No therapist session notes recorded yet.</p>
+                              )}
+                            </div>
+                          </>
+                        ) : (
+                          <p className="text-sm text-gray-600">Save the treatment plan to generate a quick summary here.</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </div>
             ) : (
               <Card>
                 <CardContent className="text-center py-12">
@@ -487,23 +758,165 @@ const TherapistDashboard: React.FC = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="notifications" className="space-y-6 mt-6">
+          <TabsContent value="notifications" className="space-y-6 mt-6 lg:mt-0 flex-1">
             <TherapistNotifications therapistEmail={therapistEmail || user?.email || ''} />
           </TabsContent>
 
-          <TabsContent value="reports" className="space-y-6 mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Generate Reports</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">Report generation features coming soon...</p>
-              </CardContent>
-            </Card>
+          <TabsContent value="medical-report" className="space-y-6 mt-6 lg:mt-0 flex-1">
+            {selectedPatientId && selectedPatientData ? (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Patient Situation Overview</CardTitle>
+                    <p className="text-sm text-gray-600">
+                      Consolidated insights based on current treatment plans, therapist notes, and recent analytics activity.
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <p className="text-xs uppercase text-gray-500 mb-1">Patient</p>
+                        <p className="text-sm text-gray-800 font-medium">
+                          {selectedPatientData.profile?.first_name} {selectedPatientData.profile?.last_name}
+                        </p>
+                        <p className="text-sm text-gray-600">{selectedPatientData.profile?.email}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase text-gray-500 mb-1">Average Anxiety (30 days)</p>
+                        <p className="text-sm text-gray-800 font-semibold">{averageAnxiety !== null ? `${averageAnxiety.toFixed(1)}/10` : '—'}</p>
+                        <p className="text-sm text-gray-600">Top trigger: {mostCommonTrigger?.trigger || 'No trigger identified'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase text-gray-500 mb-1">Treatment Goals</p>
+                        {latestTreatmentPlan?.goals?.length ? (
+                          <ul className="text-sm text-gray-700 space-y-1">
+                            {latestTreatmentPlan.goals.slice(0, 3).map((goal: any) => (
+                              <li key={goal.id} className="flex items-start gap-2">
+                                <Target className="w-4 h-4 text-blue-500 mt-1" />
+                                <span>{goal.title}</span>
+                              </li>
+                            ))}
+                            {latestTreatmentPlan.goals.length > 3 && (
+                              <li className="text-xs text-gray-500">+ {latestTreatmentPlan.goals.length - 3} more goals</li>
+                            )}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-gray-600">No treatment goals saved yet.</p>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase text-gray-500 mb-1">Recent Sessions</p>
+                        {latestTreatmentPlan?.sessionNotes?.length ? (
+                          <ul className="text-sm text-gray-700 space-y-1">
+                            {latestTreatmentPlan.sessionNotes.slice(0, 2).map((note: any) => (
+                              <li key={note.id}>
+                                <span className="font-medium text-gray-900">{note.meetingTitle || 'Session'}</span>
+                                {note.meetingDate && (
+                                  <span className="text-xs text-gray-500 ml-2">{new Date(note.meetingDate).toLocaleDateString()}</span>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-gray-600">No session notes recorded.</p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <AnalyticsMetrics 
+                  totalEntries={totalEntries}
+                  averageAnxiety={averageAnxiety}
+                  mostCommonTrigger={mostCommonTrigger ?? { trigger: '', count: 0 }}
+                />
+
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <AnxietyChartsSection 
+                    triggerData={triggerData}
+                    severityDistribution={[]}
+                    analyses={weeklyTrendAnalyses}
+                    showOnly="trends"
+                    dateRange={weeklyTrendsRange}
+                    onDateRangeChange={setWeeklyTrendsRange}
+                    minDate={analysisBounds.min}
+                    maxDate={analysisBounds.max}
+                  />
+                  <TreatmentOutcomes 
+                    analyses={averageAnxietyAnalyses}
+                    showOnly="trends"
+                    dateRange={averageAnxietyRange}
+                    onDateRangeChange={setAverageAnxietyRange}
+                    minDate={analysisBounds.min}
+                    maxDate={analysisBounds.max}
+                  />
+                </div>
+
+                <GoalProgressSection 
+                  goals={goals}
+                  dateRange={goalProgressRange}
+                  onDateRangeChange={setGoalProgressRange}
+                  minDate={goalProgressBounds.min ?? analysisBounds.min}
+                  maxDate={goalProgressBounds.max ?? analysisBounds.max}
+                />
+
+                <TriggerAnalysisTable 
+                  triggerData={filteredTriggerData}
+                  totalEntries={filteredTriggerEntries}
+                  dateRange={triggerAnalysisRange}
+                  onDateRangeChange={setTriggerAnalysisRange}
+                  minDate={analysisBounds.min}
+                  maxDate={analysisBounds.max}
+                />
+
+                <InterventionSummariesSection 
+                  summaries={summaries}
+                  analyses={analyses}
+                />
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <FileText className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                  <p className="text-gray-600">Select a patient to generate a medical situation report</p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </div>
     </div>
+
+    <Sheet open={vanessaOpen} onOpenChange={setVanessaOpen}>
+      <SheetContent side="right" className="w-full sm:max-w-xl">
+        <SheetHeader>
+          <SheetTitle>Vanessa – AI Treatment Assistant</SheetTitle>
+        </SheetHeader>
+        <div className="mt-4">
+          {selectedPatientId && selectedPatientData ? (
+            <TherapistChatInterface
+              patientId={selectedPatientId}
+              patientName={`${selectedPatientData.profile?.first_name || ''} ${selectedPatientData.profile?.last_name || ''}`.trim() || 'Patient'}
+            />
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12">
+                <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-600">Select a patient from the search tab to start a conversation with Vanessa.</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+
+    <Button
+      onClick={() => setVanessaOpen(true)}
+      className="fixed bottom-6 right-6 bg-blue-600 text-white shadow-lg hover:bg-blue-700"
+    >
+      <MessageCircle className="w-4 h-4 mr-2" /> Ask Banessa
+    </Button>
+  </div>
   );
 };
 

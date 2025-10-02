@@ -136,6 +136,7 @@ export const userGoals = pgTable("user_goals", {
   startDate: text("start_date").notNull(),
   endDate: text("end_date"),
   isActive: boolean("is_active").default(true),
+  source: text("source"),
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at"),
 });
@@ -160,6 +161,14 @@ export const interventionSummaries = pgTable("intervention_summaries", {
   interventionType: text("intervention_type").default("cbt"),
   conversationCount: integer("conversation_count").default(0),
   keyPoints: text("key_points"),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
+});
+
+export const treatmentPlans = pgTable("treatment_plans", {
+  id: uuid("id").primaryKey(),
+  patientId: text("patient_id").notNull().unique(),
+  plan: text("plan").notNull(),
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at"),
 });

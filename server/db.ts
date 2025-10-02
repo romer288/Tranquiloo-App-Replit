@@ -13,6 +13,7 @@ import { dirname } from 'path';
 
 // Create data directory if it doesn't exist
 const dbPath = './data/tranquiloo.db';
+console.log('[DB] Using SQLite database at', dbPath);
 try {
   mkdirSync(dirname(dbPath), { recursive: true });
 } catch {}
@@ -100,7 +101,18 @@ sqliteDb.exec(`
     status TEXT DEFAULT 'active',
     progress INTEGER DEFAULT 0,
     created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
-    updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
+    updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+    frequency TEXT,
+    reminder_enabled INTEGER DEFAULT 0,
+    reminder_time INTEGER,
+    notes TEXT,
+    milestones TEXT,
+    target_value TEXT,
+    unit TEXT,
+    start_date TEXT,
+    end_date TEXT,
+    is_active INTEGER DEFAULT 1,
+    source TEXT
   );
 
   CREATE TABLE IF NOT EXISTS goal_progress (
@@ -126,6 +138,14 @@ sqliteDb.exec(`
     effectiveness_rating INTEGER,
     notes TEXT,
     created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
+  );
+
+  CREATE TABLE IF NOT EXISTS treatment_plans (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    patient_id TEXT UNIQUE NOT NULL,
+    plan TEXT NOT NULL,
+    created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+    updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
   );
 
   CREATE TABLE IF NOT EXISTS therapist_patients (

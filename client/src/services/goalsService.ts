@@ -66,6 +66,34 @@ const calculateCompletionRate = (goal: any): number => {
   return Math.min(100, (actualEntries / expectedEntries) * 100);
 };
 
+const normalizeGoalCategory = (category: string | undefined): Goal['category'] => {
+  switch ((category || '').toLowerCase()) {
+    case 'self-care':
+    case 'coping-skills':
+      return 'self-care';
+    case 'therapy':
+    case 'anxiety-management':
+    case 'behavioral':
+    case 'exposure-therapy':
+      return 'therapy';
+    case 'mindfulness':
+      return 'mindfulness';
+    case 'exercise':
+      return 'exercise';
+    case 'social':
+    case 'social-skills':
+      return 'social';
+    case 'work':
+      return 'work';
+    case 'sleep':
+      return 'sleep';
+    case 'nutrition':
+      return 'nutrition';
+    default:
+      return 'treatment';
+  }
+};
+
 export const goalsService = {
   async getUserGoals(): Promise<GoalWithProgress[]> {
     try {
@@ -86,8 +114,9 @@ export const goalsService = {
       
       return goals.map((goal: any) => ({
         ...goal,
-        category: goal.category as Goal['category'],
-        frequency: goal.frequency as Goal['frequency'],
+        category: normalizeGoalCategory(goal.category),
+        frequency: (goal.frequency as Goal['frequency']) ?? 'weekly',
+        source: goal.source,
         latest_progress: goal.goal_progress?.[0] || null,
         progress_history: goal.goal_progress || [],
         average_score: goal.goal_progress?.length > 0 

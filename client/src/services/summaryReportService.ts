@@ -333,8 +333,9 @@ export const generateSummaryReport = (
   analyses?: ClaudeAnxietyAnalysisWithDate[],
   options: ReportOptions = {}
 ): string => {
-  const today = new Date().toLocaleDateString();
-  const heading = options.title ?? 'COMPREHENSIVE MENTAL HEALTH REPORT';
+  const today = new Date().toLocaleDateString('en-US');
+  const reportName = 'Mental Health Medical Data';
+  const heading = options.title ?? 'Analytics & Intervention History Report';
 
   // Calculate comprehensive statistics
   const totalAnalyses = analyses?.length || 0;
@@ -362,7 +363,6 @@ export const generateSummaryReport = (
     .map(([type, count]) => `${type.replace(/_/g, ' ')} (${count})`);
 
   const weeklyTrendHighlights = weeklyTrendData
-    .slice(-6)
     .map((week) => {
       const categories = [
         { label: 'Work/Career', value: week.workCareer },
@@ -392,7 +392,6 @@ export const generateSummaryReport = (
     .join('\n');
 
   const treatmentOutcomeHighlights = treatmentOutcomeSummary
-    .slice(-8)
     .map((outcome) => {
       const direction = outcome.improvement > 0 ? `Improvement +${outcome.improvement}%` : outcome.improvement < 0 ? `Increase ${Math.abs(outcome.improvement)}%` : 'No change';
       return `• ${outcome.period}: Avg anxiety ${outcome.averageAnxiety}/10 (${direction}, ${outcome.effectiveness.toUpperCase()})`;
@@ -400,7 +399,6 @@ export const generateSummaryReport = (
     .join('\n');
 
   const monthlyActivityHighlights = monthlyActivitySummary
-    .slice(-12)
     .map((month) => {
       return `• ${month.label}: ${month.conversationCount} conversations, ${month.sessionCount} analyses, avg anxiety ${month.averageAnxiety || 0}/10`;
     })
@@ -410,8 +408,42 @@ export const generateSummaryReport = (
   const severityText = severityDistribution.length ? severityHighlights : '• No severity distribution data recorded yet.';
   const treatmentOutcomeText = treatmentOutcomeSummary.length ? treatmentOutcomeHighlights : '• Weekly outcomes will appear once more sessions are recorded.';
   const monthlyActivityText = monthlyActivitySummary.length ? monthlyActivityHighlights : '• Monthly activity data will populate after consistent usage.';
+
+  const getGadSeverityLabel = (score?: number | null): string => {
+    if (score === null || score === undefined || Number.isNaN(score)) return 'No data recorded';
+    if (score >= 15) return 'Severe anxiety';
+    if (score >= 10) return 'Moderate anxiety';
+    if (score >= 5) return 'Mild anxiety';
+    return 'Minimal anxiety';
+  };
+
+  const formatGadScore = (score: number | null | undefined, digits = 0): string => {
+    if (score === null || score === undefined || Number.isNaN(score)) {
+      return 'No data recorded';
+    }
+    const numeric = Number(score);
+    const formatted = digits > 0 ? numeric.toFixed(digits) : Math.round(numeric).toString();
+    return `${formatted}/21`;
+  };
+
+  const analysesByRecency = [...(analyses ?? [])].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+  const gadScores = analysesByRecency
+    .map((analysis) => (typeof analysis.gad7Score === 'number' ? analysis.gad7Score : null))
+    .filter((score): score is number => score !== null && !Number.isNaN(score));
+
+  const latestGadScore = analysesByRecency.find((analysis) =>
+    typeof analysis.gad7Score === 'number' && !Number.isNaN(analysis.gad7Score)
+  )?.gad7Score ?? null;
+  const averageGadScoreValue = gadScores.length
+    ? gadScores.reduce((sum, score) => sum + score, 0) / gadScores.length
+    : null;
+  const highestGadScore = gadScores.length ? Math.max(...gadScores) : null;
+  const gadInterpretation = getGadSeverityLabel(latestGadScore ?? averageGadScoreValue);
   
-  let report = `${heading}
+  let report = `${reportName}
+${heading}
 Generated on: ${today}
 
 ==================================================
@@ -480,6 +512,12 @@ ANXIETY PROFILE:
 • High-Intensity Sessions: ${highAnxietySessions} (${totalAnalyses > 0 ? Math.round((highAnxietySessions/totalAnalyses)*100) : 0}%)
 • Crisis Interventions: ${crisisRiskSessions}
 • Escalation Events: ${escalationCount}
+
+GAD-7 CLINICAL SCORES:
+• Latest Score: ${formatGadScore(latestGadScore)}
+• Average Score: ${formatGadScore(averageGadScoreValue, 1)}
+• Highest Recorded Score: ${formatGadScore(highestGadScore)}
+• Screening Interpretation: ${gadInterpretation}
 
 THERAPEUTIC PROGRESS:
 • Goals Set: ${goals?.length || 0}
@@ -582,7 +620,7 @@ ${'-'.repeat(40)}
 `;
         
         if (triggerData.length > 0) {
-          triggerData.slice(0, 5).forEach((trigger, index) => {
+          triggerData.forEach((trigger, index) => {
             const severity = trigger.avgSeverity;
             const severityIcon = severity >= 8 ? '🔴' : severity >= 6 ? '🟠' : severity >= 4 ? '🟡' : '🟢';
             
@@ -784,10 +822,10 @@ completionRate >= 50 ?
   }
 
   // Intervention summaries (session/weekly/monthly/yearly)
-  const sessionSummaries = aggregateAnalysesByPeriod(analyses ?? [], 'session').slice(0, 5);
-  const weeklySummaries = aggregateAnalysesByPeriod(analyses ?? [], 'week').slice(0, 4);
-  const monthlySummaries = aggregateAnalysesByPeriod(analyses ?? [], 'month').slice(0, 4);
-  const yearlySummaries = aggregateAnalysesByPeriod(analyses ?? [], 'year').slice(0, 3);
+  const sessionSummaries = aggregateAnalysesByPeriod(analyses ?? [], 'session');
+  const weeklySummaries = aggregateAnalysesByPeriod(analyses ?? [], 'week');
+  const monthlySummaries = aggregateAnalysesByPeriod(analyses ?? [], 'month');
+  const yearlySummaries = aggregateAnalysesByPeriod(analyses ?? [], 'year');
 
   const formatPeriodSummaries = (label: string, summaries: PeriodSummary[]) => {
     if (!summaries.length) {
@@ -915,7 +953,7 @@ export const downloadSummaryReport = (
   const blob = new Blob([htmlContent], { type: 'text/html' });
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const baseFileName = options.fileName ?? 'conversation-summaries';
+  const baseFileName = options.fileName ?? 'mental-health-medical-data';
   a.href = url;
   a.download = `${baseFileName}-${new Date().toISOString().split('T')[0]}.html`;
   document.body.appendChild(a);
@@ -947,7 +985,7 @@ const convertToPDFFormat = (textContent: string): string => {
     <!DOCTYPE html>
     <html lang="en">
     <head>
-      <title>Conversation Intervention Summaries</title>
+      <title>Mental Health Medical Data</title>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
@@ -1195,8 +1233,8 @@ const convertToPDFFormat = (textContent: string): string => {
     <body>
       <div class="container">
         <div class="header">
-          <h1>📊 Conversation Intervention Summaries</h1>
-          <p>Generated on ${new Date().toLocaleDateString('en-US', { 
+          <h1>🧠 Mental Health Medical Data</h1>
+          <p>Analytics & Intervention History Report • Generated on ${new Date().toLocaleDateString('en-US', { 
             weekday: 'long', 
             year: 'numeric', 
             month: 'long', 

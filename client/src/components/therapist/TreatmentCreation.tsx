@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useChatLanguageContext } from '@/hooks/useChatLanguageContext';
 import {
   Target, Plus, Save, Edit3, Trash2, Send,
-  FileText, Copy, Mic, Square, Play
+  FileText, Copy, Mic, Square, Trash
 } from 'lucide-react';
 
 interface Goal {
@@ -32,6 +32,17 @@ interface Milestone {
   completedDate?: string;
 }
 
+interface SessionNote {
+  id: string;
+  meetingTitle: string;
+  meetingDate?: string;
+  linkedGoalId?: string;
+  linkedGoalTitle?: string;
+  notes: string;
+  createdAt: string;
+  audioUrl?: string;
+}
+
 interface TreatmentPlan {
   id: string;
   title: string;
@@ -40,6 +51,7 @@ interface TreatmentPlan {
   interventions: string[];
   exercises: string[];
   notes: string;
+  sessionNotes: SessionNote[];
   createdAt: string;
   updatedAt: string;
 }
@@ -47,11 +59,13 @@ interface TreatmentPlan {
 interface TreatmentCreationProps {
   patientId: string;
   patientName: string;
+  onPlanUpdate?: (plan: TreatmentPlan | null) => void;
 }
 
 const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
   patientId,
-  patientName
+  patientName,
+  onPlanUpdate
 }) => {
   const { toast } = useToast();
   const [treatmentPlan, setTreatmentPlan] = useState<TreatmentPlan | null>(null);
@@ -72,32 +86,84 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
     milestones: []
   });
   const [newMilestone, setNewMilestone] = useState('');
-  const [personalNotes, setPersonalNotes] = useState('');
+  const [newSessionNote, setNewSessionNote] = useState<{
+    meetingTitle: string;
+    meetingDate: string;
+    linkedGoalId: string;
+    notes: string;
+  }>({ meetingTitle: '', meetingDate: '', linkedGoalId: '', notes: '' });
+  const [isRecordingAudioNote, setIsRecordingAudioNote] = useState(false);
+  const [sessionAudioPreview, setSessionAudioPreview] = useState<{ url: string; dataUrl: string; mimeType: string } | null>(null);
 
-  useEffect(() => {
-    loadTreatmentPlan();
-  }, [patientId]);
+  const audioRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioStreamRef = useRef<MediaStream | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  const applyPlanDefaults = (incomingPlan: any): TreatmentPlan => {
+    const base: TreatmentPlan = {
+      id: incomingPlan.id ?? Date.now().toString(),
+      title: incomingPlan.title ?? `Treatment Plan for ${patientName}`,
+      description:
+        incomingPlan.description ??
+        'Comprehensive anxiety management treatment plan derived from therapy goals and progress notes.',
+      goals: Array.isArray(incomingPlan.goals) ? incomingPlan.goals : [],
+      interventions: Array.isArray(incomingPlan.interventions) ? incomingPlan.interventions : [],
+      exercises: Array.isArray(incomingPlan.exercises) ? incomingPlan.exercises : [],
+      notes: incomingPlan.notes ?? '',
+      sessionNotes: Array.isArray(incomingPlan.sessionNotes) ? incomingPlan.sessionNotes : [],
+      createdAt: incomingPlan.createdAt ?? new Date().toISOString(),
+      updatedAt: incomingPlan.updatedAt ?? new Date().toISOString(),
+    };
+
+    // Ensure each goal has milestones array
+    base.goals = base.goals.map((goal: Goal) => ({
+      ...goal,
+      milestones: Array.isArray(goal.milestones) ? goal.milestones : [],
+    }));
+
+    return base;
+  };
 
   const loadTreatmentPlan = async () => {
     try {
       const response = await fetch(`/api/therapist/patient/${patientId}/treatment-plan`);
       if (response.ok) {
         const plan = await response.json();
-        setTreatmentPlan(plan);
+        if (plan) {
+          setTreatmentPlan(applyPlanDefaults(plan));
+        } else {
+          setTreatmentPlan(null);
+        }
       }
     } catch (error) {
       console.error('Failed to load treatment plan:', error);
     }
   };
 
+  useEffect(() => {
+    loadTreatmentPlan();
+  }, [patientId]);
+
+  useEffect(() => {
+    if (onPlanUpdate) {
+      onPlanUpdate(treatmentPlan ?? null);
+    }
+  }, [treatmentPlan, onPlanUpdate]);
+
   const saveTreatmentPlan = async () => {
     if (!treatmentPlan) return;
 
     try {
+      const updatedPlan: TreatmentPlan = {
+        ...treatmentPlan,
+        updatedAt: new Date().toISOString(),
+      };
+
+      setTreatmentPlan(updatedPlan);
       const response = await fetch(`/api/therapist/patient/${patientId}/treatment-plan`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(treatmentPlan)
+        body: JSON.stringify(updatedPlan)
       });
 
       if (response.ok) {
@@ -127,7 +193,7 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
       return;
     }
 
-    const goal: Goal = {
+      const goal: Goal = {
       id: Date.now().toString(),
       title: newGoal.title || '',
       description: newGoal.description || '',
@@ -135,17 +201,19 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
       targetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       priority: newGoal.priority || 'medium',
       milestones: newGoal.milestones || [],
-      therapistNotes: personalNotes,
       status: 'active'
     };
 
-    if (treatmentPlan) {
-      setTreatmentPlan({
-        ...treatmentPlan,
-        goals: [...treatmentPlan.goals, goal]
-      });
-    } else {
-      setTreatmentPlan({
+    setTreatmentPlan((prev) => {
+      if (prev) {
+        return {
+          ...prev,
+          goals: [...prev.goals, goal],
+          updatedAt: new Date().toISOString(),
+        };
+      }
+
+      return {
         id: Date.now().toString(),
         title: `Treatment Plan for ${patientName}`,
         description: 'Comprehensive anxiety management treatment plan',
@@ -153,10 +221,11 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
         interventions: [],
         exercises: [],
         notes: '',
+        sessionNotes: [],
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-    }
+        updatedAt: new Date().toISOString(),
+      };
+    });
 
     // Reset form
     setNewGoal({
@@ -166,11 +235,78 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
       priority: 'medium',
       milestones: []
     });
-    setPersonalNotes('');
-    
+
     toast({
       title: "Goal Added",
       description: "New goal has been added to the treatment plan"
+    });
+  };
+
+  const addSessionNote = () => {
+    if (isRecordingAudioNote) {
+      toast({
+        title: 'Recording in progress',
+        description: 'Please stop the audio recording before saving this session note.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!newSessionNote.notes.trim()) {
+      toast({
+        title: 'Missing Notes',
+        description: 'Please enter session notes before saving.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const note: SessionNote = {
+      id: Date.now().toString(),
+      meetingTitle: newSessionNote.meetingTitle || 'Therapy Session',
+      meetingDate: newSessionNote.meetingDate || undefined,
+      linkedGoalId: newSessionNote.linkedGoalId || undefined,
+      linkedGoalTitle:
+        (newSessionNote.linkedGoalId &&
+          treatmentPlan?.goals.find((goal) => goal.id === newSessionNote.linkedGoalId)?.title) ||
+        undefined,
+      notes: newSessionNote.notes.trim(),
+      createdAt: new Date().toISOString(),
+      audioUrl: sessionAudioPreview?.dataUrl,
+    };
+
+    setTreatmentPlan((prev) => {
+      if (prev) {
+        return {
+          ...prev,
+          sessionNotes: [...(prev.sessionNotes ?? []), note],
+          updatedAt: new Date().toISOString(),
+        };
+      }
+
+      return {
+        id: Date.now().toString(),
+        title: `Treatment Plan for ${patientName}`,
+        description: 'Comprehensive anxiety management treatment plan',
+        goals: [],
+        interventions: [],
+        exercises: [],
+        notes: '',
+        sessionNotes: [note],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    });
+
+    setNewSessionNote({ meetingTitle: '', meetingDate: '', linkedGoalId: '', notes: '' });
+    if (sessionAudioPreview?.url) {
+      URL.revokeObjectURL(sessionAudioPreview.url);
+    }
+    setSessionAudioPreview(null);
+    
+    toast({
+      title: 'Session Note Added',
+      description: 'Therapist session notes have been added to the treatment plan.',
     });
   };
 
@@ -183,7 +319,7 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
       completed: false
     };
 
-    setNewGoal(prev => ({
+    setNewGoal((prev) => ({
       ...prev,
       milestones: [...(prev.milestones || []), milestone]
     }));
@@ -232,6 +368,91 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
       setRecordingText(transcript);
     }, language);
   };
+
+  const startAudioRecording = async () => {
+    if (isRecordingAudioNote) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioStreamRef.current = stream;
+      const recorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      recorder.onstop = async () => {
+        const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType || 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(blob);
+        });
+        setSessionAudioPreview({ url, dataUrl, mimeType: blob.type });
+      };
+      recorder.start();
+      audioRecorderRef.current = recorder;
+      setSessionAudioPreview(null);
+      setIsRecordingAudioNote(true);
+    } catch (error) {
+      console.error('Failed to start audio recording', error);
+      toast({
+        title: 'Microphone Error',
+        description: 'Unable to access microphone. Please check browser permissions.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const stopAudioRecording = () => {
+    if (!isRecordingAudioNote) return;
+    try {
+      const recorder = audioRecorderRef.current;
+      if (recorder && recorder.state !== 'inactive') {
+        recorder.stop();
+      }
+    } catch (error) {
+      console.error('Error stopping recorder', error);
+    }
+    if (audioStreamRef.current) {
+      audioStreamRef.current.getTracks().forEach((track) => track.stop());
+      audioStreamRef.current = null;
+    }
+    setIsRecordingAudioNote(false);
+  };
+
+  const resetAudioRecording = () => {
+    if (audioRecorderRef.current && audioRecorderRef.current.state !== 'inactive') {
+      audioRecorderRef.current.stop();
+    }
+    if (audioStreamRef.current) {
+      audioStreamRef.current.getTracks().forEach((track) => track.stop());
+      audioStreamRef.current = null;
+    }
+    if (sessionAudioPreview?.url) {
+      URL.revokeObjectURL(sessionAudioPreview.url);
+    }
+    setSessionAudioPreview(null);
+    setIsRecordingAudioNote(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (audioRecorderRef.current && audioRecorderRef.current.state !== 'inactive') {
+        audioRecorderRef.current.stop();
+      }
+      if (audioStreamRef.current) {
+        audioStreamRef.current.getTracks().forEach((track) => track.stop());
+        audioStreamRef.current = null;
+      }
+      if (sessionAudioPreview?.url) {
+        URL.revokeObjectURL(sessionAudioPreview.url);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -348,19 +569,6 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
                 </div>
               </div>
 
-              {/* Personal Notes */}
-              <div>
-                <Label htmlFor="personal-notes">Therapist Notes</Label>
-                <Textarea
-                  id="personal-notes"
-                  value={personalNotes}
-                  onChange={(e) => setPersonalNotes(e.target.value)}
-                  placeholder="Personal notes about this goal (optional)"
-                  rows={2}
-                  data-testid="textarea-personal-notes"
-                />
-              </div>
-
               {/* Voice Recording */}
               <div className="border-t pt-4">
                 <Label>Voice Notes</Label>
@@ -387,7 +595,12 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setPersonalNotes(prev => prev + '\n' + recordingText)}
+                      onClick={() =>
+                        setNewSessionNote((prev) => ({
+                          ...prev,
+                          notes: [prev.notes, recordingText].filter(Boolean).join('\n')
+                        }))
+                      }
                       data-testid="button-add-recording"
                     >
                       <Plus className="w-4 h-4 mr-1" />
@@ -508,6 +721,44 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
                       ))}
                     </div>
                   </div>
+
+                  {treatmentPlan.sessionNotes.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-4">Therapist Session Notes</h4>
+                      <div className="space-y-4">
+                        {treatmentPlan.sessionNotes.map((note) => (
+                          <div key={note.id} className="border rounded-lg p-4 bg-slate-50">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h5 className="font-semibold text-slate-900">{note.meetingTitle}</h5>
+                                {note.meetingDate && (
+                                  <p className="text-xs text-slate-500">{new Date(note.meetingDate).toLocaleDateString()}</p>
+                                )}
+                              </div>
+                              <Badge variant="outline">Session Note</Badge>
+                            </div>
+                  {note.linkedGoalTitle && (
+                    <p className="text-xs text-blue-600 mb-2">
+                      Linked goal: <span className="font-medium">{note.linkedGoalTitle}</span>
+                    </p>
+                  )}
+                  <p className="text-sm text-slate-700 whitespace-pre-line">{note.notes}</p>
+                  {note.audioUrl && (
+                    <div className="mt-3">
+                      <audio controls className="w-full">
+                        <source src={note.audioUrl} />
+                        Your browser does not support audio playback.
+                      </audio>
+                    </div>
+                  )}
+                  <p className="mt-3 text-xs text-slate-400">
+                    Added {new Date(note.createdAt).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-500">
@@ -520,6 +771,104 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
           </Card>
         </div>
       </div>
+
+      {/* Therapist session notes entry */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Edit3 className="w-5 h-5" /> Therapist Session Notes
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="meeting-title">Session / Meeting</Label>
+              <Input
+                id="meeting-title"
+                placeholder="e.g., Week 4 CBT session"
+                value={newSessionNote.meetingTitle}
+                onChange={(e) => setNewSessionNote((prev) => ({ ...prev, meetingTitle: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="meeting-date">Date</Label>
+              <Input
+                id="meeting-date"
+                type="date"
+                value={newSessionNote.meetingDate}
+                onChange={(e) => setNewSessionNote((prev) => ({ ...prev, meetingDate: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="linked-goal">Link to Goal (optional)</Label>
+              <select
+                id="linked-goal"
+                className="w-full p-2 border rounded-md"
+                value={newSessionNote.linkedGoalId}
+                onChange={(e) => setNewSessionNote((prev) => ({ ...prev, linkedGoalId: e.target.value }))}
+              >
+                <option value="">No linked goal</option>
+                {(treatmentPlan?.goals ?? []).map((goal) => (
+                  <option key={goal.id} value={goal.id}>
+                    {goal.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="session-notes">Session Notes</Label>
+            <Textarea
+              id="session-notes"
+              placeholder="Key observations, interventions, follow-up homework..."
+              rows={4}
+              value={newSessionNote.notes}
+              onChange={(e) => setNewSessionNote((prev) => ({ ...prev, notes: e.target.value }))}
+            />
+          </div>
+
+          <div className="border rounded-lg p-4 bg-gray-50 space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="font-medium">Session Audio Recording</Label>
+              <div className="flex items-center gap-2">
+                {!isRecordingAudioNote ? (
+                  <Button type="button" size="sm" variant="outline" onClick={startAudioRecording}>
+                    <Mic className="w-4 h-4 mr-2" /> Record Audio
+                  </Button>
+                ) : (
+                  <Button type="button" size="sm" variant="destructive" onClick={stopAudioRecording}>
+                    <Square className="w-4 h-4 mr-2" /> Stop
+                  </Button>
+                )}
+                {sessionAudioPreview && !isRecordingAudioNote && (
+                  <Button type="button" size="sm" variant="ghost" onClick={resetAudioRecording}>
+                    <Trash className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            {isRecordingAudioNote && (
+              <p className="text-xs text-red-600">Recording in progress... click Stop when finished.</p>
+            )}
+            {sessionAudioPreview && (
+              <div className="rounded-md bg-white p-3 border">
+                <p className="text-sm font-medium text-slate-700 mb-2">Recorded Preview</p>
+                <audio controls className="w-full">
+                  <source src={sessionAudioPreview.url} />
+                  Your browser does not support audio playback.
+                </audio>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end">
+            <Button onClick={addSessionNote} data-testid="button-add-session-note">
+              <Plus className="w-4 h-4 mr-2" /> Save Session Note
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Quick Actions */}
       <Card>

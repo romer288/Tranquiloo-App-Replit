@@ -449,11 +449,17 @@ Key therapeutic themes addressed:
   app.get('/api/therapist/patient/:id/treatment-plan', async (req, res) => {
     try {
       const patientId = req.params.id;
-      
-      // Return existing treatment plan or null
-      // In production, this would fetch from database
-      res.json(null);
+
+      const storedPlan = await storage.getTreatmentPlanByPatient(patientId);
+      if (!storedPlan || !storedPlan.plan) {
+        console.log('[TreatmentPlan] No plan found for patient', patientId);
+        return res.json(null);
+      }
+
+      console.log('[TreatmentPlan] Returning plan for patient', patientId, 'goals:', Array.isArray(storedPlan.plan?.goals) ? storedPlan.plan.goals.length : 'n/a');
+      res.json(storedPlan.plan);
     } catch (error) {
+      console.error('Failed to load treatment plan:', error);
       res.status(500).json({ error: 'Failed to load treatment plan' });
     }
   });
@@ -462,12 +468,18 @@ Key therapeutic themes addressed:
     try {
       const patientId = req.params.id;
       const treatmentPlan = req.body;
-      
-      // Save treatment plan to database
-      // In production, this would save to database and sync with patient
-      
-      res.json({ success: true, message: 'Treatment plan saved successfully' });
+
+      if (!treatmentPlan) {
+        return res.status(400).json({ error: 'Treatment plan payload required' });
+      }
+
+      console.log('[TreatmentPlan] Saving for patient', patientId, 'goals:', Array.isArray(treatmentPlan?.goals) ? treatmentPlan.goals.length : 'n/a');
+      const result = await storage.upsertTreatmentPlan(patientId, treatmentPlan);
+      await storage.syncTreatmentPlanGoals(patientId, treatmentPlan);
+
+      res.json({ success: true, message: 'Treatment plan saved successfully', updatedAt: result.updatedAt });
     } catch (error) {
+      console.error('Failed to save treatment plan:', error);
       res.status(500).json({ error: 'Failed to save treatment plan' });
     }
   });
