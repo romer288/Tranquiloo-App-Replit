@@ -14,8 +14,8 @@ interface Message {
 }
 
 interface TherapistChatInterfaceProps {
-  patientId: string;
-  patientName: string;
+  patientId?: string;
+  patientName?: string;
 }
 
 const TherapistChatInterface: React.FC<TherapistChatInterfaceProps> = ({ 
@@ -27,13 +27,14 @@ const TherapistChatInterface: React.FC<TherapistChatInterfaceProps> = ({
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const displayName = patientName?.trim() || 'General Consultation';
 
   useEffect(() => {
     // Initialize with welcome message from Vanessa
     setMessages([
       {
         id: '1',
-        content: `Hello Doctor! I'm Vanessa, your AI assistant. I can help you with questions about Patient X's treatment, progress, and therapeutic strategies. All patient data is anonymized for HIPAA compliance. How can I assist you today?`,
+        content: `Hello Doctor! I'm Vanessa, your AI assistant. I can help you with questions about your patients' treatment, progress, and therapeutic strategies—or general clinical questions you may have. All patient data is anonymized for HIPAA compliance. How can I assist you today?`,
         sender: 'vanessa',
         timestamp: new Date().toISOString()
       }
@@ -65,7 +66,7 @@ const TherapistChatInterface: React.FC<TherapistChatInterfaceProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: inputMessage,
-          patientId: patientId,
+          patientId: patientId || 'general-consultation',
           context: 'therapist_consultation'
         })
       });
@@ -125,7 +126,7 @@ const TherapistChatInterface: React.FC<TherapistChatInterfaceProps> = ({
             Chat with Vanessa - AI Therapeutic Assistant
           </CardTitle>
           <p className="text-sm text-gray-600">
-            Discussing treatment for: {patientName}
+            Discussing treatment for: {displayName}
           </p>
         </CardHeader>
 
@@ -193,7 +194,7 @@ const TherapistChatInterface: React.FC<TherapistChatInterfaceProps> = ({
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask Vanessa about Patient X's treatment, progress, or therapeutic strategies..."
+              placeholder="Ask Vanessa about treatment ideas, clinical questions, or case strategy..."
               className="flex-1"
               disabled={isLoading}
               data-testid="input-therapist-message"

@@ -24,6 +24,13 @@ export default defineConfig({
     },
   },
   root: path.resolve(import.meta.dirname, "client"),
+  server: {
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      port: Number(process.env.PORT ?? 5000),
+    },
+  },
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,

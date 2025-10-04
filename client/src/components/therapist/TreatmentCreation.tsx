@@ -41,6 +41,7 @@ interface SessionNote {
   notes: string;
   createdAt: string;
   audioUrl?: string;
+  transcript?: string;
 }
 
 interface TreatmentPlan {
@@ -60,12 +61,14 @@ interface TreatmentCreationProps {
   patientId: string;
   patientName: string;
   onPlanUpdate?: (plan: TreatmentPlan | null) => void;
+  onOpenAssistant?: () => void;
 }
 
 const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
   patientId,
   patientName,
-  onPlanUpdate
+  onPlanUpdate,
+  onOpenAssistant
 }) => {
   const { toast } = useToast();
   const [treatmentPlan, setTreatmentPlan] = useState<TreatmentPlan | null>(null);
@@ -94,10 +97,14 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
   }>({ meetingTitle: '', meetingDate: '', linkedGoalId: '', notes: '' });
   const [isRecordingAudioNote, setIsRecordingAudioNote] = useState(false);
   const [sessionAudioPreview, setSessionAudioPreview] = useState<{ url: string; dataUrl: string; mimeType: string } | null>(null);
+  const [audioTranscript, setAudioTranscript] = useState<string>('');
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [transcriptionLanguage, setTranscriptionLanguage] = useState<'en' | 'es'>('en');
 
   const audioRecorderRef = useRef<MediaRecorder | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const audioRecognitionRef = useRef<any>(null);
 
   const applyPlanDefaults = (incomingPlan: any): TreatmentPlan => {
     const base: TreatmentPlan = {
@@ -273,6 +280,7 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
       notes: newSessionNote.notes.trim(),
       createdAt: new Date().toISOString(),
       audioUrl: sessionAudioPreview?.dataUrl,
+      transcript: audioTranscript.trim() || undefined,
     };
 
     setTreatmentPlan((prev) => {
@@ -303,7 +311,8 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
       URL.revokeObjectURL(sessionAudioPreview.url);
     }
     setSessionAudioPreview(null);
-    
+    setAudioTranscript('');
+
     toast({
       title: 'Session Note Added',
       description: 'Therapist session notes have been added to the treatment plan.',
@@ -396,6 +405,43 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
       audioRecorderRef.current = recorder;
       setSessionAudioPreview(null);
       setIsRecordingAudioNote(true);
+
+      // Start speech recognition for transcription (bilingual support)
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        try {
+          const recognition = new SpeechRecognition();
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          // Use selected transcription language (English or Spanish)
+          recognition.lang = transcriptionLanguage === 'es' ? 'es-ES' : 'en-US';
+          console.log('Starting transcription in:', recognition.lang);
+
+          let transcript = '';
+          recognition.onresult = (event: any) => {
+            let interimTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              const transcriptPiece = event.results[i][0].transcript;
+              if (event.results[i].isFinal) {
+                transcript += transcriptPiece + ' ';
+              } else {
+                interimTranscript += transcriptPiece;
+              }
+            }
+            setAudioTranscript(transcript + interimTranscript);
+          };
+
+          recognition.onerror = (event: any) => {
+            console.error('Speech recognition error:', event.error);
+          };
+
+          recognition.start();
+          audioRecognitionRef.current = recognition;
+          setIsTranscribing(true);
+        } catch (error) {
+          console.error('Failed to start speech recognition:', error);
+        }
+      }
     } catch (error) {
       console.error('Failed to start audio recording', error);
       toast({
@@ -420,7 +466,19 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
       audioStreamRef.current.getTracks().forEach((track) => track.stop());
       audioStreamRef.current = null;
     }
+
+    // Stop speech recognition
+    if (audioRecognitionRef.current) {
+      try {
+        audioRecognitionRef.current.stop();
+        audioRecognitionRef.current = null;
+      } catch (error) {
+        console.error('Error stopping speech recognition', error);
+      }
+    }
+
     setIsRecordingAudioNote(false);
+    setIsTranscribing(false);
   };
 
   const resetAudioRecording = () => {
@@ -431,11 +489,21 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
       audioStreamRef.current.getTracks().forEach((track) => track.stop());
       audioStreamRef.current = null;
     }
+    if (audioRecognitionRef.current) {
+      try {
+        audioRecognitionRef.current.stop();
+        audioRecognitionRef.current = null;
+      } catch (error) {
+        console.error('Error stopping speech recognition', error);
+      }
+    }
     if (sessionAudioPreview?.url) {
       URL.revokeObjectURL(sessionAudioPreview.url);
     }
     setSessionAudioPreview(null);
+    setAudioTranscript('');
     setIsRecordingAudioNote(false);
+    setIsTranscribing(false);
   };
 
   useEffect(() => {
@@ -624,6 +692,40 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
                 <Target className="w-4 h-4 mr-2" />
                 Add Goal to Treatment Plan
               </Button>
+
+              {/* Vanessa AI Treatment Assistant */}
+              <Card className="border-blue-200 bg-blue-50 mt-4">
+                <CardHeader>
+                  <CardTitle className="text-blue-900 text-base">
+                    Vanessa – AI Treatment Assistant
+                  </CardTitle>
+                  <p className="text-sm text-blue-700">
+                    Ask Vanessa for treatment ideas, homework suggestions,
+                    or quick summaries while you build the plan.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button
+                    onClick={onOpenAssistant}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                  >
+                    Ask Vanessa
+                  </Button>
+                  <ul className="space-y-2 text-sm text-blue-800">
+                    <li>
+                      • Generate exposure hierarchies tailored to current
+                      goals
+                    </li>
+                    <li>
+                      • Draft follow-up homework or journaling prompts
+                    </li>
+                    <li>
+                      • Ask for patient-friendly explanations of session
+                      topics
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
             </CardContent>
           </Card>
         </div>
@@ -830,7 +932,21 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
 
           <div className="border rounded-lg p-4 bg-gray-50 space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="font-medium">Session Audio Recording</Label>
+              <div className="flex items-center gap-3">
+                <Label className="font-medium">Session Audio Recording</Label>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs text-gray-600">Language:</Label>
+                  <select
+                    value={transcriptionLanguage}
+                    onChange={(e) => setTranscriptionLanguage(e.target.value as 'en' | 'es')}
+                    disabled={isRecordingAudioNote}
+                    className="text-xs p-1 border rounded bg-white"
+                  >
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                  </select>
+                </div>
+              </div>
               <div className="flex items-center gap-2">
                 {!isRecordingAudioNote ? (
                   <Button type="button" size="sm" variant="outline" onClick={startAudioRecording}>
@@ -849,15 +965,38 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
               </div>
             </div>
             {isRecordingAudioNote && (
-              <p className="text-xs text-red-600">Recording in progress... click Stop when finished.</p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-red-600">Recording in progress... click Stop when finished.</p>
+                  <Badge variant="outline" className="text-xs">
+                    {transcriptionLanguage === 'es' ? '🇪🇸 Español' : '🇺🇸 English'}
+                  </Badge>
+                </div>
+                {isTranscribing && audioTranscript && (
+                  <div className="bg-white p-3 rounded border">
+                    <p className="text-xs font-medium text-slate-700 mb-1">
+                      Live Transcript ({transcriptionLanguage === 'es' ? 'Español' : 'English'}):
+                    </p>
+                    <p className="text-sm text-slate-600">{audioTranscript}</p>
+                  </div>
+                )}
+              </div>
             )}
             {sessionAudioPreview && (
-              <div className="rounded-md bg-white p-3 border">
-                <p className="text-sm font-medium text-slate-700 mb-2">Recorded Preview</p>
-                <audio controls className="w-full">
-                  <source src={sessionAudioPreview.url} />
-                  Your browser does not support audio playback.
-                </audio>
+              <div className="space-y-3">
+                <div className="rounded-md bg-white p-3 border">
+                  <p className="text-sm font-medium text-slate-700 mb-2">Recorded Audio</p>
+                  <audio controls className="w-full">
+                    <source src={sessionAudioPreview.url} />
+                    Your browser does not support audio playback.
+                  </audio>
+                </div>
+                {audioTranscript && (
+                  <div className="rounded-md bg-white p-3 border">
+                    <p className="text-sm font-medium text-slate-700 mb-2">Transcript</p>
+                    <p className="text-sm text-slate-600 whitespace-pre-line">{audioTranscript}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -1,24 +1,30 @@
-import React from 'react';
-import { Loader2 } from 'lucide-react';
-import AnxietyAnalyticsTracker from '@/components/AnxietyAnalyticsTracker';
-import { useAnalyticsData } from '@/hooks/useAnalyticsData';
-import TreatmentOutcomes from '@/components/TreatmentOutcomes';
-import AnalyticsHeader from '@/components/analytics/AnalyticsHeader';
-import AnalyticsMetrics from '@/components/analytics/AnalyticsMetrics';
-import AnxietyChartsSection from '@/components/analytics/AnxietyChartsSection';
-import MonthlyChartsSection from '@/components/analytics/MonthlyChartsSection';
-import TriggerAnalysisTable from '@/components/analytics/TriggerAnalysisTable';
-import EmptyAnalyticsState from '@/components/analytics/EmptyAnalyticsState';
-import GoalProgressSection from '@/components/analytics/GoalProgressSection';
+import React from "react";
+import { Loader2 } from "lucide-react";
+import AnxietyAnalyticsTracker from "@/components/AnxietyAnalyticsTracker";
+import { useAnalyticsData } from "@/hooks/useAnalyticsData";
+import TreatmentOutcomes from "@/components/TreatmentOutcomes";
+import AnalyticsHeader from "@/components/analytics/AnalyticsHeader";
+import AnalyticsMetrics from "@/components/analytics/AnalyticsMetrics";
+import AnxietyChartsSection from "@/components/analytics/AnxietyChartsSection";
+import MonthlyChartsSection from "@/components/analytics/MonthlyChartsSection";
+import TriggerAnalysisTable from "@/components/analytics/TriggerAnalysisTable";
+import EmptyAnalyticsState from "@/components/analytics/EmptyAnalyticsState";
+import GoalProgressSection from "@/components/analytics/GoalProgressSection";
 
-import { processTriggerData, processSeverityDistribution, getAnalyticsMetrics } from '@/utils/analyticsDataProcessor';
-import { shareWithTherapist } from '@/services/analyticsExportService';
-import { useGoalsData } from '@/hooks/useGoalsData';
-import { useToast } from '@/hooks/use-toast';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { DateRange } from 'react-day-picker';
-import { filterAnalysesByRange, getAnalysisDateBounds } from '@/utils/filterAnalysesByRange';
-
+import {
+  processTriggerData,
+  processSeverityDistribution,
+  getAnalyticsMetrics,
+} from "@/utils/analyticsDataProcessor";
+import { shareWithTherapist } from "@/services/analyticsExportService";
+import { useGoalsData } from "@/hooks/useGoalsData";
+import { useToast } from "@/hooks/use-toast";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { DateRange } from "react-day-picker";
+import {
+  filterAnalysesByRange,
+  getAnalysisDateBounds,
+} from "@/utils/filterAnalysesByRange";
 
 const AnalyticsContent = () => {
   const { data, isLoading, error, getAllAnalyses } = useAnalyticsData();
@@ -26,69 +32,71 @@ const AnalyticsContent = () => {
   const { goals, summaries } = summariesData;
   const { toast } = useToast();
   const allAnalyses = getAllAnalyses();
-  
+
   // Debug logging for chart order
-  console.log('🎯 Analytics component rendering - chart order should be 1-8');
-  console.log('📊 Analytics Page - allAnalyses count:', allAnalyses.length);
-  console.log('📊 First analysis sample:', allAnalyses[0]);
-  
+  console.log("🎯 Analytics component rendering - chart order should be 1-8");
+  console.log("📊 Analytics Page - allAnalyses count:", allAnalyses.length);
+  console.log("📊 First analysis sample:", allAnalyses[0]);
+
   // Don't process data until we actually have analyses
   const hasData = allAnalyses.length > 0;
 
   const analysisBounds = React.useMemo(
     () => getAnalysisDateBounds(allAnalyses),
-    [allAnalyses]
+    [allAnalyses],
   );
 
   const [weeklyTrendsRange, setWeeklyTrendsRange] = React.useState<DateRange>();
-  const [averageAnxietyRange, setAverageAnxietyRange] = React.useState<DateRange>();
-  const [monthlyTrendsRange, setMonthlyTrendsRange] = React.useState<DateRange>();
-  const [monthlyActivityRange, setMonthlyActivityRange] = React.useState<DateRange>();
-  const [weeklyOutcomesRange, setWeeklyOutcomesRange] = React.useState<DateRange>();
-  const [triggerAnalysisRange, setTriggerAnalysisRange] = React.useState<DateRange>();
+  const [averageAnxietyRange, setAverageAnxietyRange] =
+    React.useState<DateRange>();
+  const [monthlyTrendsRange, setMonthlyTrendsRange] =
+    React.useState<DateRange>();
+  const [monthlyActivityRange, setMonthlyActivityRange] =
+    React.useState<DateRange>();
+  const [weeklyOutcomesRange, setWeeklyOutcomesRange] =
+    React.useState<DateRange>();
+  const [triggerAnalysisRange, setTriggerAnalysisRange] =
+    React.useState<DateRange>();
   const [goalProgressRange, setGoalProgressRange] = React.useState<DateRange>();
 
   const weeklyTrendAnalyses = React.useMemo(
     () => filterAnalysesByRange(allAnalyses, weeklyTrendsRange),
-    [allAnalyses, weeklyTrendsRange]
+    [allAnalyses, weeklyTrendsRange],
   );
 
   const averageAnxietyAnalyses = React.useMemo(
     () => filterAnalysesByRange(allAnalyses, averageAnxietyRange),
-    [allAnalyses, averageAnxietyRange]
+    [allAnalyses, averageAnxietyRange],
   );
 
   const monthlyTrendAnalyses = React.useMemo(
     () => filterAnalysesByRange(allAnalyses, monthlyTrendsRange),
-    [allAnalyses, monthlyTrendsRange]
+    [allAnalyses, monthlyTrendsRange],
   );
 
   const monthlyActivityAnalyses = React.useMemo(
     () => filterAnalysesByRange(allAnalyses, monthlyActivityRange),
-    [allAnalyses, monthlyActivityRange]
+    [allAnalyses, monthlyActivityRange],
   );
 
   const weeklyOutcomeAnalyses = React.useMemo(
     () => filterAnalysesByRange(allAnalyses, weeklyOutcomesRange),
-    [allAnalyses, weeklyOutcomesRange]
+    [allAnalyses, weeklyOutcomesRange],
   );
 
   const triggerAnalyses = React.useMemo(
     () => filterAnalysesByRange(allAnalyses, triggerAnalysisRange),
-    [allAnalyses, triggerAnalysisRange]
+    [allAnalyses, triggerAnalysisRange],
   );
 
   const triggerData = processTriggerData(allAnalyses);
   const severityDistribution = processSeverityDistribution(allAnalyses);
-  const { totalEntries, averageAnxiety, mostCommonTrigger } = getAnalyticsMetrics(
-    allAnalyses,
-    triggerData,
-    goals
-  );
+  const { totalEntries, averageAnxiety, mostCommonTrigger } =
+    getAnalyticsMetrics(allAnalyses, triggerData, goals);
 
   const filteredTriggerData = React.useMemo(
     () => processTriggerData(triggerAnalyses),
-    [triggerAnalyses]
+    [triggerAnalyses],
   );
   const filteredTriggerEntries = triggerAnalyses.length;
 
@@ -105,9 +113,15 @@ const AnalyticsContent = () => {
         timestamps.push(start.getTime());
       }
 
-      const history = Array.isArray(goal.progress_history) ? goal.progress_history : [];
+      const history = Array.isArray(goal.progress_history)
+        ? goal.progress_history
+        : [];
       history.forEach((entry) => {
-        const recorded = entry?.recorded_at ? new Date(entry.recorded_at) : entry?.created_at ? new Date(entry.created_at) : undefined;
+        const recorded = entry?.recorded_at
+          ? new Date(entry.recorded_at)
+          : entry?.created_at
+            ? new Date(entry.created_at)
+            : undefined;
         if (recorded && !Number.isNaN(recorded.getTime())) {
           timestamps.push(recorded.getTime());
         }
@@ -124,47 +138,50 @@ const AnalyticsContent = () => {
     };
   }, [goals]);
 
-
   const handleDownloadReport = async () => {
     try {
-      const { downloadSummaryReport } = await import('@/services/summaryReportService');
+      const { downloadSummaryReport } = await import(
+        "@/services/summaryReportService"
+      );
       downloadSummaryReport(summaries, goals || [], allAnalyses, {
-        fileName: 'analytics-history',
-        title: 'Analytics & Intervention History Report'
+        fileName: "analytics-history",
+        title: "Analytics & Intervention History Report",
       });
 
       toast({
-        title: 'Download started',
-        description: 'Analytics history report is downloading.'
+        title: "Download started",
+        description: "Analytics history report is downloading.",
       });
     } catch (error) {
-      console.error('Error downloading history:', error);
+      console.error("Error downloading history:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to download analytics history.',
-        variant: 'destructive'
+        title: "Error",
+        description: "Failed to download analytics history.",
+        variant: "destructive",
       });
     }
   };
 
   const handleDownloadSummary = async () => {
     try {
-      console.log('🔄 Starting download summary...');
-      console.log('📊 Current analyses count:', allAnalyses.length);
-      console.log('📋 Current summaries count:', summaries.length);
-      
+      console.log("🔄 Starting download summary...");
+      console.log("📊 Current analyses count:", allAnalyses.length);
+      console.log("📋 Current summaries count:", summaries.length);
+
       // Use the summary report service to download as PDF-like format
-      const { downloadSummaryReport } = await import('@/services/summaryReportService');
+      const { downloadSummaryReport } = await import(
+        "@/services/summaryReportService"
+      );
       downloadSummaryReport(summaries, goals || [], allAnalyses);
-      
+
       toast({
         title: "Success",
         description: "Conversation summary downloaded successfully",
       });
     } catch (error) {
-      console.error('Error downloading summary:', error);
+      console.error("Error downloading summary:", error);
       toast({
-        title: "Error", 
+        title: "Error",
         description: "Failed to download conversation summary",
         variant: "destructive",
       });
@@ -174,17 +191,19 @@ const AnalyticsContent = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
-        <AnalyticsHeader 
+        <AnalyticsHeader
           analysesCount={0}
           onDownloadHistory={handleDownloadReport}
-          onShareWithTherapist={() => shareWithTherapist('loading')}
+          onShareWithTherapist={() => shareWithTherapist("loading")}
           onDownloadSummary={handleDownloadSummary}
         />
-        
+
         <div className="max-w-7xl mx-auto px-8 py-8">
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-            <span className="ml-2 text-gray-600">Loading analytics data...</span>
+            <span className="ml-2 text-gray-600">
+              Loading analytics data...
+            </span>
           </div>
         </div>
       </div>
@@ -195,18 +214,23 @@ const AnalyticsContent = () => {
   if (!hasData && !isLoading && !error) {
     return (
       <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
-        <AnalyticsHeader 
+        <AnalyticsHeader
           analysesCount={0}
           onDownloadHistory={handleDownloadReport}
-          onShareWithTherapist={() => shareWithTherapist('no-data')}
+          onShareWithTherapist={() => shareWithTherapist("no-data")}
           onDownloadSummary={handleDownloadSummary}
         />
-        
+
         <div className="max-w-7xl mx-auto px-8 py-8">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
-              <p className="text-gray-600 text-lg mb-4">Please log in to view your analytics data</p>
-              <p className="text-gray-500">Your anxiety tracking data is protected and only visible when you're authenticated.</p>
+              <p className="text-gray-600 text-lg mb-4">
+                Please log in to view your analytics data
+              </p>
+              <p className="text-gray-500">
+                Your anxiety tracking data is protected and only visible when
+                you're authenticated.
+              </p>
             </div>
           </div>
         </div>
@@ -217,10 +241,10 @@ const AnalyticsContent = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
-        <AnalyticsHeader 
+        <AnalyticsHeader
           analysesCount={0}
           onDownloadHistory={handleDownloadReport}
-          onShareWithTherapist={() => shareWithTherapist('error')}
+          onShareWithTherapist={() => shareWithTherapist("error")}
           onDownloadSummary={handleDownloadSummary}
         />
         <div className="max-w-7xl mx-auto px-8 py-8">
@@ -234,10 +258,10 @@ const AnalyticsContent = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
-      <AnalyticsHeader 
+      <AnalyticsHeader
         analysesCount={allAnalyses.length}
         onDownloadHistory={handleDownloadReport}
-        onShareWithTherapist={() => shareWithTherapist('main')}
+        onShareWithTherapist={() => shareWithTherapist("main")}
         onDownloadSummary={handleDownloadSummary}
       />
 
@@ -249,108 +273,107 @@ const AnalyticsContent = () => {
           <EmptyAnalyticsState />
         ) : (
           <div className="flex flex-col">
-          <div className="space-y-12">
-            {/* Key Metrics */}
-            <AnalyticsMetrics 
-              totalEntries={totalEntries}
-              averageAnxiety={averageAnxiety}
-              mostCommonTrigger={mostCommonTrigger}
-            />
+            <div className="space-y-12">
+              {/* Key Metrics */}
+              <AnalyticsMetrics
+                totalEntries={totalEntries}
+                averageAnxiety={averageAnxiety}
+                mostCommonTrigger={mostCommonTrigger}
+              />
 
-            {/* 1️⃣ Anxiety Type Trends Over Time */}
-            <div className="w-full">
-              <AnxietyChartsSection 
-                triggerData={triggerData}
-                severityDistribution={[]}
-                analyses={weeklyTrendAnalyses}
-                showOnly="trends"
-                dateRange={weeklyTrendsRange}
-                onDateRangeChange={setWeeklyTrendsRange}
+              {/* 1️⃣ Goal Progress Overview */}
+              <div className="w-full">
+                <GoalProgressSection
+                  goals={goals}
+                  dateRange={goalProgressRange}
+                  onDateRangeChange={setGoalProgressRange}
+                  minDate={goalProgressBounds.min ?? analysisBounds.min}
+                  maxDate={goalProgressBounds.max ?? analysisBounds.max}
+                />
+              </div>
+
+              {/* 2️⃣ Clinical Trigger Analysis */}
+              <TriggerAnalysisTable
+                triggerData={filteredTriggerData}
+                totalEntries={filteredTriggerEntries}
+                dateRange={triggerAnalysisRange}
+                onDateRangeChange={setTriggerAnalysisRange}
                 minDate={analysisBounds.min}
                 maxDate={analysisBounds.max}
               />
+
+              {/* 3️⃣ Weekly Anxiety Type Trends */}
+              <div className="w-full">
+                <AnxietyChartsSection
+                  triggerData={triggerData}
+                  severityDistribution={[]}
+                  analyses={weeklyTrendAnalyses}
+                  showOnly="trends"
+                  dateRange={weeklyTrendsRange}
+                  onDateRangeChange={setWeeklyTrendsRange}
+                  minDate={analysisBounds.min}
+                  maxDate={analysisBounds.max}
+                />
+              </div>
+
+              {/* 4️⃣ Anxiety Levels Distribution */}
+              <div className="w-full">
+                <AnxietyChartsSection
+                  triggerData={[]}
+                  severityDistribution={severityDistribution}
+                  analyses={allAnalyses}
+                  showOnly="distribution"
+                />
+              </div>
+
+              {/* 5️⃣ Anxiety Level Trends */}
+              <div className="w-full">
+                <TreatmentOutcomes
+                  analyses={averageAnxietyAnalyses}
+                  showOnly="trends"
+                  dateRange={averageAnxietyRange}
+                  onDateRangeChange={setAverageAnxietyRange}
+                  minDate={analysisBounds.min}
+                  maxDate={analysisBounds.max}
+                />
+              </div>
+
+              {/* 6️⃣ Monthly Anxiety Trends */}
+              <div className="w-full">
+                <MonthlyChartsSection
+                  analyses={monthlyTrendAnalyses}
+                  showOnly="trends"
+                  dateRange={monthlyTrendsRange}
+                  onDateRangeChange={setMonthlyTrendsRange}
+                  minDate={analysisBounds.min}
+                  maxDate={analysisBounds.max}
+                />
+              </div>
+
+              {/* 7️⃣ Weekly Treatment Outcomes */}
+              <div className="w-full">
+                <TreatmentOutcomes
+                  analyses={weeklyOutcomeAnalyses}
+                  showOnly="outcomes"
+                  dateRange={weeklyOutcomesRange}
+                  onDateRangeChange={setWeeklyOutcomesRange}
+                  minDate={analysisBounds.min}
+                  maxDate={analysisBounds.max}
+                />
+              </div>
+
+              {/* 8️⃣ Monthly Session Activity */}
+              <div className="w-full">
+                <MonthlyChartsSection
+                  analyses={monthlyActivityAnalyses}
+                  showOnly="activity"
+                  dateRange={monthlyActivityRange}
+                  onDateRangeChange={setMonthlyActivityRange}
+                  minDate={analysisBounds.min}
+                  maxDate={analysisBounds.max}
+                />
+              </div>
             </div>
-
-            {/* 2️⃣ Anxiety Levels Distribution */}
-            <div className="w-full">
-              <AnxietyChartsSection 
-                triggerData={[]}
-                severityDistribution={severityDistribution}
-                analyses={allAnalyses}
-                showOnly="distribution"
-              />
-            </div>
-
-            {/* 3️⃣ Anxiety Level Trends */}
-            <div className="w-full">
-              <TreatmentOutcomes 
-                analyses={averageAnxietyAnalyses} 
-                showOnly="trends" 
-                dateRange={averageAnxietyRange}
-                onDateRangeChange={setAverageAnxietyRange}
-                minDate={analysisBounds.min}
-                maxDate={analysisBounds.max}
-              />
-            </div>
-
-            {/* 4️⃣ Monthly Anxiety Trends */}
-            <div className="w-full">
-              <MonthlyChartsSection 
-                analyses={monthlyTrendAnalyses} 
-                showOnly="trends" 
-                dateRange={monthlyTrendsRange}
-                onDateRangeChange={setMonthlyTrendsRange}
-                minDate={analysisBounds.min}
-                maxDate={analysisBounds.max}
-              />
-            </div>
-
-            {/* 5️⃣ Weekly Treatment Outcomes */}
-            <div className="w-full">
-              <TreatmentOutcomes 
-                analyses={weeklyOutcomeAnalyses} 
-                showOnly="outcomes" 
-                dateRange={weeklyOutcomesRange}
-                onDateRangeChange={setWeeklyOutcomesRange}
-                minDate={analysisBounds.min}
-                maxDate={analysisBounds.max}
-              />
-            </div>
-
-            {/* 6️⃣ Monthly Session Activity */}
-            <div className="w-full">
-              <MonthlyChartsSection 
-                analyses={monthlyActivityAnalyses} 
-                showOnly="activity" 
-                dateRange={monthlyActivityRange}
-                onDateRangeChange={setMonthlyActivityRange}
-                minDate={analysisBounds.min}
-                maxDate={analysisBounds.max}
-              />
-            </div>
-
-            {/* 7️⃣ Goal Progress Section */}
-            <div className="w-full">
-              <GoalProgressSection 
-                goals={goals}
-                dateRange={goalProgressRange}
-                onDateRangeChange={setGoalProgressRange}
-                minDate={goalProgressBounds.min ?? analysisBounds.min}
-                maxDate={goalProgressBounds.max ?? analysisBounds.max}
-              />
-            </div>
-          </div>
-
-
-            {/* Detailed Trigger Analysis Table */}
-            <TriggerAnalysisTable 
-              triggerData={filteredTriggerData}
-              totalEntries={filteredTriggerEntries}
-              dateRange={triggerAnalysisRange}
-              onDateRangeChange={setTriggerAnalysisRange}
-              minDate={analysisBounds.min}
-              maxDate={analysisBounds.max}
-            />
           </div>
         )}
       </div>
