@@ -12,7 +12,7 @@ import {
   type NormalizedInterventionSummary
 } from "@shared/schema";
 import { db, sqliteDatabase } from "./db";
-import { eq, and, desc, gt } from "drizzle-orm";
+import { eq, and, desc, gt, sql } from "drizzle-orm";
 import { randomUUID } from 'crypto';
 
 const ensureTreatmentPlanTable = () => {
@@ -585,6 +585,18 @@ export class DatabaseStorage implements IStorage {
       ));
   }
 
+  async getPatientTherapistConnections(patientId: string): Promise<TherapistPatientConnection[]> {
+    return await db
+      .select()
+      .from(therapistPatientConnections)
+      .where(and(
+        eq(therapistPatientConnections.patientId, patientId),
+        eq(therapistPatientConnections.isActive, true),
+        eq(therapistPatientConnections.patientConsentGiven, true),
+        eq(therapistPatientConnections.therapistAccepted, true)
+      ));
+  }
+
   async acceptTherapistConnection(connectionId: string, therapistEmail: string): Promise<TherapistPatientConnection | undefined> {
     await db
       .update(therapistPatientConnections)
@@ -597,12 +609,31 @@ export class DatabaseStorage implements IStorage {
         eq(therapistPatientConnections.id, connectionId),
         eq(therapistPatientConnections.therapistEmail, therapistEmail)
       ));
-    
+
     const result = await db.select().from(therapistPatientConnections)
       .where(eq(therapistPatientConnections.id, connectionId))
       .limit(1);
-    
+
     return result[0];
+  }
+
+  async getTherapistPatientConnection(connectionId: string): Promise<TherapistPatientConnection | undefined> {
+    const result = await db
+      .select()
+      .from(therapistPatientConnections)
+      .where(eq(therapistPatientConnections.id, connectionId))
+      .limit(1);
+    return result[0];
+  }
+
+  async updateTherapistPatientConnection(connectionId: string, updates: Partial<TherapistPatientConnection>): Promise<void> {
+    await db
+      .update(therapistPatientConnections)
+      .set({
+        ...updates,
+        updatedAt: Date.now()
+      })
+      .where(eq(therapistPatientConnections.id, connectionId));
   }
 
   // Email queue
@@ -625,9 +656,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEmailNotificationsByTherapist(therapistEmail: string): Promise<any[]> {
+    // Only return notifications that are 'sent' (not processed/deleted)
     return await db.select().from(emailQueue)
-      .where(eq(emailQueue.toEmail, therapistEmail))
+      .where(and(
+        eq(emailQueue.toEmail, therapistEmail),
+        eq(emailQueue.status, 'sent')
+      ))
       .orderBy(desc(emailQueue.createdAt));
+  }
+
+  async updateEmailNotificationStatus(connectionId: string, status: string): Promise<void> {
+    // Update all notifications for this connection
+    await db.update(emailQueue)
+      .set({ status, updatedAt: Date.now() })
+      .where(sql`json_extract(metadata, '$.connectionId') = ${connectionId}`);
   }
 
   // Email verification methods

@@ -39,6 +39,8 @@ import RecommendAppForm from "./components/auth/RecommendAppForm";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import MobileNavigation from "./components/MobileNavigation";
 import MobileHeader from "./components/MobileHeader";
+import Appointments from "./pages/Appointments";
+import VideoCall from "./pages/VideoCall";
 
 // Create QueryClient outside of component to avoid hooks violations
 const queryClient = new QueryClient();
@@ -110,13 +112,17 @@ const App = () => {
               <Route path="/chat" element={<ProtectedAppLayout><Chat /></ProtectedAppLayout>} />
               <Route path="/chat-history" element={<ProtectedAppLayout><ChatHistory /></ProtectedAppLayout>} />
               <Route path="/analytics" element={<ProtectedAppLayout><Analytics /></ProtectedAppLayout>} />
+              <Route path="/appointments" element={<ProtectedAppLayout><Appointments /></ProtectedAppLayout>} />
               <Route path="/find-therapist" element={<ProtectedAppLayout><FindTherapist /></ProtectedAppLayout>} />
               <Route path="/treatment-resources" element={<ProtectedAppLayout><TreatmentResources /></ProtectedAppLayout>} />
               <Route path="/contact-therapist" element={<ProtectedAppLayout><ContactTherapist /></ProtectedAppLayout>} />
               <Route path="/settings" element={<ProtectedAppLayout><Settings /></ProtectedAppLayout>} />
               <Route path="/help" element={<ProtectedAppLayout><Help /></ProtectedAppLayout>} />
               <Route path="/notifications" element={<ProtectedAppLayout><Notifications /></ProtectedAppLayout>} />
-              
+
+              {/* Video Call route - fullscreen, no sidebar */}
+              <Route path="/video-call/:roomId" element={<ProtectedRoute><VideoCall /></ProtectedRoute>} />
+
               {/* Catch all route */}
               <Route path="*" element={<NotFound />} />
             </Routes>

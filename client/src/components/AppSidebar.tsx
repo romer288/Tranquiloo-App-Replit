@@ -16,7 +16,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { MessageCircle, Heart, BarChart3, Users, Stethoscope, Settings, HelpCircle, LayoutDashboard, LogOut, Share, History } from 'lucide-react';
+import { MessageCircle, Heart, BarChart3, Users, Stethoscope, Settings, HelpCircle, LayoutDashboard, LogOut, Share, History, Calendar } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -40,6 +40,11 @@ const navigationItems = [
     title: 'Analytics',
     url: '/analytics',
     icon: BarChart3,
+  },
+  {
+    title: 'My Appointments',
+    url: '/appointments',
+    icon: Calendar,
   },
   {
     title: 'Track Outcomes/Treatment',

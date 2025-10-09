@@ -6,6 +6,8 @@ dotenv.config();
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { WebSocketServer } from "ws";
+import { videoCallSignaling } from "./routes/video-call";
 
 const app = express();
 
@@ -67,6 +69,29 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
+  // Setup WebSocket server for video calls (only after vite setup to avoid conflicts)
+  const wss = new WebSocketServer({
+    noServer: true  // Don't attach automatically, we'll handle upgrades manually
+  });
+
+  // Handle WebSocket upgrades manually for video calls only
+  server.on('upgrade', (request, socket, head) => {
+    const pathname = new URL(request.url || '', 'http://localhost').pathname;
+
+    // Only handle video call WebSocket, let Vite handle its own
+    if (pathname === '/ws/video-call') {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit('connection', ws, request);
+      });
+    }
+  });
+
+  wss.on('connection', (ws, req) => {
+    videoCallSignaling.handleConnection(ws, req);
+  });
+
+  console.log('📹 Video call WebSocket server initialized on /ws/video-call');
+
   // Serve the app on port 5000 for Replit compatibility
   // this serves both the API and the client.
   const port = process.env.PORT || 5000;
@@ -76,7 +101,7 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
-    
+
     // Start email service after server is running
     import('./emailService').then(({ emailService }) => {
       emailService.startEmailProcessor();

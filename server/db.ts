@@ -175,6 +175,26 @@ sqliteDb.exec(`
     updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
   );
 
+  CREATE TABLE IF NOT EXISTS appointments (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    patient_id TEXT NOT NULL,
+    therapist_email TEXT NOT NULL,
+    scheduled_at TEXT NOT NULL,
+    duration INTEGER DEFAULT 60,
+    type TEXT DEFAULT 'video',
+    status TEXT DEFAULT 'scheduled',
+    room_id TEXT,
+    started_at TEXT,
+    ended_at TEXT,
+    recording_url TEXT,
+    transcript TEXT,
+    actual_duration INTEGER,
+    notes TEXT,
+    cancellation_reason TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS email_queue (
     id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
     to_email TEXT NOT NULL,

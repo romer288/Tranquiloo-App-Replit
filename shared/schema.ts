@@ -173,6 +173,27 @@ export const treatmentPlans = pgTable("treatment_plans", {
   updatedAt: timestamp("updated_at"),
 });
 
+// Appointments table for video/audio call scheduling
+export const appointments = pgTable("appointments", {
+  id: uuid("id").primaryKey(),
+  patientId: text("patient_id").notNull(),
+  therapistEmail: text("therapist_email").notNull(),
+  scheduledAt: text("scheduled_at").notNull(), // ISO date string
+  duration: integer("duration").default(60), // minutes
+  type: text("type").default("video"), // 'video' or 'audio'
+  status: text("status").default("scheduled"), // 'scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled'
+  roomId: text("room_id"), // WebRTC room ID for the call
+  startedAt: text("started_at"), // When call actually started
+  endedAt: text("ended_at"), // When call ended
+  recordingUrl: text("recording_url"), // URL to stored recording (HIPAA compliant)
+  transcript: text("transcript"), // Full transcript of the session
+  actualDuration: integer("actual_duration"), // Actual call duration in minutes
+  notes: text("notes"), // Patient's notes about the appointment
+  cancellationReason: text("cancellation_reason"),
+  createdAt: text("created_at"),
+  updatedAt: text("updated_at"),
+});
+
 // Internal email queue for all notifications
 export const emailQueue = pgTable("email_queue", {
   id: uuid("id").primaryKey(),
@@ -239,6 +260,12 @@ export const insertTherapistPatientConnectionSchema = createInsertSchema(therapi
 export const insertGoalProgressSchema = createInsertSchema(goalProgress).omit({
   id: true,
   createdAt: true,
+});
+
+export const insertAppointmentSchema = createInsertSchema(appointments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export const insertInterventionSummarySchema = createInsertSchema(interventionSummaries).omit({

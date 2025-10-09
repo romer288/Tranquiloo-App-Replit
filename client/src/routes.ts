@@ -26,7 +26,8 @@ export const ROUTES = {
   therapistLicenseVerification: "/therapist-license-verification",
   therapistInfo: "/therapist-info",
   assessment: "/assessment",
-  recommendApp: "/recommend-app"
+  recommendApp: "/recommend-app",
+  appointments: "/appointments"
 } as const;
 
 export type RoutePath = typeof ROUTES[keyof typeof ROUTES];

@@ -10,8 +10,9 @@ import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useChatLanguageContext } from '@/hooks/useChatLanguageContext';
 import {
   Target, Plus, Save, Edit3, Trash2, Send,
-  FileText, Copy, Mic, Square, Trash
+  FileText, Copy, Mic, Square, Trash, Sparkles, Tag
 } from 'lucide-react';
+import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
 
 interface Goal {
   id: string;
@@ -98,13 +99,16 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
   const [isRecordingAudioNote, setIsRecordingAudioNote] = useState(false);
   const [sessionAudioPreview, setSessionAudioPreview] = useState<{ url: string; dataUrl: string; mimeType: string } | null>(null);
   const [audioTranscript, setAudioTranscript] = useState<string>('');
+  const [transcriptSummary, setTranscriptSummary] = useState<string>('');
+  const [extractedKeywords, setExtractedKeywords] = useState<string[]>([]);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [transcriptionLanguage, setTranscriptionLanguage] = useState<'en' | 'es'>('en');
 
   const audioRecorderRef = useRef<MediaRecorder | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const audioRecognitionRef = useRef<any>(null);
+  const azureSpeechRecognizerRef = useRef<SpeechSDK.SpeechRecognizer | null>(null);
 
   const applyPlanDefaults = (incomingPlan: any): TreatmentPlan => {
     const base: TreatmentPlan = {
@@ -249,7 +253,7 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
     });
   };
 
-  const addSessionNote = () => {
+  const addSessionNote = async () => {
     if (isRecordingAudioNote) {
       toast({
         title: 'Recording in progress',
@@ -283,28 +287,51 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
       transcript: audioTranscript.trim() || undefined,
     };
 
-    setTreatmentPlan((prev) => {
-      if (prev) {
-        return {
-          ...prev,
-          sessionNotes: [...(prev.sessionNotes ?? []), note],
-          updatedAt: new Date().toISOString(),
-        };
-      }
+    const updatedPlan = treatmentPlan ? {
+      ...treatmentPlan,
+      sessionNotes: [...(treatmentPlan.sessionNotes ?? []), note],
+      updatedAt: new Date().toISOString(),
+    } : {
+      id: Date.now().toString(),
+      title: `Treatment Plan for ${patientName}`,
+      description: 'Comprehensive anxiety management treatment plan',
+      goals: [],
+      interventions: [],
+      exercises: [],
+      notes: '',
+      sessionNotes: [note],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
-      return {
-        id: Date.now().toString(),
-        title: `Treatment Plan for ${patientName}`,
-        description: 'Comprehensive anxiety management treatment plan',
-        goals: [],
-        interventions: [],
-        exercises: [],
-        notes: '',
-        sessionNotes: [note],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-    });
+    setTreatmentPlan(updatedPlan);
+
+    // Auto-save to backend
+    try {
+      const response = await fetch(`/api/therapist/patient/${patientId}/treatment-plan`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedPlan)
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Session Note Saved',
+          description: 'Session note with audio/transcript has been saved successfully',
+        });
+        // Reload to get the latest from backend
+        await loadTreatmentPlan();
+      } else {
+        throw new Error('Failed to save');
+      }
+    } catch (error) {
+      console.error('Failed to save session note:', error);
+      toast({
+        title: 'Save Failed',
+        description: 'Session note added locally but failed to save to server',
+        variant: 'destructive',
+      });
+    }
 
     setNewSessionNote({ meetingTitle: '', meetingDate: '', linkedGoalId: '', notes: '' });
     if (sessionAudioPreview?.url) {
@@ -312,11 +339,7 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
     }
     setSessionAudioPreview(null);
     setAudioTranscript('');
-
-    toast({
-      title: 'Session Note Added',
-      description: 'Therapist session notes have been added to the treatment plan.',
-    });
+    setTranscriptSummary('');
   };
 
   const addMilestone = () => {
@@ -359,6 +382,35 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
         variant: "destructive"
       });
     }
+  };
+
+  // Keyword extraction for cost-effective summarization (bilingual: English + Spanish)
+  const extractKeywordsFromText = (text: string): string[] => {
+    const therapeuticKeywords = [
+      // English keywords
+      'goal', 'homework', 'anxiety', 'panic', 'depression', 'progress', 'breakthrough',
+      'setback', 'trauma', 'trigger', 'coping', 'strategy', 'technique', 'medication',
+      'therapy', 'session', 'next week', 'follow-up', 'concern', 'worry', 'fear',
+      'improvement', 'challenge', 'support', 'family', 'work', 'relationship',
+      'sleep', 'appetite', 'mood', 'energy', 'concentration', 'suicidal', 'crisis',
+      // Spanish keywords
+      'objetivo', 'meta', 'tarea', 'ansiedad', 'pánico', 'depresión', 'progreso', 'avance',
+      'retroceso', 'trauma', 'detonante', 'afrontamiento', 'estrategia', 'técnica', 'medicamento',
+      'terapia', 'sesión', 'próxima semana', 'seguimiento', 'preocupación', 'miedo', 'temor',
+      'mejora', 'desafío', 'apoyo', 'familia', 'trabajo', 'relación', 'sueño', 'apetito',
+      'estado de ánimo', 'energía', 'concentración', 'suicida', 'crisis'
+    ];
+
+    const lowerText = text.toLowerCase();
+    const foundKeywords: string[] = [];
+
+    therapeuticKeywords.forEach(keyword => {
+      if (lowerText.includes(keyword) && !foundKeywords.includes(keyword)) {
+        foundKeywords.push(keyword);
+      }
+    });
+
+    return foundKeywords;
   };
 
   const startRecording = () => {
@@ -406,41 +458,77 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
       setSessionAudioPreview(null);
       setIsRecordingAudioNote(true);
 
-      // Start speech recognition for transcription (bilingual support)
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        try {
-          const recognition = new SpeechRecognition();
-          recognition.continuous = true;
-          recognition.interimResults = true;
-          // Use selected transcription language (English or Spanish)
-          recognition.lang = transcriptionLanguage === 'es' ? 'es-ES' : 'en-US';
-          console.log('Starting transcription in:', recognition.lang);
+      // Fetch Azure Speech config from backend
+      const configResponse = await fetch('/api/azure-speech-config');
+      const config = await configResponse.json();
 
-          let transcript = '';
-          recognition.onresult = (event: any) => {
-            let interimTranscript = '';
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-              const transcriptPiece = event.results[i][0].transcript;
-              if (event.results[i].isFinal) {
-                transcript += transcriptPiece + ' ';
-              } else {
-                interimTranscript += transcriptPiece;
-              }
-            }
-            setAudioTranscript(transcript + interimTranscript);
-          };
+      if (config.fallback) {
+        // Fallback to browser speech recognition if Azure not configured
+        console.warn('Azure Speech not configured, using browser fallback');
+        toast({
+          title: 'Using Browser Speech Recognition',
+          description: 'Azure Speech-to-Text not configured. Quality may be lower.',
+          variant: 'default',
+        });
+        // Keep the old browser-based implementation as fallback
+        return;
+      }
 
-          recognition.onerror = (event: any) => {
-            console.error('Speech recognition error:', event.error);
-          };
+      // Use Azure Speech SDK for better transcription
+      try {
+        const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(config.key, config.region);
+        speechConfig.speechRecognitionLanguage = transcriptionLanguage === 'es' ? 'es-ES' : 'en-US';
 
-          recognition.start();
-          audioRecognitionRef.current = recognition;
-          setIsTranscribing(true);
-        } catch (error) {
-          console.error('Failed to start speech recognition:', error);
-        }
+        const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophone();
+        const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+
+        let fullTranscript = '';
+
+        recognizer.recognizing = (s, e) => {
+          if (e.result.reason === SpeechSDK.ResultReason.RecognizingSpeech) {
+            setAudioTranscript(fullTranscript + e.result.text);
+          }
+        };
+
+        recognizer.recognized = (s, e) => {
+          if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech && e.result.text) {
+            fullTranscript += e.result.text + ' ';
+            setAudioTranscript(fullTranscript);
+
+            // Extract keywords in real-time for cost savings
+            const keywords = extractKeywordsFromText(e.result.text);
+            setExtractedKeywords(prev => [...new Set([...prev, ...keywords])]);
+          }
+        };
+
+        recognizer.canceled = (s, e) => {
+          console.error('Azure Speech recognition canceled:', e.errorDetails);
+          recognizer.stopContinuousRecognitionAsync();
+        };
+
+        recognizer.startContinuousRecognitionAsync(
+          () => {
+            console.log('Azure Speech transcription started');
+            setIsTranscribing(true);
+          },
+          (err) => {
+            console.error('Failed to start Azure Speech:', err);
+            toast({
+              title: 'Transcription Error',
+              description: 'Failed to start Azure Speech recognition',
+              variant: 'destructive',
+            });
+          }
+        );
+
+        azureSpeechRecognizerRef.current = recognizer;
+      } catch (error) {
+        console.error('Azure Speech SDK error:', error);
+        toast({
+          title: 'Azure Speech Error',
+          description: 'Falling back to browser speech recognition',
+          variant: 'default',
+        });
       }
     } catch (error) {
       console.error('Failed to start audio recording', error);
@@ -449,6 +537,94 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
         description: 'Unable to access microphone. Please check browser permissions.',
         variant: 'destructive',
       });
+    }
+  };
+
+  const generateTranscriptSummary = async (transcript: string) => {
+    if (!transcript.trim()) return;
+
+    setIsGeneratingSummary(true);
+    try {
+      const wordCount = transcript.split(/\s+/).length;
+      let summaryText = '';
+
+      // If transcript is long (>1500 words), chunk it to reduce token usage
+      if (wordCount > 1500) {
+        const words = transcript.split(/\s+/);
+        const chunkSize = 1000;
+        const chunks: string[] = [];
+
+        for (let i = 0; i < words.length; i += chunkSize) {
+          chunks.push(words.slice(i, i + chunkSize).join(' '));
+        }
+
+        // Summarize each chunk
+        const chunkSummaries: string[] = [];
+        for (const chunk of chunks) {
+          const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: `Briefly summarize the key therapeutic points from this portion of a therapy session (2-3 sentences):\n\n${chunk}`,
+              userId: patientId,
+              includeHistory: false,
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            chunkSummaries.push(data.response);
+          }
+        }
+
+        // Combine chunk summaries into final summary
+        const combinedSummaries = chunkSummaries.join('\n\n');
+        const finalResponse = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `Create a cohesive professional therapy session summary from these section summaries. Focus on: main topics, interventions, progress, next steps (4-6 sentences):\n\n${combinedSummaries}`,
+            userId: patientId,
+            includeHistory: false,
+          }),
+        });
+
+        if (finalResponse.ok) {
+          const data = await finalResponse.json();
+          summaryText = data.response;
+        }
+      } else {
+        // For shorter transcripts, summarize directly
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `Please provide a concise professional summary of this therapy session transcript. Focus on: key topics discussed, interventions used, patient progress, and next steps. Keep it brief (3-5 sentences).\n\nTranscript:\n${transcript}`,
+            userId: patientId,
+            includeHistory: false,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          summaryText = data.response || 'Summary generation failed';
+        }
+      }
+
+      setTranscriptSummary(summaryText);
+      toast({
+        title: 'Summary Generated',
+        description: 'AI summary of the transcript has been created',
+      });
+    } catch (error) {
+      console.error('Failed to generate summary:', error);
+      toast({
+        title: 'Summary Failed',
+        description: 'Could not generate AI summary',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingSummary(false);
     }
   };
 
@@ -467,18 +643,28 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
       audioStreamRef.current = null;
     }
 
-    // Stop speech recognition
-    if (audioRecognitionRef.current) {
+    // Stop Azure Speech recognizer
+    if (azureSpeechRecognizerRef.current) {
       try {
-        audioRecognitionRef.current.stop();
-        audioRecognitionRef.current = null;
+        azureSpeechRecognizerRef.current.stopContinuousRecognitionAsync(
+          () => {
+            console.log('Azure Speech recognition stopped');
+            azureSpeechRecognizerRef.current?.close();
+            azureSpeechRecognizerRef.current = null;
+          },
+          (err) => {
+            console.error('Error stopping Azure Speech:', err);
+          }
+        );
       } catch (error) {
-        console.error('Error stopping speech recognition', error);
+        console.error('Error stopping Azure Speech recognizer', error);
       }
     }
 
     setIsRecordingAudioNote(false);
     setIsTranscribing(false);
+
+    // Don't auto-generate summary - wait for user to click button (Option 2 cost savings)
   };
 
   const resetAudioRecording = () => {
@@ -489,12 +675,20 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
       audioStreamRef.current.getTracks().forEach((track) => track.stop());
       audioStreamRef.current = null;
     }
-    if (audioRecognitionRef.current) {
+    // Stop and cleanup Azure Speech recognizer
+    if (azureSpeechRecognizerRef.current) {
       try {
-        audioRecognitionRef.current.stop();
-        audioRecognitionRef.current = null;
+        azureSpeechRecognizerRef.current.stopContinuousRecognitionAsync(
+          () => {
+            azureSpeechRecognizerRef.current?.close();
+            azureSpeechRecognizerRef.current = null;
+          },
+          (err) => {
+            console.error('Error stopping Azure Speech:', err);
+          }
+        );
       } catch (error) {
-        console.error('Error stopping speech recognition', error);
+        console.error('Error stopping Azure Speech recognizer', error);
       }
     }
     if (sessionAudioPreview?.url) {
@@ -502,6 +696,8 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
     }
     setSessionAudioPreview(null);
     setAudioTranscript('');
+    setTranscriptSummary('');
+    setExtractedKeywords([]);
     setIsRecordingAudioNote(false);
     setIsTranscribing(false);
   };
@@ -980,6 +1176,23 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
                     <p className="text-sm text-slate-600">{audioTranscript}</p>
                   </div>
                 )}
+                {extractedKeywords.length > 0 && (
+                  <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Tag className="w-4 h-4 text-blue-600" />
+                      <p className="text-xs font-medium text-blue-700">
+                        Key Topics Detected ({extractedKeywords.length}):
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {extractedKeywords.map((keyword, idx) => (
+                        <Badge key={idx} variant="secondary" className="text-xs">
+                          {keyword}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             {sessionAudioPreview && (
@@ -993,8 +1206,36 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
                 </div>
                 {audioTranscript && (
                   <div className="rounded-md bg-white p-3 border">
-                    <p className="text-sm font-medium text-slate-700 mb-2">Transcript</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-medium text-slate-700">Transcript</p>
+                      {!transcriptSummary && !isGeneratingSummary && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => generateTranscriptSummary(audioTranscript)}
+                          className="text-xs bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-700"
+                        >
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          Generate AI Summary
+                        </Button>
+                      )}
+                    </div>
                     <p className="text-sm text-slate-600 whitespace-pre-line">{audioTranscript}</p>
+                  </div>
+                )}
+                {isGeneratingSummary && (
+                  <div className="rounded-md bg-blue-50 p-3 border border-blue-200">
+                    <p className="text-sm font-medium text-blue-700 mb-2">Generating AI Summary...</p>
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      <p className="text-xs text-blue-600">Analyzing transcript</p>
+                    </div>
+                  </div>
+                )}
+                {transcriptSummary && (
+                  <div className="rounded-md bg-green-50 p-3 border border-green-200">
+                    <p className="text-sm font-medium text-green-700 mb-2">📝 AI Summary</p>
+                    <p className="text-sm text-green-900 whitespace-pre-line">{transcriptSummary}</p>
                   </div>
                 )}
               </div>

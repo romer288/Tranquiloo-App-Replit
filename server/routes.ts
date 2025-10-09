@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import * as bcrypt from "bcryptjs";
 import { emailService } from "./emailService";
 import { randomBytes } from "crypto";
+import appointmentsRouter from "./routes/appointments";
 
 import { analyzeAnxietyContext, detectAnxietyTriggers } from "@shared/mentalHealth/anxietyContexts";
 
@@ -175,6 +176,10 @@ const extractAndParseJson = (provider: string, text: string): any | null => {
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log('Registering authentication routes...');
 
+  // Register appointments routes
+  app.use('/api/appointments', appointmentsRouter);
+  console.log('✅ Appointments routes registered');
+
   // Therapist API endpoints
   app.post('/api/therapist/search-patient', async (req, res) => {
     try {
@@ -316,10 +321,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Azure Speech-to-Text configuration endpoint
+  app.get('/api/azure-speech-config', async (req, res) => {
+    try {
+      const azureSpeechKey = process.env.AZURE_SPEECH_KEY;
+      const azureSpeechRegion = process.env.AZURE_SPEECH_REGION || 'eastus';
+
+      if (!azureSpeechKey) {
+        return res.status(503).json({
+          error: 'Azure Speech-to-Text not configured',
+          fallback: true
+        });
+      }
+
+      res.json({
+        key: azureSpeechKey,
+        region: azureSpeechRegion
+      });
+    } catch (error) {
+      console.error('Azure Speech config error:', error);
+      res.status(500).json({ error: 'Speech service error' });
+    }
+  });
+
+  // General chat endpoint for AI summaries with GPT-3.5-Turbo (cost-effective)
+  app.post('/api/chat', async (req, res) => {
+    try {
+      const { message, userId, includeHistory } = req.body;
+      const openaiKey = process.env.OPENAI_API_KEY;
+
+      if (!openaiKey) {
+        return res.status(503).json({ error: 'OpenAI API not configured' });
+      }
+
+      // Use GPT-3.5-Turbo for cost efficiency (~10x cheaper than GPT-4)
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${openaiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [{
+            role: 'user',
+            content: message
+          }],
+          max_tokens: 500,
+          temperature: 0.7
+        })
+      });
+
+      if (response.ok) {
+        const aiData = await response.json();
+        res.json({ response: aiData.choices[0].message.content });
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'AI service unavailable');
+      }
+    } catch (error) {
+      console.error('Chat API error:', error);
+      res.status(500).json({ error: 'Failed to generate AI response' });
+    }
+  });
+
   app.post('/api/therapist/chat', async (req, res) => {
     try {
       const { message, patientId, context } = req.body;
-      
+
       // Generate therapeutic AI response (anonymized)
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -333,8 +402,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           max_tokens: 300,
           messages: [{
             role: 'user',
-            content: `You are Vanessa, a therapeutic AI assistant helping a therapist with Patient X. 
-            
+            content: `You are Vanessa, a therapeutic AI assistant helping a therapist with Patient X.
+
 Context: ${context}
 Patient Data: Anonymized as "Patient X" for HIPAA compliance.
 
@@ -533,6 +602,22 @@ Key therapeutic themes addressed:
         notes
       });
 
+      // Check if connection already exists
+      const existingConnections = await storage.getPatientTherapistConnections(patient.id);
+      const existingConnection = existingConnections.find(
+        conn => conn.therapistEmail === contactValue
+      );
+
+      if (existingConnection) {
+        console.log('⚠️ Connection already exists:', existingConnection.id);
+        return res.json({
+          success: true,
+          message: 'Connection already exists',
+          connection: existingConnection,
+          alreadyExists: true
+        });
+      }
+
       // Create HIPAA-compliant connection with explicit consent
       const connection = await storage.createTherapistPatientConnection({
         patientId: patient.id,
@@ -554,27 +639,24 @@ Key therapeutic themes addressed:
       const emailContent = `
         <h2>New Patient Connection Request</h2>
         <p>A patient has requested to connect with you through the Tranquil Support app.</p>
-        
-        <h3>HIPAA-Compliant Connection Details:</h3>
+
+        <p><strong>Would you like to see this patient?</strong></p>
+
+        <p>By accepting this connection, you will gain access to the patient's:</p>
         <ul>
-          <li><strong>Therapist:</strong> ${therapistName}</li>
-          <li><strong>Contact:</strong> ${contactValue}</li>
-          <li><strong>Patient Email:</strong> ${patient.email}</li>
-          <li><strong>Patient Code:</strong> <span style="font-family: monospace; background: #f3f4f6; padding: 2px 6px; border-radius: 4px;">${patient.patientCode}</span></li>
-          <li><strong>Share Reports:</strong> ${shareReport === 'yes' ? 'Yes, patient wants to share their anxiety reports' : 'No report sharing requested'}</li>
-          <li><strong>Notes:</strong> ${notes || 'No additional notes'}</li>
+          <li>Medical situation report</li>
+          <li>Anxiety tracking data</li>
+          <li>Chat history and interventions</li>
+          <li>Ability to schedule appointments</li>
         </ul>
-        
+
         <h3>HIPAA Compliance Notice:</h3>
-        <p>This connection requires your explicit acceptance. The patient has provided informed consent to share their data with you.</p>
-        
+        <p>This connection requires your explicit acceptance. The patient has provided informed consent to share their data with you. Patient details will only be revealed after you accept the connection.</p>
+
         <h3>Next Steps:</h3>
-        <p>1. Log into the therapist portal: <a href="${appUrl}/therapist-login">Therapist Login</a></p>
-        <p>2. Search for the patient using their email and patient code</p>
-        <p>3. Accept the connection to begin receiving their anxiety tracking data</p>
-        
-        <p><strong>To search for this patient:</strong> Use email (<strong>${patient.email}</strong>) and patient code (<strong>${patient.patientCode}</strong>)</p>
-        
+        <p>Log into your therapist dashboard to review this connection request and make your decision.</p>
+        <p><a href="${appUrl}/therapist-dashboard" style="display: inline-block; background: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; margin: 10px 0;">View Connection Request</a></p>
+
         <hr>
         <p><small>This email was generated by the HIPAA-compliant Tranquil Support app. The patient has explicitly requested this connection and provided informed consent.</small></p>
       `;
@@ -585,9 +667,10 @@ Key therapeutic themes addressed:
         htmlContent: emailContent,
         emailType: 'connection_request',
         metadata: JSON.stringify({
+          connectionId: connection.id,
           patientId: patient.id,
-          therapistEmail: contactValue,
-          shareReport: shareReport === 'yes'
+          therapistName: therapistName,
+          requestedAt: new Date().toISOString()
         })
       });
 
@@ -606,6 +689,129 @@ Key therapeutic themes addressed:
         success: false, 
         error: 'Failed to send connection request: ' + error.message 
       });
+    }
+  });
+
+  // Get therapist connections for a patient (for appointment scheduling)
+  app.get('/api/therapist-connections', async (req, res) => {
+    try {
+      const { patientId } = req.query;
+
+      if (!patientId) {
+        return res.status(400).json({ error: 'Patient ID is required' });
+      }
+
+      // Get all active, accepted connections for this patient
+      const connections = await storage.getPatientTherapistConnections(patientId as string);
+
+      res.json(connections);
+    } catch (error) {
+      console.error('Failed to fetch therapist connections:', error);
+      res.status(500).json({ error: 'Failed to fetch connections' });
+    }
+  });
+
+  // Get all accepted patients for a therapist (for Patient Directory)
+  app.get('/api/therapist/:therapistEmail/patients', async (req, res) => {
+    try {
+      const { therapistEmail } = req.params;
+
+      // Get all active, accepted connections for this therapist
+      const connections = await storage.getTherapistPatientConnections(therapistEmail);
+
+      // Get full patient details for each connection
+      const patientsWithDetails = await Promise.all(
+        connections.map(async (connection) => {
+          const patient = await storage.getProfile(connection.patientId);
+          return {
+            connectionId: connection.id,
+            patientId: connection.patientId,
+            patientEmail: patient?.email,
+            patientCode: patient?.patientCode,
+            firstName: patient?.firstName,
+            lastName: patient?.lastName,
+            dateOfBirth: patient?.dateOfBirth,
+            gender: patient?.gender,
+            phoneNumber: patient?.phoneNumber,
+            connectedAt: connection.connectionAcceptedDate,
+            shareAnalytics: connection.shareAnalytics,
+            shareReports: connection.shareReports,
+          };
+        })
+      );
+
+      res.json(patientsWithDetails);
+    } catch (error) {
+      console.error('Failed to fetch therapist patients:', error);
+      res.status(500).json({ error: 'Failed to fetch patients' });
+    }
+  });
+
+  // Accept or reject patient connection request
+  app.post('/api/therapist/connection/:connectionId/respond', async (req, res) => {
+    try {
+      const { connectionId } = req.params;
+      const { action } = req.body; // 'accept' or 'reject'
+
+      if (!['accept', 'reject'].includes(action)) {
+        return res.status(400).json({ error: 'Invalid action. Must be "accept" or "reject"' });
+      }
+
+      // Get the connection
+      const connection = await storage.getTherapistPatientConnection(connectionId);
+
+      if (!connection) {
+        return res.status(404).json({ error: 'Connection not found' });
+      }
+
+      // Update connection status
+      if (action === 'accept') {
+        await storage.updateTherapistPatientConnection(connectionId, {
+          therapistAccepted: true,
+          isActive: true,
+          connectionAcceptedDate: Date.now()
+        });
+
+        // Mark notification as processed
+        await storage.updateEmailNotificationStatus(connectionId, 'processed');
+
+        // Get patient details to reveal after acceptance
+        const patient = await storage.getProfile(connection.patientId);
+
+        res.json({
+          success: true,
+          message: 'Patient connection accepted',
+          connection: { ...connection, therapistAccepted: true, isActive: true },
+          patientDetails: {
+            email: patient?.email,
+            patientCode: patient?.patientCode,
+            firstName: patient?.firstName,
+            lastName: patient?.lastName,
+            dateOfBirth: patient?.dateOfBirth,
+            gender: patient?.gender,
+            phoneNumber: patient?.phoneNumber,
+            shareReport: connection.shareAnalytics || connection.shareReports
+          }
+        });
+      } else {
+        // Reject - set inactive (no patient details revealed)
+        await storage.updateTherapistPatientConnection(connectionId, {
+          therapistAccepted: false,
+          isActive: false
+        });
+
+        // Mark notification as processed
+        await storage.updateEmailNotificationStatus(connectionId, 'processed');
+
+        res.json({
+          success: true,
+          message: 'Patient connection declined',
+          connection: { ...connection, therapistAccepted: false, isActive: false }
+        });
+      }
+    } catch (error) {
+      console.error('Failed to respond to connection:', error);
+      res.status(500).json({ error: 'Failed to process connection response' });
     }
   });
 

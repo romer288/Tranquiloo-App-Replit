@@ -25,12 +25,19 @@ import {
   Target,
   ClipboardList,
   Edit3,
+  BookOpen,
+  Calendar,
 } from "lucide-react";
 
 // Import therapist components
+import PatientDirectory from "@/components/therapist/PatientDirectory";
 import TherapistChatInterface from "@/components/therapist/TherapistChatInterface";
 import TreatmentCreation from "@/components/therapist/TreatmentCreation";
 import TherapistNotifications from "@/components/therapist/TherapistNotifications";
+import AppointmentsCalendar from "@/components/therapist/AppointmentsCalendar";
+import CallInitiator from "@/components/video-call/CallInitiator";
+import VideoCallInterface from "@/components/video-call/VideoCallInterface";
+import IncomingCallNotification from "@/components/video-call/IncomingCallNotification";
 
 // Import analytics components to match patient view exactly
 import AnalyticsHeader from "@/components/analytics/AnalyticsHeader";
@@ -80,6 +87,15 @@ const TherapistDashboard: React.FC = () => {
   const [therapistEmail, setTherapistEmail] = useState("");
   const [vanessaOpen, setVanessaOpen] = useState(false);
   const [latestTreatmentPlan, setLatestTreatmentPlan] = useState<any>(null);
+
+  // Video call state
+  const [isInCall, setIsInCall] = useState(false);
+  const [callRoomId, setCallRoomId] = useState<string>("");
+  const [incomingCall, setIncomingCall] = useState<{
+    callerName: string;
+    callType: 'video' | 'audio';
+    roomId: string;
+  } | null>(null);
 
   // Initialize therapist email when component loads
   React.useEffect(() => {
@@ -260,6 +276,13 @@ const TherapistDashboard: React.FC = () => {
             },
           },
         ]);
+
+        // Automatically select the found patient
+        toast({
+          title: "Patient Found",
+          description: `${patient.firstName} ${patient.lastName} - Loading patient data...`,
+        });
+        await handleSelectPatient(patient.id);
       } else {
         toast({
           title: "Patient Not Found",
@@ -403,6 +426,27 @@ const TherapistDashboard: React.FC = () => {
     }
   };
 
+  // Video call handlers
+  const handleInitiateCall = (callType: 'video' | 'audio', roomId: string) => {
+    setCallRoomId(roomId);
+    setIsInCall(true);
+  };
+
+  const handleAcceptCall = (roomId: string) => {
+    setCallRoomId(roomId);
+    setIsInCall(true);
+    setIncomingCall(null);
+  };
+
+  const handleRejectCall = () => {
+    setIncomingCall(null);
+  };
+
+  const handleEndCall = () => {
+    setIsInCall(false);
+    setCallRoomId("");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200 px-8 py-4">
@@ -451,6 +495,20 @@ const TherapistDashboard: React.FC = () => {
                 <span className="hidden lg:inline">Find Patient</span>
               </TabsTrigger>
               <TabsTrigger
+                value="directory"
+                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 lg:justify-start"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span className="hidden lg:inline">Patient Directory</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="appointments"
+                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 lg:justify-start"
+              >
+                <Calendar className="w-4 h-4" />
+                <span className="hidden lg:inline">Appointments</span>
+              </TabsTrigger>
+              <TabsTrigger
                 value="analytics"
                 disabled={!selectedPatientId}
                 className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start"
@@ -480,15 +538,7 @@ const TherapistDashboard: React.FC = () => {
                 className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start"
               >
                 <Target className="w-4 h-4" />
-                <span className="hidden lg:inline">Current Plan Overview</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="therapist-notes"
-                disabled={!selectedPatientId}
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start"
-              >
-                <Edit3 className="w-4 h-4" />
-                <span className="hidden lg:inline">Therapist Notes Summaries</span>
+                <span className="hidden lg:inline">Treatment Plan & Notes</span>
               </TabsTrigger>
               <TabsTrigger
                 value="medical-report"
@@ -604,6 +654,14 @@ const TherapistDashboard: React.FC = () => {
                     </CardContent>
                   </Card>
                 )}
+              </TabsContent>
+
+              <TabsContent value="directory" className="space-y-6">
+                <PatientDirectory therapistEmail={therapistEmail} />
+              </TabsContent>
+
+              <TabsContent value="appointments" className="space-y-6">
+                <AppointmentsCalendar therapistEmail={therapistEmail} />
               </TabsContent>
 
               <TabsContent value="analytics" className="space-y-6">
@@ -820,180 +878,114 @@ const TherapistDashboard: React.FC = () => {
 
               <TabsContent value="current-plan" className="space-y-6">
                 {selectedPatientId && selectedPatientData ? (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Current Plan Overview</CardTitle>
-                      <p className="text-sm text-gray-600">
-                        Snapshot of the latest goals and session notes saved
-                        for this patient.
-                      </p>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {latestTreatmentPlan ? (
-                        <>
-                          <div>
-                            <h3 className="text-sm font-semibold text-gray-900">
-                              Primary Goals
-                            </h3>
-                            {latestTreatmentPlan.goals &&
-                            latestTreatmentPlan.goals.length > 0 ? (
-                              <ul className="mt-2 space-y-2 text-sm text-gray-700">
-                                {latestTreatmentPlan.goals
-                                  .slice(0, 3)
-                                  .map((goal: any) => (
-                                    <li
-                                      key={goal.id}
-                                      className="flex items-start gap-2"
-                                    >
-                                      <Target className="w-4 h-4 text-blue-500 mt-1" />
-                                      <span>
-                                        <span className="font-medium text-gray-900">
-                                          {goal.title}
-                                        </span>
-                                        {goal.description
-                                          ? ` – ${goal.description}`
-                                          : ""}
-                                      </span>
-                                    </li>
-                                  ))}
-                              </ul>
-                            ) : (
-                              <p className="text-sm text-gray-600">
-                                No goals saved in the current treatment plan.
-                              </p>
-                            )}
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-semibold text-gray-900">
-                              Recent Session Notes
-                            </h3>
-                            {latestTreatmentPlan.sessionNotes &&
-                            latestTreatmentPlan.sessionNotes.length > 0 ? (
-                              <ul className="mt-2 space-y-2 text-sm text-gray-700">
-                                {latestTreatmentPlan.sessionNotes
-                                  .slice(0, 2)
-                                  .map((note: any) => (
-                                    <li
-                                      key={note.id}
-                                      className="border rounded-md p-2 bg-gray-50"
-                                    >
-                                      <p className="font-medium text-gray-900">
-                                        {note.meetingTitle || "Session"}
-                                      </p>
-                                      {note.meetingDate && (
-                                        <p className="text-xs text-gray-500">
-                                          {new Date(
-                                            note.meetingDate,
-                                          ).toLocaleDateString()}
-                                        </p>
-                                      )}
-                                      <p className="text-xs text-gray-600 mt-1 whitespace-pre-line">
-                                        {note.notes}
-                                      </p>
-                                    </li>
-                                  ))}
-                              </ul>
-                            ) : (
-                              <p className="text-sm text-gray-600">
-                                No therapist session notes recorded yet.
-                              </p>
-                            )}
-                          </div>
-                        </>
-                      ) : (
+                  <>
+                    {/* Goals Overview Card */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Treatment Goals Overview</CardTitle>
                         <p className="text-sm text-gray-600">
-                          Save the treatment plan to generate a quick summary
-                          here.
+                          Primary goals for this patient's treatment plan.
                         </p>
-                      )}
-                    </CardContent>
-                  </Card>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {latestTreatmentPlan?.goals && latestTreatmentPlan.goals.length > 0 ? (
+                          <ul className="space-y-3">
+                            {latestTreatmentPlan.goals.map((goal: any) => (
+                              <li key={goal.id} className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+                                <Target className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <p className="font-semibold text-gray-900">{goal.title}</p>
+                                  {goal.description && (
+                                    <p className="text-sm text-gray-600 mt-1">{goal.description}</p>
+                                  )}
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <Target className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                            <p>No treatment goals saved yet</p>
+                            <p className="text-sm">Go to "Create Treatment Plan" to add goals</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Session Notes Card */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Session Notes & Recordings</CardTitle>
+                        <p className="text-sm text-gray-600">
+                          All session notes with audio recordings and transcripts for this patient.
+                        </p>
+                      </CardHeader>
+                      <CardContent>
+                        {latestTreatmentPlan?.sessionNotes && latestTreatmentPlan.sessionNotes.length > 0 ? (
+                          <div className="space-y-4">
+                            {latestTreatmentPlan.sessionNotes.map((note: any) => (
+                              <div key={note.id} className="border rounded-lg p-4 bg-slate-50">
+                                <div className="flex items-start justify-between mb-2">
+                                  <div>
+                                    <h5 className="font-semibold text-slate-900">{note.meetingTitle}</h5>
+                                    {note.meetingDate && (
+                                      <p className="text-xs text-slate-500">
+                                        {new Date(note.meetingDate).toLocaleDateString()}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <Badge variant="outline">Session Note</Badge>
+                                </div>
+                                {note.linkedGoalTitle && (
+                                  <p className="text-xs text-blue-600 mb-2">
+                                    Linked goal: <span className="font-medium">{note.linkedGoalTitle}</span>
+                                  </p>
+                                )}
+                                <div className="space-y-3">
+                                  <div>
+                                    <h6 className="text-sm font-semibold text-slate-700 mb-1">Notes:</h6>
+                                    <p className="text-sm text-slate-700 whitespace-pre-line">{note.notes}</p>
+                                  </div>
+                                  {note.transcript && (
+                                    <div>
+                                      <h6 className="text-sm font-semibold text-slate-700 mb-1">Transcript:</h6>
+                                      <p className="text-sm text-slate-600 whitespace-pre-line bg-white p-3 rounded border">
+                                        {note.transcript}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {note.audioUrl && (
+                                    <div>
+                                      <h6 className="text-sm font-semibold text-slate-700 mb-1">Audio Recording:</h6>
+                                      <audio controls className="w-full">
+                                        <source src={note.audioUrl} />
+                                        Your browser does not support audio playback.
+                                      </audio>
+                                    </div>
+                                  )}
+                                </div>
+                                <p className="mt-3 text-xs text-slate-400">
+                                  Added {new Date(note.createdAt).toLocaleString()}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-12 text-gray-500">
+                            <Edit3 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                            <p>No session notes recorded yet</p>
+                            <p className="text-sm">Go to "Create Treatment Plan" to add session notes</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </>
                 ) : (
                   <Card>
                     <CardContent className="text-center py-12">
                       <Target className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                       <p className="text-gray-600">
-                        Select a patient to view current plan overview
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-              </TabsContent>
-
-              <TabsContent value="therapist-notes" className="space-y-6">
-                {selectedPatientId && latestTreatmentPlan ? (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Therapist Notes Summaries</CardTitle>
-                      <p className="text-sm text-gray-600">
-                        All session notes with audio recordings and transcripts for this patient.
-                      </p>
-                    </CardHeader>
-                    <CardContent>
-                      {latestTreatmentPlan.sessionNotes && latestTreatmentPlan.sessionNotes.length > 0 ? (
-                        <div className="space-y-4">
-                          {latestTreatmentPlan.sessionNotes.map((note: any) => (
-                            <div key={note.id} className="border rounded-lg p-4 bg-slate-50">
-                              <div className="flex items-start justify-between mb-2">
-                                <div>
-                                  <h5 className="font-semibold text-slate-900">{note.meetingTitle}</h5>
-                                  {note.meetingDate && (
-                                    <p className="text-xs text-slate-500">
-                                      {new Date(note.meetingDate).toLocaleDateString()}
-                                    </p>
-                                  )}
-                                </div>
-                                <Badge variant="outline">Session Note</Badge>
-                              </div>
-                              {note.linkedGoalTitle && (
-                                <p className="text-xs text-blue-600 mb-2">
-                                  Linked goal: <span className="font-medium">{note.linkedGoalTitle}</span>
-                                </p>
-                              )}
-                              <div className="space-y-3">
-                                <div>
-                                  <h6 className="text-sm font-semibold text-slate-700 mb-1">Notes:</h6>
-                                  <p className="text-sm text-slate-700 whitespace-pre-line">{note.notes}</p>
-                                </div>
-                                {note.transcript && (
-                                  <div>
-                                    <h6 className="text-sm font-semibold text-slate-700 mb-1">Transcript:</h6>
-                                    <p className="text-sm text-slate-600 whitespace-pre-line bg-white p-3 rounded border">
-                                      {note.transcript}
-                                    </p>
-                                  </div>
-                                )}
-                                {note.audioUrl && (
-                                  <div>
-                                    <h6 className="text-sm font-semibold text-slate-700 mb-1">Audio Recording:</h6>
-                                    <audio controls className="w-full">
-                                      <source src={note.audioUrl} />
-                                      Your browser does not support audio playback.
-                                    </audio>
-                                  </div>
-                                )}
-                              </div>
-                              <p className="mt-3 text-xs text-slate-400">
-                                Added {new Date(note.createdAt).toLocaleString()}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-12 text-gray-500">
-                          <Edit3 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                          <p>No therapist notes recorded yet</p>
-                          <p className="text-sm">Go to "Create Treatment Plan" to add session notes</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card>
-                    <CardContent className="text-center py-12">
-                      <Edit3 className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                      <p className="text-gray-600">
-                        Select a patient to view therapist notes summaries
+                        Select a patient to view treatment plan and notes
                       </p>
                     </CardContent>
                   </Card>
@@ -1201,6 +1193,27 @@ const TherapistDashboard: React.FC = () => {
       >
         <MessageCircle className="w-4 h-4 mr-2" /> Ask Vanessa
       </Button>
+
+      {/* Incoming Call Notification */}
+      {incomingCall && (
+        <IncomingCallNotification
+          callerName={incomingCall.callerName}
+          callType={incomingCall.callType}
+          roomId={incomingCall.roomId}
+          onAccept={handleAcceptCall}
+          onReject={handleRejectCall}
+        />
+      )}
+
+      {/* Video Call Interface */}
+      {isInCall && callRoomId && (
+        <VideoCallInterface
+          roomId={callRoomId}
+          userName={user?.username || "Therapist"}
+          userRole="therapist"
+          onEndCall={handleEndCall}
+        />
+      )}
     </div>
   );
 };
