@@ -39,6 +39,10 @@ coverage/
 ehthumbs.db
 Icon?
 
+# Git backups (should never be tracked)
+.git.backup/
+.git.*/
+
 # Project specific
 server/public
 vite.config.ts.*
