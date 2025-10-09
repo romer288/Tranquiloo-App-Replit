@@ -43,6 +43,9 @@ Icon?
 .git.backup/
 .git.*/
 
+# Replit agent state files (local development only)
+.local/
+
 # Project specific
 server/public
 vite.config.ts.*
