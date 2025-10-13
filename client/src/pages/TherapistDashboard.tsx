@@ -74,6 +74,76 @@ interface PatientRecord {
   };
 }
 
+type InsightTone = "success" | "warning" | "danger" | "neutral" | "muted";
+
+const toneBackgroundClass: Record<InsightTone, string> = {
+  success: "border-green-200 bg-green-50",
+  warning: "border-amber-200 bg-amber-50",
+  danger: "border-red-200 bg-red-50",
+  neutral: "border-slate-200 bg-slate-50",
+  muted: "border-slate-200 bg-white",
+};
+
+const toneValueClass: Record<InsightTone, string> = {
+  success: "text-green-700",
+  warning: "text-amber-600",
+  danger: "text-red-600",
+  neutral: "text-slate-900",
+  muted: "text-slate-600",
+};
+
+const toneBadgeClass: Record<InsightTone, string> = {
+  success: "bg-green-100 text-green-700 border-green-200",
+  warning: "bg-amber-100 text-amber-700 border-amber-200",
+  danger: "bg-red-100 text-red-700 border-red-200",
+  neutral: "bg-slate-100 text-slate-700 border-slate-200",
+  muted: "bg-slate-50 text-slate-600 border-slate-200",
+};
+
+interface TreatmentReportInsights {
+  summaryStats: Array<{
+    label: string;
+    value: string;
+    helper?: string;
+    tone: InsightTone;
+  }>;
+  highlights: string[];
+  priorityActions: string[];
+  triggers: Array<{ label: string; count: number }>;
+  interventions: Array<{ label: string; count: number }>;
+  goals: {
+    total: number;
+    active: number;
+    completed: number;
+    averageCompletion: number | null;
+    struggling: string[];
+  };
+  timeframe: {
+    label: string;
+    detail?: string;
+  };
+  trend: {
+    label: string;
+    detail?: string;
+    delta: number | null;
+    direction: "up" | "down" | "flat";
+    tone: InsightTone;
+  };
+  narrative: string;
+  conversationCount: number;
+  totalSummaries: number;
+  recentSessions: Array<{
+    id: string;
+    title?: string;
+    dateLabel?: string;
+    notesPreview?: string;
+  }>;
+  latestSummary?: {
+    label: string;
+    keyPoints: string[];
+  };
+}
+
 const TherapistDashboard: React.FC = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
@@ -225,11 +295,498 @@ const TherapistDashboard: React.FC = () => {
       return {} as { min?: Date; max?: Date };
     }
 
-    return {
-      min: new Date(Math.min(...timestamps)),
-      max: new Date(Math.max(...timestamps)),
+  return {
+    min: new Date(Math.min(...timestamps)),
+    max: new Date(Math.max(...timestamps)),
+  };
+}, [goals]);
+
+  const aiNarrative = React.useMemo(
+    () =>
+      generateSummaryReport(summaries, goals, analyses, {
+        title: "Treatment Report Analysis",
+      }),
+    [summaries, goals, analyses],
+  );
+
+  const treatmentReportInsights = React.useMemo<TreatmentReportInsights | null>(() => {
+    const safeAnalyses = Array.isArray(analyses) ? analyses : [];
+    const safeSummaries = Array.isArray(summaries) ? summaries : [];
+    const safeGoals = Array.isArray(goals) ? goals : [];
+    const safeSessionNotes = Array.isArray(latestTreatmentPlan?.sessionNotes)
+      ? latestTreatmentPlan.sessionNotes
+      : [];
+
+    if (
+      !safeAnalyses.length &&
+      !safeSummaries.length &&
+      !safeGoals.length &&
+      !safeSessionNotes.length
+    ) {
+      return null;
+    }
+
+    const toNumber = (value: any): number => {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : 0;
     };
-  }, [goals]);
+
+    const formatDate = (value: any): string | null => {
+      if (!value) return null;
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return null;
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    };
+
+    const normalizeList = (value: any): string[] => {
+      if (!value) return [];
+      if (Array.isArray(value)) {
+        return value
+          .map((item) => (item == null ? "" : String(item).trim()))
+          .filter(Boolean);
+      }
+      if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (!trimmed) return [];
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed)) {
+            return parsed
+              .map((item) => (item == null ? "" : String(item).trim()))
+              .filter(Boolean);
+          }
+        } catch (error) {
+          // ignore JSON parse errors and fall back to delimiter split
+        }
+        return trimmed
+          .split(/[\n,;•\-]+/)
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+      return [];
+    };
+
+    const incrementCounts = (
+      map: Map<string, { label: string; count: number }>,
+      values: string[],
+    ) => {
+      values.forEach((raw) => {
+        const normalized = raw.trim();
+        if (!normalized) return;
+        const key = normalized.toLowerCase();
+        const existing = map.get(key);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          map.set(key, { label: normalized, count: 1 });
+        }
+      });
+    };
+
+    const totalAnalyses = safeAnalyses.length;
+    const totalSummaries = safeSummaries.length;
+    const averageAnxietyValue =
+      totalAnalyses > 0
+        ? safeAnalyses.reduce(
+            (sum, analysis) =>
+              sum +
+              toNumber(
+                (analysis as any).anxietyLevel ??
+                  (analysis as any).anxiety_level ??
+                  0,
+              ),
+            0,
+          ) / totalAnalyses
+        : null;
+
+    const highIntensitySessions = safeAnalyses.filter((analysis) =>
+      toNumber((analysis as any).anxietyLevel ?? 0) >= 7,
+    ).length;
+
+    const crisisRiskSessions = safeAnalyses.filter((analysis) => {
+      const risk = (
+        (analysis as any).crisisRiskLevel ??
+        (analysis as any).crisis_risk_level ??
+        "low"
+      )
+        .toString()
+        .toLowerCase();
+      return risk === "high" || risk === "critical";
+    }).length;
+
+    const escalationCount = safeAnalyses.filter((analysis) =>
+      Boolean(
+        (analysis as any).escalationDetected ??
+          (analysis as any).escalation_detected ??
+          (analysis as any).escalationRecommended ??
+          (analysis as any).requiresEscalation,
+      ),
+    ).length;
+
+    const analysesWithDates = safeAnalyses
+      .map((analysis) => {
+        const rawDate =
+          (analysis as any).created_at ??
+          (analysis as any).createdAt ??
+          (analysis as any).created_on;
+        const date = rawDate ? new Date(rawDate) : null;
+        return {
+          analysis,
+          date,
+        };
+      })
+      .filter((item) => item.date && !Number.isNaN(item.date.getTime()))
+      .sort((a, b) => a.date!.getTime() - b.date!.getTime());
+
+    const timeframeStart = analysesWithDates[0]?.date ?? null;
+    const timeframeEnd =
+      analysesWithDates[analysesWithDates.length - 1]?.date ?? null;
+
+    const computeAverage = (items: typeof safeAnalyses) => {
+      if (!items.length) return null;
+      const total = items.reduce(
+        (sum, item) =>
+          sum +
+          toNumber(
+            (item as any).anxietyLevel ??
+              (item as any).anxiety_level ??
+              0,
+          ),
+        0,
+      );
+      return items.length ? total / items.length : null;
+    };
+
+    const sampleDescending = analysesWithDates
+      .slice()
+      .sort((a, b) => b.date!.getTime() - a.date!.getTime())
+      .map((item) => item.analysis);
+
+    const recentSample = sampleDescending.slice(0, 5);
+    const previousSample = sampleDescending.slice(5, 10);
+    const recentAverage = computeAverage(recentSample);
+    const previousAverage = computeAverage(previousSample);
+
+    let trendLabel = "Limited data available";
+    let trendDetail: string | undefined;
+    let trendDirection: "up" | "down" | "flat" = "flat";
+    let trendTone: InsightTone = "muted";
+    let trendDelta: number | null = null;
+
+    if (recentAverage !== null && previousAverage !== null) {
+      const delta = Number((recentAverage - previousAverage).toFixed(1));
+      trendDelta = delta;
+      if (Math.abs(delta) < 0.2) {
+        trendLabel = "Anxiety levels are stable";
+        trendDetail = `Change ${delta >= 0 ? "+" : ""}${delta}`;
+        trendDirection = "flat";
+        trendTone = "neutral";
+      } else if (delta < 0) {
+        trendLabel = "Anxiety is trending down";
+        trendDetail = `Down ${Math.abs(delta).toFixed(1)} vs prior period`;
+        trendDirection = "down";
+        trendTone = "success";
+      } else {
+        trendLabel = "Anxiety is trending up";
+        trendDetail = `Up +${delta.toFixed(1)} vs prior period`;
+        trendDirection = "up";
+        trendTone = delta >= 1 ? "danger" : "warning";
+      }
+    }
+
+    let severityHelper = "No recent data";
+    let severityTone: InsightTone = "muted";
+    if (averageAnxietyValue !== null) {
+      if (averageAnxietyValue >= 8) {
+        severityHelper = "Critical focus required";
+        severityTone = "danger";
+      } else if (averageAnxietyValue >= 6) {
+        severityHelper = "Elevated - monitor closely";
+        severityTone = "warning";
+      } else if (averageAnxietyValue >= 4) {
+        severityHelper = "Stable progress";
+        severityTone = "neutral";
+      } else {
+        severityHelper = "Improvement trend";
+        severityTone = "success";
+      }
+    }
+
+    const summaryStats: TreatmentReportInsights["summaryStats"] = [
+      {
+        label: "Average Anxiety",
+        value:
+          averageAnxietyValue !== null
+            ? `${averageAnxietyValue.toFixed(1)}/10`
+            : "No data",
+        helper: severityHelper,
+        tone: severityTone,
+      },
+      {
+        label: "Sessions Analyzed",
+        value: String(totalAnalyses),
+        helper:
+          totalSummaries > 0
+            ? `${totalSummaries} intervention summaries`
+            : undefined,
+        tone: totalAnalyses > 0 ? "neutral" : "muted",
+      },
+      {
+        label: "Crisis Alerts",
+        value: String(crisisRiskSessions),
+        helper:
+          crisisRiskSessions > 0
+            ? "Follow-up required"
+            : "No crisis alerts",
+        tone: crisisRiskSessions > 0 ? "danger" : "success",
+      },
+      {
+        label: "Active Goals",
+        value: String(
+          safeGoals.filter((goal: any) => goal?.is_active !== false).length,
+        ),
+        helper:
+          safeGoals.length > 0
+            ? `Avg completion ${Math.round(
+                safeGoals.reduce(
+                  (sum: number, goal: any) =>
+                    sum + toNumber(goal?.completion_rate ?? 0),
+                  0,
+                ) / safeGoals.length,
+              )}%`
+            : "No goals recorded",
+        tone:
+          safeGoals.length > 0
+            ? (() => {
+                const avg =
+                  safeGoals.reduce(
+                    (sum: number, goal: any) =>
+                      sum + toNumber(goal?.completion_rate ?? 0),
+                    0,
+                  ) / safeGoals.length;
+                if (avg >= 70) return "success";
+                if (avg < 40) return "warning";
+                return "neutral";
+              })()
+            : "muted",
+      },
+    ];
+
+    const triggerCounts = new Map<string, { label: string; count: number }>();
+    const interventionCounts = new Map<
+      string,
+      { label: string; count: number }
+    >();
+
+    safeAnalyses.forEach((analysis) => {
+      incrementCounts(
+        triggerCounts,
+        normalizeList(
+          (analysis as any).triggers ??
+            (analysis as any).anxietyTriggers ??
+            (analysis as any).anxiety_triggers ??
+            [],
+        ),
+      );
+      incrementCounts(
+        interventionCounts,
+        normalizeList(
+          (analysis as any).recommendedInterventions ??
+            (analysis as any).copingStrategies ??
+            [],
+        ),
+      );
+    });
+
+    const topTriggers = Array.from(triggerCounts.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+    const topInterventions = Array.from(interventionCounts.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    const averageGoalCompletion =
+      safeGoals.length > 0
+        ? Math.round(
+            safeGoals.reduce(
+              (sum: number, goal: any) =>
+                sum + toNumber(goal?.completion_rate ?? 0),
+              0,
+            ) / safeGoals.length,
+          )
+        : null;
+
+    const completedGoals = safeGoals.filter(
+      (goal: any) => toNumber(goal?.completion_rate ?? 0) >= 90,
+    ).length;
+
+    const strugglingGoals = safeGoals
+      .filter((goal: any) => toNumber(goal?.completion_rate ?? 0) < 50)
+      .map((goal: any) => String(goal?.title || "Untitled goal"))
+      .slice(0, 3);
+
+    const conversationCount = safeSummaries.reduce(
+      (sum, summary: any) => sum + toNumber(summary?.conversation_count ?? 0),
+      0,
+    );
+
+    const sortedSummaries = safeSummaries
+      .slice()
+      .sort(
+        (a: any, b: any) =>
+          new Date(b?.week_end ?? b?.week_start ?? 0).getTime() -
+          new Date(a?.week_end ?? a?.week_start ?? 0).getTime(),
+      );
+
+    const latestSummary = sortedSummaries[0]
+      ? {
+          label:
+            formatDate(sortedSummaries[0].week_start) &&
+            formatDate(sortedSummaries[0].week_end)
+              ? `${formatDate(sortedSummaries[0].week_start)} → ${formatDate(
+                  sortedSummaries[0].week_end,
+                )}`
+              : formatDate(sortedSummaries[0].week_start) ?? "Most recent summary",
+          keyPoints: normalizeList(sortedSummaries[0].key_points).slice(0, 4),
+        }
+      : undefined;
+
+    const highlights = [
+      averageAnxietyValue !== null
+        ? `Average anxiety is ${averageAnxietyValue.toFixed(1)}/10.`
+        : "No anxiety assessments recorded yet.",
+      topTriggers.length
+        ? `Top triggers: ${topTriggers
+            .slice(0, 3)
+            .map((trigger) => `${trigger.label} (${trigger.count})`)
+            .join(", ")}.`
+        : "No triggers detected in recent sessions.",
+      topInterventions.length
+        ? `Most used interventions: ${topInterventions
+            .slice(0, 3)
+            .map((item) => `${item.label} (${item.count})`)
+            .join(", ")}.`
+        : "No intervention usage recorded yet.",
+      highIntensitySessions > 0
+        ? `${highIntensitySessions} session${
+            highIntensitySessions === 1 ? "" : "s"
+          } reported anxiety ≥7.`
+        : undefined,
+      conversationCount > 0
+        ? `${conversationCount} conversations captured across intervention summaries.`
+        : undefined,
+    ].filter((item): item is string => Boolean(item));
+
+    const priorityActions: string[] = [];
+    if (crisisRiskSessions > 0) {
+      priorityActions.push(
+        "🚨 Address crisis risk factors with immediate follow-up.",
+      );
+    }
+    if (escalationCount > Math.max(1, Math.floor(totalAnalyses * 0.3))) {
+      priorityActions.push(
+        "⚠️ Assess escalation patterns and reinforce coping strategies.",
+      );
+    }
+    if (averageAnxietyValue !== null && averageAnxietyValue >= 7) {
+      priorityActions.push(
+        "📈 Focus sessions on acute anxiety reduction techniques.",
+      );
+    }
+    if (safeGoals.some((goal: any) => toNumber(goal?.completion_rate ?? 0) < 50)) {
+      priorityActions.push(
+        "🎯 Revisit underperforming goals to remove blockers or reset targets.",
+      );
+    }
+    if (!priorityActions.length) {
+      priorityActions.push(
+        "✅ Continue reinforcing effective interventions and monitor progress weekly.",
+      );
+    }
+
+    const narrativeParts: string[] = [];
+    if (averageAnxietyValue !== null) {
+      narrativeParts.push(
+        `Average anxiety is ${averageAnxietyValue.toFixed(1)}/10 ${
+          trendDetail ? `(${trendDetail})` : ""
+        }.`,
+      );
+    }
+    if (crisisRiskSessions > 0) {
+      narrativeParts.push(
+        `${crisisRiskSessions} crisis-level session${
+          crisisRiskSessions === 1 ? "" : "s"
+        } detected in the current window.`,
+      );
+    }
+    if (topTriggers.length) {
+      narrativeParts.push(
+        `Primary triggers include ${topTriggers
+          .slice(0, 2)
+          .map((item) => item.label)
+          .join(" and ")}.`,
+      );
+    }
+    if (averageGoalCompletion !== null) {
+      narrativeParts.push(
+        `Goals show an average completion of ${averageGoalCompletion}% with ${completedGoals} near completion.`,
+      );
+    }
+
+    const recentSessions = safeSessionNotes.slice(0, 2).map((note: any) => ({
+      id: String(note?.id ?? Math.random()),
+      title: note?.meetingTitle ?? "Session",
+      dateLabel: formatDate(note?.meetingDate) ?? undefined,
+      notesPreview: note?.notes
+        ? String(note.notes).split(/\n+/)[0].slice(0, 160)
+        : undefined,
+    }));
+
+    return {
+      summaryStats,
+      highlights,
+      priorityActions,
+      triggers: topTriggers,
+      interventions: topInterventions,
+      goals: {
+        total: safeGoals.length,
+        active: safeGoals.filter((goal: any) => goal?.is_active !== false).length,
+        completed: completedGoals,
+        averageCompletion: averageGoalCompletion,
+        struggling: strugglingGoals,
+      },
+      timeframe: {
+        label:
+          timeframeStart && timeframeEnd
+            ? `${formatDate(timeframeStart)} → ${formatDate(timeframeEnd)}`
+            : timeframeEnd
+            ? `Last session ${formatDate(timeframeEnd)}`
+            : "Timeline unavailable",
+        detail:
+          totalAnalyses > 0
+            ? `${totalAnalyses} recorded assessment${
+                totalAnalyses === 1 ? "" : "s"
+              }`
+            : undefined,
+      },
+      trend: {
+        label: trendLabel,
+        detail: trendDetail,
+        delta: trendDelta,
+        direction: trendDirection,
+        tone: trendTone,
+      },
+      narrative: narrativeParts.join(" ").trim(),
+      conversationCount,
+      totalSummaries,
+      recentSessions,
+      latestSummary,
+    } satisfies TreatmentReportInsights;
+  }, [analyses, summaries, goals, latestTreatmentPlan]);
 
   const handlePatientSearch = async () => {
     if (!searchEmail || !searchCode) {
@@ -1009,27 +1566,282 @@ const TherapistDashboard: React.FC = () => {
                           AI-generated clinical analysis combining intervention summaries, patient analytics, and therapist notes.
                         </p>
                       </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center justify-between mb-4">
+                      <CardContent className="space-y-6">
+                        <div className="flex flex-wrap items-start justify-between gap-4">
                           <div>
                             <p className="text-xs uppercase text-gray-500">Patient</p>
-                            <p className="text-sm text-gray-800 font-medium">
+                            <p className="text-base font-semibold text-gray-900">
                               {selectedPatientData.profile?.first_name} {selectedPatientData.profile?.last_name}
                             </p>
-                            <p className="text-sm text-gray-600">{selectedPatientData.profile?.email}</p>
+                            <p className="text-sm text-gray-600">
+                              {selectedPatientData.profile?.email}
+                            </p>
+                            {treatmentReportInsights?.timeframe.label && (
+                              <p className="mt-2 text-xs text-slate-500">
+                                {treatmentReportInsights.timeframe.label}
+                                {treatmentReportInsights.timeframe.detail && (
+                                  <span className="ml-2">
+                                    • {treatmentReportInsights.timeframe.detail}
+                                  </span>
+                                )}
+                              </p>
+                            )}
                           </div>
-                          <Button
-                            variant="outline"
-                            onClick={() => downloadSummaryReport(summaries, goals, analyses, { title: 'Treatment Report Analysis' })}
-                          >
-                            Download Report
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            {treatmentReportInsights && (
+                              <Badge
+                                variant="outline"
+                                className={toneBadgeClass[
+                                  treatmentReportInsights.trend.tone
+                                ]}
+                              >
+                                {treatmentReportInsights.trend.label}
+                                {treatmentReportInsights.trend.detail && (
+                                  <span className="ml-1 text-xs">
+                                    ({treatmentReportInsights.trend.detail})
+                                  </span>
+                                )}
+                              </Badge>
+                            )}
+                            <Button
+                              variant="outline"
+                              onClick={() =>
+                                downloadSummaryReport(summaries, goals, analyses, {
+                                  title: "Treatment Report Analysis",
+                                })
+                              }
+                            >
+                              Download Report
+                            </Button>
+                          </div>
                         </div>
-                        <div className="rounded border bg-white p-4 max-h-[60vh] overflow-auto">
-                          <pre className="whitespace-pre-wrap text-sm text-slate-800">
-                            {generateSummaryReport(summaries, goals, analyses, { title: 'Treatment Report Analysis' })}
-                          </pre>
-                        </div>
+
+                        {treatmentReportInsights?.narrative && (
+                          <div className="rounded-lg border border-blue-100 bg-blue-50/70 p-4">
+                            <p className="text-sm font-semibold text-blue-900">
+                              Executive Summary
+                            </p>
+                            <p className="mt-1 text-sm text-slate-800">
+                              {treatmentReportInsights.narrative}
+                            </p>
+                          </div>
+                        )}
+
+                        {treatmentReportInsights ? (
+                          <>
+                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                              {treatmentReportInsights.summaryStats.map((stat) => (
+                                <div
+                                  key={stat.label}
+                                  className={`rounded-lg border p-4 ${toneBackgroundClass[stat.tone]}`}
+                                >
+                                  <p className="text-xs font-medium uppercase text-slate-500">
+                                    {stat.label}
+                                  </p>
+                                  <p
+                                    className={`text-xl font-semibold ${toneValueClass[stat.tone]}`}
+                                  >
+                                    {stat.value}
+                                  </p>
+                                  {stat.helper && (
+                                    <p className="mt-1 text-xs text-slate-600">
+                                      {stat.helper}
+                                    </p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="grid gap-4 lg:grid-cols-2">
+                              <div className="rounded-lg border bg-white p-4">
+                                <h4 className="text-sm font-semibold text-slate-900">
+                                  Key Highlights
+                                </h4>
+                                <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                                  {treatmentReportInsights.highlights.map((highlight, index) => (
+                                    <li key={`${highlight}-${index}`} className="flex items-start gap-2">
+                                      <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-400" />
+                                      <span>{highlight}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                              <div className="rounded-lg border bg-white p-4">
+                                <h4 className="text-sm font-semibold text-slate-900">
+                                  Priority Actions
+                                </h4>
+                                <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                                  {treatmentReportInsights.priorityActions.map((action, index) => (
+                                    <li key={`${action}-${index}`} className="flex items-start gap-2">
+                                      <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-400" />
+                                      <span>{action}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+
+                            <div className="grid gap-4 lg:grid-cols-2">
+                              <div className="rounded-lg border bg-white p-4">
+                                <h4 className="text-sm font-semibold text-slate-900">
+                                  Leading Triggers
+                                </h4>
+                                {treatmentReportInsights.triggers.length ? (
+                                  <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                                    {treatmentReportInsights.triggers.map((trigger) => (
+                                      <li key={trigger.label} className="flex items-center justify-between">
+                                        <span>{trigger.label}</span>
+                                        <span className="text-xs text-slate-500">
+                                          {trigger.count} occurrence{trigger.count === 1 ? "" : "s"}
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p className="mt-3 text-sm text-slate-500">
+                                    No triggers recorded yet.
+                                  </p>
+                                )}
+                              </div>
+                              <div className="rounded-lg border bg-white p-4">
+                                <h4 className="text-sm font-semibold text-slate-900">
+                                  Intervention Engagement
+                                </h4>
+                                {treatmentReportInsights.interventions.length ? (
+                                  <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                                    {treatmentReportInsights.interventions.map((item) => (
+                                      <li key={item.label} className="flex items-center justify-between">
+                                        <span>{item.label}</span>
+                                        <span className="text-xs text-slate-500">
+                                          {item.count} mention{item.count === 1 ? "" : "s"}
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p className="mt-3 text-sm text-slate-500">
+                                    No intervention data captured yet.
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="grid gap-4 lg:grid-cols-2">
+                              <div className="rounded-lg border bg-white p-4">
+                                <h4 className="text-sm font-semibold text-slate-900">
+                                  Goal Progress Snapshot
+                                </h4>
+                                <div className="mt-3 grid gap-2 text-sm text-slate-700">
+                                  <div className="flex items-center justify-between">
+                                    <span>Total goals</span>
+                                    <span>{treatmentReportInsights.goals.total}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <span>Active goals</span>
+                                    <span>{treatmentReportInsights.goals.active}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <span>Completed / near complete</span>
+                                    <span>{treatmentReportInsights.goals.completed}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <span>Average completion</span>
+                                    <span>
+                                      {treatmentReportInsights.goals.averageCompletion !== null
+                                        ? `${treatmentReportInsights.goals.averageCompletion}%`
+                                        : "No data"}
+                                    </span>
+                                  </div>
+                                </div>
+                                {treatmentReportInsights.goals.struggling.length > 0 && (
+                                  <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3">
+                                    <p className="text-xs font-semibold text-amber-800 uppercase">
+                                      Goals needing attention
+                                    </p>
+                                    <ul className="mt-2 space-y-1 text-xs text-amber-700">
+                                      {treatmentReportInsights.goals.struggling.map((goal, index) => (
+                                        <li key={`${goal}-${index}`}>• {goal}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+
+                              {treatmentReportInsights.latestSummary && (
+                                <div className="rounded-lg border bg-white p-4">
+                                  <h4 className="text-sm font-semibold text-slate-900">
+                                    Latest Intervention Summary
+                                  </h4>
+                                  <p className="mt-2 text-xs uppercase text-slate-500">
+                                    {treatmentReportInsights.latestSummary.label}
+                                  </p>
+                                  {treatmentReportInsights.latestSummary.keyPoints.length ? (
+                                    <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                                      {treatmentReportInsights.latestSummary.keyPoints.map((point, index) => (
+                                        <li key={`${point}-${index}`} className="flex items-start gap-2">
+                                          <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-slate-400" />
+                                          <span>{point}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <p className="mt-3 text-sm text-slate-500">
+                                      No key points recorded.
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {treatmentReportInsights.recentSessions.length > 0 && (
+                              <div className="rounded-lg border bg-white p-4">
+                                <h4 className="text-sm font-semibold text-slate-900">
+                                  Recent Therapist Notes
+                                </h4>
+                                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                                  {treatmentReportInsights.recentSessions.map((session) => (
+                                    <div
+                                      key={session.id}
+                                      className="rounded-md border border-slate-200 bg-slate-50 p-3"
+                                    >
+                                      <div className="flex items-start justify-between gap-2">
+                                        <p className="text-sm font-semibold text-slate-900">
+                                          {session.title}
+                                        </p>
+                                        {session.dateLabel && (
+                                          <span className="text-xs text-slate-500">
+                                            {session.dateLabel}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {session.notesPreview && (
+                                        <p className="mt-2 text-xs text-slate-600">
+                                          {session.notesPreview}
+                                          {session.notesPreview.length >= 160 && "…"}
+                                        </p>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            <details className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                              <summary className="cursor-pointer font-semibold text-slate-900">
+                                View full AI narrative
+                              </summary>
+                              <div className="mt-3 max-h-[45vh] overflow-auto rounded border bg-white p-3">
+                                <pre className="whitespace-pre-wrap text-xs text-slate-800">
+                                  {aiNarrative}
+                                </pre>
+                              </div>
+                            </details>
+                          </>
+                        ) : (
+                          <div className="rounded border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
+                            Not enough patient data to build an analysis yet. Encourage the patient to log sessions and assessments to unlock this view.
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   </div>
