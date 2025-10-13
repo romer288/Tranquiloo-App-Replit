@@ -100,6 +100,9 @@ const toneBadgeClass: Record<InsightTone, string> = {
   muted: "bg-slate-50 text-slate-600 border-slate-200",
 };
 
+const navLabelClass =
+  "hidden lg:inline flex-1 text-left leading-tight whitespace-normal break-words";
+
 interface TreatmentReportInsights {
   summaryStats: Array<{
     label: string;
@@ -1047,78 +1050,80 @@ const TherapistDashboard: React.FC = () => {
             <TabsList className="flex flex-wrap gap-2 bg-white p-3 rounded-xl border border-gray-200 shadow-sm lg:flex-col lg:sticky lg:top-24 lg:h-fit lg:gap-1">
               <TabsTrigger
                 value="search"
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 lg:justify-start"
+                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 lg:justify-start lg:items-start"
               >
                 <Search className="w-4 h-4" />
-                <span className="hidden lg:inline">Find Patient</span>
+                <span className={navLabelClass}>Find Patient</span>
               </TabsTrigger>
               <TabsTrigger
                 value="directory"
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 lg:justify-start"
+                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 lg:justify-start lg:items-start"
               >
                 <BookOpen className="w-4 h-4" />
-                <span className="hidden lg:inline">Patient Directory</span>
+                <span className={navLabelClass}>Patient Directory</span>
               </TabsTrigger>
               <TabsTrigger
                 value="appointments"
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 lg:justify-start"
+                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 lg:justify-start lg:items-start"
               >
                 <Calendar className="w-4 h-4" />
-                <span className="hidden lg:inline">Appointments</span>
+                <span className={navLabelClass}>Appointments</span>
               </TabsTrigger>
               <TabsTrigger
                 value="analytics"
                 disabled={!selectedPatientId}
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start"
+                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start lg:items-start"
               >
                 <TrendingUp className="w-4 h-4" />
-                <span className="hidden lg:inline">Patient Analytics</span>
+                <span className={navLabelClass}>Patient Analytics</span>
               </TabsTrigger>
               <TabsTrigger
                 value="interventions"
                 disabled={!selectedPatientId}
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start"
+                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start lg:items-start"
               >
                 <ClipboardList className="w-4 h-4" />
-                <span className="hidden lg:inline">Patient Intervention Summaries</span>
+                <span className={navLabelClass}>Patient Intervention Summaries</span>
               </TabsTrigger>
               <TabsTrigger
                 value="treatment"
                 disabled={!selectedPatientId}
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start"
+                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start lg:items-start"
               >
                 <Clipboard className="w-4 h-4" />
-                <span className="hidden lg:inline">Start Session & Create Treatment Plan</span>
+                <span className={navLabelClass}>
+                  Start Session & Create Treatment Plan
+                </span>
               </TabsTrigger>
               <TabsTrigger
                 value="current-plan"
                 disabled={!selectedPatientId}
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start"
+                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start lg:items-start"
               >
                 <Target className="w-4 h-4" />
-                <span className="hidden lg:inline">Treatment Plan & Notes</span>
+                <span className={navLabelClass}>Treatment Plan & Notes</span>
               </TabsTrigger>
               <TabsTrigger
                 value="medical-report"
                 disabled={!selectedPatientId}
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold text-center border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start"
+                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold text-center border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start lg:items-start"
               >
                 <FileText className="w-4 h-4" />
-                <span className="hidden lg:inline">Treatment Report Analysis</span>
+                <span className={navLabelClass}>Treatment Report Analysis</span>
               </TabsTrigger>
               <TabsTrigger
                 value="chat"
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 lg:justify-start"
+                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 lg:justify-start lg:items-start"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span className="hidden lg:inline">Case Chat</span>
+                <span className={navLabelClass}>Case Chat</span>
               </TabsTrigger>
               <TabsTrigger
                 value="notifications"
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 lg:justify-start"
+                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 lg:justify-start lg:items-start"
               >
                 <Bell className="w-4 h-4" />
-                <span className="hidden lg:inline">Notifications</span>
+                <span className={navLabelClass}>Notifications</span>
               </TabsTrigger>
             </TabsList>
 
