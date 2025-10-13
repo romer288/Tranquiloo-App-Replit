@@ -104,8 +104,22 @@ const aggregateAnalysesByPeriod = (
 
     const triggerCounts = new Map<string, number>();
     ordered.forEach((analysis) => {
-      (analysis.triggers || []).forEach((trigger) => {
-        const normalized = trigger?.trim();
+      const rawTriggers: any = (analysis as any).triggers ?? (analysis as any).anxietyTriggers ?? (analysis as any).anxiety_triggers ?? [];
+      const triggersArr: string[] = Array.isArray(rawTriggers)
+        ? rawTriggers
+        : typeof rawTriggers === 'string'
+          ? (() => {
+              try {
+                const parsed = JSON.parse(rawTriggers);
+                return Array.isArray(parsed) ? parsed : String(rawTriggers).split(/[\n,•\-]+/).map((s) => String(s).trim()).filter(Boolean);
+              } catch {
+                return String(rawTriggers).split(/[\n,•\-]+/).map((s) => String(s).trim()).filter(Boolean);
+              }
+            })()
+          : [];
+
+      triggersArr.forEach((trigger) => {
+        const normalized = String(trigger ?? '').trim();
         if (!normalized) return;
         triggerCounts.set(normalized, (triggerCounts.get(normalized) ?? 0) + 1);
       });
@@ -117,9 +131,22 @@ const aggregateAnalysesByPeriod = (
 
     const therapyCounts = new Map<string, number>();
     ordered.forEach((analysis) => {
-      const interventions = analysis.recommendedInterventions ?? analysis.copingStrategies ?? [];
+      const rawInterventions: any = (analysis as any).recommendedInterventions ?? (analysis as any).copingStrategies ?? [];
+      const interventions: string[] = Array.isArray(rawInterventions)
+        ? rawInterventions
+        : typeof rawInterventions === 'string'
+          ? (() => {
+              try {
+                const parsed = JSON.parse(rawInterventions);
+                return Array.isArray(parsed) ? parsed : String(rawInterventions).split(/[\n,•\-]+/).map((s) => String(s).trim()).filter(Boolean);
+              } catch {
+                return String(rawInterventions).split(/[\n,•\-]+/).map((s) => String(s).trim()).filter(Boolean);
+              }
+            })()
+          : [];
+
       interventions.forEach((therapy) => {
-        const normalized = therapy?.trim();
+        const normalized = String(therapy ?? '').trim();
         if (!normalized) return;
         therapyCounts.set(normalized, (therapyCounts.get(normalized) ?? 0) + 1);
       });
