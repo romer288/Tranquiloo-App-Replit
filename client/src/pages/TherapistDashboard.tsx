@@ -49,6 +49,7 @@ import MonthlyChartsSection from "@/components/analytics/MonthlyChartsSection";
 import GoalProgressSection from "@/components/analytics/GoalProgressSection";
 import TriggerAnalysisTable from "@/components/analytics/TriggerAnalysisTable";
 import InterventionSummariesSection from "@/components/analytics/InterventionSummariesSection";
+import { downloadSummaryReport, generateSummaryReport } from "@/services/summaryReportService";
 import {
   processTriggerData,
   processSeverityDistribution,
@@ -530,7 +531,7 @@ const TherapistDashboard: React.FC = () => {
                 className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start"
               >
                 <Clipboard className="w-4 h-4" />
-                <span className="hidden lg:inline">Create Treatment Plan</span>
+                <span className="hidden lg:inline">Start Session & Create Treatment Plan</span>
               </TabsTrigger>
               <TabsTrigger
                 value="current-plan"
@@ -546,7 +547,7 @@ const TherapistDashboard: React.FC = () => {
                 className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold text-center border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start"
               >
                 <FileText className="w-4 h-4" />
-                <span className="hidden lg:inline">Treatment Report</span>
+                <span className="hidden lg:inline">Treatment Report Analysis</span>
               </TabsTrigger>
               <TabsTrigger
                 value="chat"
@@ -906,7 +907,7 @@ const TherapistDashboard: React.FC = () => {
                           <div className="text-center py-8 text-gray-500">
                             <Target className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                             <p>No treatment goals saved yet</p>
-                            <p className="text-sm">Go to "Create Treatment Plan" to add goals</p>
+                            <p className="text-sm">Go to "Start Session & Create Treatment Plan" to add goals</p>
                           </div>
                         )}
                       </CardContent>
@@ -974,7 +975,7 @@ const TherapistDashboard: React.FC = () => {
                           <div className="text-center py-12 text-gray-500">
                             <Edit3 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                             <p>No session notes recorded yet</p>
-                            <p className="text-sm">Go to "Create Treatment Plan" to add session notes</p>
+                            <p className="text-sm">Go to "Start Session & Create Treatment Plan" to add session notes</p>
                           </div>
                         )}
                       </CardContent>
@@ -1003,162 +1004,40 @@ const TherapistDashboard: React.FC = () => {
                   <div className="space-y-6">
                     <Card>
                       <CardHeader>
-                        <CardTitle>Treatment Report</CardTitle>
+                        <CardTitle>Treatment Report Analysis</CardTitle>
                         <p className="text-sm text-gray-600">
-                          Consolidated insights based on current treatment
-                          plans, therapist notes, and recent analytics activity.
+                          AI-generated clinical analysis combining intervention summaries, patient analytics, and therapist notes.
                         </p>
                       </CardHeader>
                       <CardContent>
-                        <div className="grid gap-4 md:grid-cols-2">
+                        <div className="flex items-center justify-between mb-4">
                           <div>
-                            <p className="text-xs uppercase text-gray-500 mb-1">
-                              Patient
-                            </p>
+                            <p className="text-xs uppercase text-gray-500">Patient</p>
                             <p className="text-sm text-gray-800 font-medium">
-                              {selectedPatientData.profile?.first_name}{" "}
-                              {selectedPatientData.profile?.last_name}
+                              {selectedPatientData.profile?.first_name} {selectedPatientData.profile?.last_name}
                             </p>
-                            <p className="text-sm text-gray-600">
-                              {selectedPatientData.profile?.email}
-                            </p>
+                            <p className="text-sm text-gray-600">{selectedPatientData.profile?.email}</p>
                           </div>
-                          <div>
-                            <p className="text-xs uppercase text-gray-500 mb-1">
-                              Average Anxiety (30 days)
-                            </p>
-                            <p className="text-sm text-gray-800 font-semibold">
-                              {averageAnxiety !== null
-                                ? `${averageAnxiety.toFixed(1)}/10`
-                                : "—"}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              Top trigger:{" "}
-                              {mostCommonTrigger?.trigger ||
-                                "No trigger identified"}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs uppercase text-gray-500 mb-1">
-                              Treatment Goals
-                            </p>
-                            {latestTreatmentPlan?.goals?.length ? (
-                              <ul className="text-sm text-gray-700 space-y-1">
-                                {latestTreatmentPlan.goals
-                                  .slice(0, 3)
-                                  .map((goal: any) => (
-                                    <li
-                                      key={goal.id}
-                                      className="flex items-start gap-2"
-                                    >
-                                      <Target className="w-4 h-4 text-blue-500 mt-1" />
-                                      <span>{goal.title}</span>
-                                    </li>
-                                  ))}
-                                {latestTreatmentPlan.goals.length > 3 && (
-                                  <li className="text-xs text-gray-500">
-                                    + {latestTreatmentPlan.goals.length - 3}{" "}
-                                    more goals
-                                  </li>
-                                )}
-                              </ul>
-                            ) : (
-                              <p className="text-sm text-gray-600">
-                                No treatment goals saved yet.
-                              </p>
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-xs uppercase text-gray-500 mb-1">
-                              Recent Sessions
-                            </p>
-                            {latestTreatmentPlan?.sessionNotes?.length ? (
-                              <ul className="text-sm text-gray-700 space-y-1">
-                                {latestTreatmentPlan.sessionNotes
-                                  .slice(0, 2)
-                                  .map((note: any) => (
-                                    <li key={note.id}>
-                                      <span className="font-medium text-gray-900">
-                                        {note.meetingTitle || "Session"}
-                                      </span>
-                                      {note.meetingDate && (
-                                        <span className="text-xs text-gray-500 ml-2">
-                                          {new Date(
-                                            note.meetingDate,
-                                          ).toLocaleDateString()}
-                                        </span>
-                                      )}
-                                    </li>
-                                  ))}
-                              </ul>
-                            ) : (
-                              <p className="text-sm text-gray-600">
-                                No session notes recorded.
-                              </p>
-                            )}
-                          </div>
+                          <Button
+                            variant="outline"
+                            onClick={() => downloadSummaryReport(summaries, goals, analyses, { title: 'Treatment Report Analysis' })}
+                          >
+                            Download Report
+                          </Button>
+                        </div>
+                        <div className="rounded border bg-white p-4 max-h-[60vh] overflow-auto">
+                          <pre className="whitespace-pre-wrap text-sm text-slate-800">
+                            {generateSummaryReport(summaries, goals, analyses, { title: 'Treatment Report Analysis' })}
+                          </pre>
                         </div>
                       </CardContent>
                     </Card>
-
-                    <AnalyticsMetrics
-                      totalEntries={totalEntries}
-                      averageAnxiety={averageAnxiety}
-                      mostCommonTrigger={
-                        mostCommonTrigger ?? { trigger: "", count: 0 }
-                      }
-                    />
-
-                    <div className="grid gap-6 lg:grid-cols-2">
-                      <AnxietyChartsSection
-                        triggerData={triggerData}
-                        severityDistribution={[]}
-                        analyses={weeklyTrendAnalyses}
-                        showOnly="trends"
-                        dateRange={weeklyTrendsRange}
-                        onDateRangeChange={setWeeklyTrendsRange}
-                        minDate={analysisBounds.min}
-                        maxDate={analysisBounds.max}
-                      />
-                      <TreatmentOutcomes
-                        analyses={averageAnxietyAnalyses}
-                        showOnly="trends"
-                        dateRange={averageAnxietyRange}
-                        onDateRangeChange={setAverageAnxietyRange}
-                        minDate={analysisBounds.min}
-                        maxDate={analysisBounds.max}
-                      />
-                    </div>
-
-                    <GoalProgressSection
-                      goals={goals}
-                      dateRange={goalProgressRange}
-                      onDateRangeChange={setGoalProgressRange}
-                      minDate={goalProgressBounds.min ?? analysisBounds.min}
-                      maxDate={goalProgressBounds.max ?? analysisBounds.max}
-                    />
-
-                    <TriggerAnalysisTable
-                      triggerData={filteredTriggerData}
-                      totalEntries={filteredTriggerEntries}
-                      dateRange={triggerAnalysisRange}
-                      onDateRangeChange={setTriggerAnalysisRange}
-                      minDate={analysisBounds.min}
-                      maxDate={analysisBounds.max}
-                    />
-
-                    <InterventionSummariesSection
-                      summaries={summaries}
-                      analyses={analyses}
-                    />
                   </div>
                 ) : (
                   <Card>
                     <CardContent className="text-center py-12">
                       <FileText className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                      <p className="text-gray-600">
-                        Select a patient to generate a medical situation report
-                      </p>
+                      <p className="text-gray-600">Select a patient to generate an AI analysis report</p>
                     </CardContent>
                   </Card>
                 )}
