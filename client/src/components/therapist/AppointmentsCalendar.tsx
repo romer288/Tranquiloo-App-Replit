@@ -18,6 +18,10 @@ import {
   ChevronRight,
   Edit,
   Trash2,
+  MapPin,
+  Link2,
+  ExternalLink,
+  Clipboard as ClipboardIcon,
 } from 'lucide-react';
 
 interface Appointment {
@@ -27,7 +31,7 @@ interface Appointment {
   scheduledAt: string;
   duration: number;
   notes?: string;
-  type: 'video' | 'audio';
+  type: 'video' | 'audio' | 'in_person';
   status: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
   roomId?: string;
   startedAt?: string;
@@ -36,6 +40,7 @@ interface Appointment {
   transcript?: string;
   actualDuration?: number;
   cancellationReason?: string;
+  meetingLink?: string | null;
   createdAt: string;
   updatedAt?: string;
 }
@@ -62,6 +67,9 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
   const [rescheduleAppointment, setRescheduleAppointment] = useState<string | null>(null);
   const [newDate, setNewDate] = useState('');
   const [newTime, setNewTime] = useState('');
+  const [formatEditAppointment, setFormatEditAppointment] = useState<string | null>(null);
+  const [formatType, setFormatType] = useState<'video' | 'audio' | 'in_person'>('video');
+  const [formatLink, setFormatLink] = useState('');
 
   useEffect(() => {
     loadAppointments();
@@ -217,6 +225,55 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
     }
   };
 
+  const handleFormatUpdate = async (appointmentId: string) => {
+    try {
+      const response = await fetch(`/api/appointments/${appointmentId}/details`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: formatType,
+          meetingLink: formatLink,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update appointment');
+      }
+
+      toast({
+        title: 'Session details updated',
+        description: 'Appointment format and link have been saved',
+      });
+      setFormatEditAppointment(null);
+      setFormatLink('');
+      await loadAppointments();
+    } catch (error) {
+      console.error('Failed to update appointment details:', error);
+      toast({
+        title: 'Update failed',
+        description: 'Could not update appointment details',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleCopyLink = async (link: string) => {
+    try {
+      await navigator.clipboard.writeText(link);
+      toast({
+        title: 'Copied',
+        description: 'Meeting link copied to clipboard',
+      });
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+      toast({
+        title: 'Copy failed',
+        description: 'Unable to copy meeting link',
+        variant: 'destructive',
+      });
+    }
+  };
+
   // Calendar helper functions
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -285,6 +342,17 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
     }
   };
 
+  const getTypeDisplay = (type: Appointment['type']) => {
+    switch (type) {
+      case 'video':
+        return { label: 'Video Session', description: 'Will use Tranquiloo video or external meeting link', icon: Video, color: 'text-blue-600' };
+      case 'audio':
+        return { label: 'Audio Session', description: 'Phone-style call or voice-only meeting', icon: Phone, color: 'text-green-600' };
+      default:
+        return { label: 'In-Person Session', description: 'Meet at the agreed physical location', icon: MapPin, color: 'text-amber-600' };
+    }
+  };
+
   // Render calendar grid
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(currentDate);
@@ -338,7 +406,13 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
                     title={`${new Date(apt.scheduledAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - ${patient?.firstName} ${patient?.lastName}`}
                   >
                     <div className="flex items-center gap-1">
-                      {apt.type === 'video' ? <Video className="w-3 h-3" /> : <Phone className="w-3 h-3" />}
+                      {apt.type === 'video' ? (
+                        <Video className="w-3 h-3" />
+                      ) : apt.type === 'audio' ? (
+                        <Phone className="w-3 h-3" />
+                      ) : (
+                        <MapPin className="w-3 h-3" />
+                      )}
                       <span>{new Date(apt.scheduledAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
                     </div>
                     {patient && <div className="truncate">{patient.firstName} {patient.lastName?.charAt(0)}.</div>}
@@ -377,8 +451,19 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
           const patient = patients[appointment.patientId];
           const { time } = formatDateTime(appointment.scheduledAt);
           const isUpcoming = new Date(appointment.scheduledAt) >= new Date();
-          const canStartCall = isUpcoming && appointment.status === 'scheduled';
+          const canStartCall =
+            isUpcoming &&
+            appointment.status === 'scheduled' &&
+            appointment.type !== 'in_person';
           const isRescheduling = rescheduleAppointment === appointment.id;
+          const isEditingFormat = formatEditAppointment === appointment.id;
+          const typeInfo = getTypeDisplay(appointment.type);
+          const typeBg =
+            appointment.type === 'video'
+              ? 'bg-blue-100'
+              : appointment.type === 'audio'
+                ? 'bg-green-100'
+                : 'bg-amber-100';
 
           return (
             <div
@@ -387,14 +472,10 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className={`p-3 rounded-lg ${
-                    appointment.type === 'video' ? 'bg-blue-100' : 'bg-green-100'
-                  }`}>
-                    {appointment.type === 'video' ? (
-                      <Video className="w-6 h-6 text-blue-600" />
-                    ) : (
-                      <Phone className="w-6 h-6 text-green-600" />
-                    )}
+                  <div className={`p-3 rounded-lg ${typeBg}`}>
+                    <typeInfo.icon
+                      className={`w-6 h-6 ${typeInfo.color}`}
+                    />
                   </div>
                   <div>
                     <h4 className="font-bold text-lg text-gray-900">
@@ -413,6 +494,45 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
                   <Clock className="w-5 h-5 text-gray-500" />
                   <span className="font-semibold text-lg">{time}</span>
                   <span className="text-gray-500">({appointment.duration} minutes)</span>
+                </div>
+                <div className="flex flex-col gap-2 text-gray-700">
+                  <span className="text-sm font-semibold">Session format</span>
+                  <div className="text-sm text-gray-600">
+                    <p className="font-medium text-gray-800">{typeInfo.label}</p>
+                    <p className="text-xs text-gray-500">{typeInfo.description}</p>
+                  </div>
+                  {appointment.meetingLink ? (
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      <Link2 className="w-4 h-4 text-blue-500" />
+                      <span className="truncate max-w-[240px] text-blue-600">
+                        {appointment.meetingLink}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        onClick={() => handleCopyLink(appointment.meetingLink || '')}
+                        className="flex items-center gap-1"
+                      >
+                        <ClipboardIcon className="w-3 h-3" /> Copy
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="xs"
+                        className="text-blue-600 hover:text-blue-700"
+                        onClick={() => window.open(appointment.meetingLink || '', '_blank', 'noopener')}
+                      >
+                        <ExternalLink className="w-3 h-3 mr-1" /> Open
+                      </Button>
+                    </div>
+                  ) : appointment.type === 'in_person' ? (
+                    <div className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                      Remember to capture session audio with the in-person recording workflow so summaries remain accurate.
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-500">
+                      Add a meeting link to use Zoom, Google Meet, or Teams.
+                    </p>
+                  )}
                 </div>
                 {appointment.notes && (
                   <div className="flex items-start gap-3 text-gray-700">
@@ -467,6 +587,69 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
                     </Button>
                   </div>
                 </div>
+              ) : isEditingFormat ? (
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-3">
+                  <h5 className="font-semibold text-sm text-gray-700">Update session format</h5>
+                  <div className="grid gap-3 md:grid-cols-3">
+                    {(['video', 'audio', 'in_person'] as Appointment['type'][]).map((option) => {
+                      const optionInfo = getTypeDisplay(option);
+                      const optionBg =
+                        option === 'video'
+                          ? 'border-blue-300 bg-blue-50'
+                          : option === 'audio'
+                            ? 'border-green-300 bg-green-50'
+                            : 'border-amber-300 bg-amber-50';
+                      const isSelected = formatType === option;
+                      return (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => {
+                            setFormatType(option);
+                            if (option === 'in_person') {
+                              setFormatLink('');
+                            }
+                          }}
+                          className={`rounded-lg border p-3 text-left transition-colors ${
+                            isSelected ? optionBg : 'border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <optionInfo.icon className={`w-4 h-4 mb-2 ${optionInfo.color}`} />
+                          <p className="text-sm font-semibold text-slate-800">{optionInfo.label}</p>
+                          <p className="text-xs text-slate-600">{optionInfo.description}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {formatType !== 'in_person' && (
+                    <div>
+                      <label className="text-xs text-gray-600 block mb-1">Meeting link</label>
+                      <Input
+                        placeholder="https://..."
+                        value={formatLink}
+                        onChange={(e) => setFormatLink(e.target.value)}
+                      />
+                      <p className="text-[11px] text-gray-500 mt-1">
+                        Paste the Zoom, Google Meet, or Teams link therapists and patients should use.
+                      </p>
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => handleFormatUpdate(appointment.id)}>
+                      <CheckCircle className="w-4 h-4 mr-2" /> Save format
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setFormatEditAppointment(null);
+                        setFormatLink('');
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
               ) : (
                 <div className="flex gap-2 flex-wrap">
                   {canStartCall && (
@@ -484,6 +667,8 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
                       <Button
                         onClick={() => {
                           setRescheduleAppointment(appointment.id);
+                          setFormatEditAppointment(null);
+                          setFormatLink('');
                           const aptDate = new Date(appointment.scheduledAt);
                           setNewDate(aptDate.toISOString().split('T')[0]);
                           setNewTime(aptDate.toTimeString().slice(0, 5));
@@ -494,6 +679,20 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
                       >
                         <Edit className="w-4 h-4 mr-2" />
                         Reschedule
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setFormatEditAppointment(appointment.id);
+                          setRescheduleAppointment(null);
+                          setFormatType(appointment.type);
+                          setFormatLink(appointment.meetingLink || '');
+                        }}
+                        variant="outline"
+                        className="text-slate-600 hover:text-slate-800 hover:bg-slate-100"
+                        size="sm"
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit session format
                       </Button>
                       <Button
                         onClick={() => handleCancelAppointment(appointment.id)}

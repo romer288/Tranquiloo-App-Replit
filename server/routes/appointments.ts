@@ -16,11 +16,16 @@ router.post('/schedule', async (req: Request, res: Response) => {
       appointmentTime,
       duration = 60, // default 60 minutes
       notes,
-      type = 'video', // 'video' or 'audio'
+      type = 'video', // 'video', 'audio', or 'in_person'
+      meetingLink,
     } = req.body;
 
     if (!patientId || !therapistEmail || !appointmentDate || !appointmentTime) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    if (!['video', 'audio', 'in_person'].includes(type)) {
+      return res.status(400).json({ error: 'Invalid appointment type' });
     }
 
     // Combine date and time into ISO string
@@ -33,6 +38,7 @@ router.post('/schedule', async (req: Request, res: Response) => {
       duration,
       notes,
       type,
+      meetingLink: meetingLink?.trim() || null,
       status: 'scheduled',
       createdAt: new Date().toISOString(),
     }).returning();
@@ -65,7 +71,14 @@ router.post('/schedule', async (req: Request, res: Response) => {
         <p><strong>Date:</strong> ${formattedDate}</p>
         <p><strong>Time:</strong> ${formattedTime}</p>
         <p><strong>Duration:</strong> ${duration} minutes</p>
-        <p><strong>Type:</strong> ${type === 'video' ? 'Video Call' : 'Audio Call'}</p>
+        <p><strong>Type:</strong> ${
+          type === 'video'
+            ? 'Video Call'
+            : type === 'audio'
+              ? 'Audio Call'
+              : 'In-Person Session'
+        }</p>
+        ${meetingLink ? `<p><strong>Meeting Link:</strong> ${meetingLink}</p>` : ''}
         ${notes ? `<p><strong>Notes:</strong> ${notes}</p>` : ''}
       </div>
 
@@ -225,6 +238,49 @@ router.delete('/:appointmentId', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Failed to cancel appointment:', error);
     res.status(500).json({ error: 'Failed to cancel appointment' });
+  }
+});
+
+// Update appointment details (meeting link, type, notes)
+router.patch('/:appointmentId/details', async (req: Request, res: Response) => {
+  try {
+    const { appointmentId } = req.params;
+    const { type, meetingLink, notes } = req.body as {
+      type?: string;
+      meetingLink?: string | null;
+      notes?: string | null;
+    };
+
+    const updateData: Record<string, any> = {
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (typeof type !== 'undefined') {
+      if (!['video', 'audio', 'in_person'].includes(type)) {
+        return res.status(400).json({ error: 'Invalid appointment type' });
+      }
+      updateData.type = type;
+    }
+
+    if (typeof meetingLink !== 'undefined') {
+      const trimmed = typeof meetingLink === 'string' ? meetingLink.trim() : '';
+      updateData.meetingLink = trimmed ? trimmed : null;
+    }
+
+    if (typeof notes !== 'undefined') {
+      updateData.notes = notes;
+    }
+
+    const [updated] = await db
+      .update(appointments)
+      .set(updateData)
+      .where(eq(appointments.id, appointmentId))
+      .returning();
+
+    res.json({ success: true, appointment: updated });
+  } catch (error) {
+    console.error('Failed to update appointment details:', error);
+    res.status(500).json({ error: 'Failed to update appointment details' });
   }
 });
 

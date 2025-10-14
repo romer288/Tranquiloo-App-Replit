@@ -191,6 +191,7 @@ sqliteDb.exec(`
     actual_duration INTEGER,
     notes TEXT,
     cancellation_reason TEXT,
+    meeting_link TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
   );

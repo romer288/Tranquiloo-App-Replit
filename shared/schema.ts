@@ -180,7 +180,7 @@ export const appointments = pgTable("appointments", {
   therapistEmail: text("therapist_email").notNull(),
   scheduledAt: text("scheduled_at").notNull(), // ISO date string
   duration: integer("duration").default(60), // minutes
-  type: text("type").default("video"), // 'video' or 'audio'
+  type: text("type").default("video"), // 'video', 'audio', or 'in_person'
   status: text("status").default("scheduled"), // 'scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled'
   roomId: text("room_id"), // WebRTC room ID for the call
   startedAt: text("started_at"), // When call actually started
@@ -190,6 +190,7 @@ export const appointments = pgTable("appointments", {
   actualDuration: integer("actual_duration"), // Actual call duration in minutes
   notes: text("notes"), // Patient's notes about the appointment
   cancellationReason: text("cancellation_reason"),
+  meetingLink: text("meeting_link"), // Optional external meeting link (Zoom, Google Meet, etc.)
   createdAt: text("created_at"),
   updatedAt: text("updated_at"),
 });

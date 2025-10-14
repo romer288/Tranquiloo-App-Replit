@@ -12,6 +12,10 @@ import {
   Play,
   CheckCircle,
   AlertCircle,
+  MapPin,
+  Link2,
+  ExternalLink,
+  Clipboard as ClipboardIcon,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -20,15 +24,16 @@ interface Appointment {
   therapistEmail: string;
   scheduledAt: string;
   duration: number;
-  type: 'video' | 'audio';
+  type: 'video' | 'audio' | 'in_person';
   status: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
   notes?: string;
   roomId?: string;
+  meetingLink?: string | null;
 }
 
 interface AppointmentListProps {
   patientId: string;
-  onJoinCall: (roomId: string, appointmentId: string, type: 'video' | 'audio') => void;
+  onJoinCall: (roomId: string, appointmentId: string, type: 'video' | 'audio' | 'in_person') => void;
 }
 
 const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall }) => {
@@ -36,6 +41,32 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+
+  const getTypeDisplay = (type: Appointment['type']) => {
+    switch (type) {
+      case 'video':
+        return {
+          label: 'Video session',
+          icon: Video,
+          accent: 'text-blue-600',
+          badge: 'bg-blue-100 text-blue-800',
+        };
+      case 'audio':
+        return {
+          label: 'Audio session',
+          icon: Phone,
+          accent: 'text-green-600',
+          badge: 'bg-green-100 text-green-800',
+        };
+      default:
+        return {
+          label: 'In-person session',
+          icon: MapPin,
+          accent: 'text-amber-600',
+          badge: 'bg-amber-100 text-amber-800',
+        };
+    }
+  };
 
   useEffect(() => {
     fetchAppointments();
@@ -88,6 +119,14 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
   };
 
   const handleJoinAppointment = async (appointment: Appointment) => {
+    if (appointment.type === 'in_person') {
+      toast({
+        title: 'In-person session',
+        description: 'This appointment is scheduled for an in-person visit. Arrive a few minutes early and bring your recording kit if required.',
+      });
+      return;
+    }
+
     try {
       // Start the call if not already started
       if (!appointment.roomId) {
@@ -112,6 +151,28 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
     }
   };
 
+  const openMeetingLink = (appointment: Appointment) => {
+    if (!appointment.meetingLink) return;
+    window.open(appointment.meetingLink, '_blank', 'noopener');
+  };
+
+  const copyMeetingLink = async (link: string) => {
+    try {
+      await navigator.clipboard.writeText(link);
+      toast({
+        title: 'Link copied',
+        description: 'Meeting link copied to clipboard',
+      });
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+      toast({
+        title: 'Copy failed',
+        description: 'Unable to copy meeting link',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const canJoinAppointment = (appointment: Appointment): boolean => {
     const scheduledTime = new Date(appointment.scheduledAt);
     const now = new Date();
@@ -119,7 +180,12 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
     const minutesUntil = diff / 1000 / 60;
 
     // Can join 10 minutes before to 15 minutes after scheduled time
-    return minutesUntil <= 10 && minutesUntil >= -15 && appointment.status !== 'cancelled';
+    return (
+      minutesUntil <= 10 &&
+      minutesUntil >= -15 &&
+      appointment.status !== 'cancelled' &&
+      appointment.type !== 'in_person'
+    );
   };
 
   const getStatusBadge = (status: string) => {
@@ -208,60 +274,106 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
           {displayAppointments.map((appointment) => {
             const scheduledDate = new Date(appointment.scheduledAt);
             const isJoinable = canJoinAppointment(appointment);
+            const typeInfo = getTypeDisplay(appointment.type);
+            const TypeIcon = typeInfo.icon;
 
             return (
               <Card key={appointment.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        {appointment.type === 'video' ? (
-                          <Video className="w-5 h-5 text-blue-600" />
-                        ) : (
-                          <Phone className="w-5 h-5 text-green-600" />
-                        )}
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div className="flex-1 space-y-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <TypeIcon className={`w-5 h-5 ${typeInfo.accent}`} />
                         <div>
-                          <h3 className="font-semibold text-gray-900">
-                            {appointment.type === 'video' ? 'Video Session' : 'Audio Session'}
-                          </h3>
-                          <p className="text-sm text-gray-600">
-                            with {appointment.therapistEmail}
+                          <p className="text-sm font-semibold text-gray-900">
+                            {format(scheduledDate, 'EEEE, MMM d • h:mm a')}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Duration: {appointment.duration} minutes
                           </p>
                         </div>
+                        <Badge className={`${typeInfo.badge} text-xs`}>{typeInfo.label}</Badge>
+                        {getStatusBadge(appointment.status)}
                       </div>
 
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                          <Calendar className="w-4 h-4" />
-                          {format(scheduledDate, 'EEEE, MMMM d, yyyy')}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                          <Clock className="w-4 h-4" />
-                          {format(scheduledDate, 'h:mm a')} ({appointment.duration} minutes)
-                        </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <Calendar className="w-4 h-4" />
+                        {format(scheduledDate, 'MMMM d, yyyy')}
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <Clock className="w-4 h-4" />
+                        {format(scheduledDate, 'h:mm a')} ({appointment.duration} minutes)
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <span className="text-xs font-semibold uppercase text-gray-500">Therapist</span>
+                        <span>{appointment.therapistEmail}</span>
                       </div>
 
-                      {appointment.notes && (
-                        <div className="mt-3 p-3 bg-gray-50 rounded-md">
-                          <p className="text-sm text-gray-700">{appointment.notes}</p>
+                      {appointment.meetingLink ? (
+                        <div className="flex flex-wrap items-center gap-2 text-sm text-blue-700">
+                          <Link2 className="w-4 h-4" />
+                          <span className="truncate max-w-[220px] md:max-w-[280px]">
+                            {appointment.meetingLink}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="xs"
+                            onClick={() => copyMeetingLink(appointment.meetingLink || '')}
+                            className="flex items-center gap-1"
+                          >
+                            <ClipboardIcon className="w-3 h-3" /> Copy
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            className="text-blue-600 hover:text-blue-700"
+                            onClick={() => openMeetingLink(appointment)}
+                          >
+                            <ExternalLink className="w-3 h-3 mr-1" /> Open
+                          </Button>
+                        </div>
+                      ) : appointment.type === 'in_person' ? (
+                        <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
+                          <AlertCircle className="w-4 h-4 mt-0.5" />
+                          <span>
+                            Plan for an on-site session. Bring the portable recorder so the AI summary can still be generated afterward.
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+                          Your therapist will share the meeting link before the session, or you can join through Tranquiloo below.
                         </div>
                       )}
 
-                      <div className="mt-4">
-                        {getStatusBadge(appointment.status)}
-                      </div>
+                      {appointment.notes && (
+                        <div className="mt-2 rounded-md bg-gray-50 p-3 text-sm text-gray-700">
+                          {appointment.notes}
+                        </div>
+                      )}
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col gap-2 ml-4">
-                      {isJoinable && (
+                    <div className="flex min-w-[180px] flex-col gap-2">
+                      {appointment.meetingLink && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                          onClick={() => openMeetingLink(appointment)}
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Open link
+                        </Button>
+                      )}
+
+                      {isJoinable && appointment.type !== 'in_person' && (
                         <Button
                           onClick={() => handleJoinAppointment(appointment)}
                           className="bg-green-600 hover:bg-green-700"
                           size="sm"
                         >
                           <Play className="w-4 h-4 mr-2" />
-                          Join Now
+                          Join via Tranquiloo
                         </Button>
                       )}
 
@@ -280,12 +392,10 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
                   </div>
 
                   {/* Join Instructions */}
-                  {activeTab === 'upcoming' && !isJoinable && appointment.status !== 'cancelled' && (
-                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                      <p className="text-sm text-blue-800">
-                        <AlertCircle className="w-4 h-4 inline mr-1" />
-                        You can join 10 minutes before your scheduled time
-                      </p>
+                  {activeTab === 'upcoming' && !isJoinable && appointment.status !== 'cancelled' && appointment.type !== 'in_person' && (
+                    <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+                      <AlertCircle className="mr-2 inline h-4 w-4" />
+                      You can join 10 minutes before your scheduled time.
                     </div>
                   )}
                 </CardContent>

@@ -17,14 +17,14 @@ const Appointments = () => {
   const [isInCall, setIsInCall] = useState(false);
   const [callRoomId, setCallRoomId] = useState('');
   const [appointmentId, setAppointmentId] = useState('');
-  const [callType, setCallType] = useState<'video' | 'audio'>('video');
+  const [callType, setCallType] = useState<'video' | 'audio' | 'in_person'>('video');
 
   const handleScheduled = () => {
     // Refresh the appointment list
     setRefreshKey(prev => prev + 1);
   };
 
-  const handleJoinCall = (roomId: string, aptId: string, type: 'video' | 'audio') => {
+  const handleJoinCall = (roomId: string, aptId: string, type: 'video' | 'audio' | 'in_person') => {
     setCallRoomId(roomId);
     setAppointmentId(aptId);
     setCallType(type);
