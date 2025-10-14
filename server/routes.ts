@@ -277,6 +277,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Normalize summaries to ensure consistent field names
       const summaries = (summariesRaw ?? []).map(normalizeInterventionSummary);
       
+      const toStringArray = (value: unknown): string[] => {
+        if (!value) return [];
+        if (Array.isArray(value)) {
+          return value
+            .map((item) => (item == null ? '' : String(item).trim()))
+            .filter(Boolean);
+        }
+        if (typeof value === 'string') {
+          const trimmed = value.trim();
+          if (!trimmed) return [];
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) {
+              return parsed
+                .map((item) => (item == null ? '' : String(item).trim()))
+                .filter(Boolean);
+            }
+          } catch (error) {
+            // fall through to delimiter split
+          }
+          return trimmed
+            .split(/[\n,;•\-]+/)
+            .map((item) => item.trim())
+            .filter(Boolean);
+        }
+        return [];
+      };
+
       // Parse JSON fields and join analyses with patient messages
       const enrichedAnalyses = analyses.map(analysis => {
         // Find patient messages around the same time as the analysis
@@ -292,15 +320,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Parse JSON fields if they are strings
         const parsedAnalysis = {
           ...analysis,
-          triggers: typeof analysis.triggers === 'string' ? 
-            (analysis.triggers ? JSON.parse(analysis.triggers) : []) : 
-            (analysis.triggers || []),
-          recommendedTechniques: typeof analysis.recommendedTechniques === 'string' ? 
-            (analysis.recommendedTechniques ? JSON.parse(analysis.recommendedTechniques) : []) : 
-            (analysis.recommendedTechniques || []),
-          copingStrategies: typeof (analysis as any).copingStrategies === 'string' ? 
-            ((analysis as any).copingStrategies ? JSON.parse((analysis as any).copingStrategies) : []) : 
-            ((analysis as any).copingStrategies || []),
+          triggers: toStringArray((analysis as any).triggers ?? (analysis as any).anxietyTriggers ?? (analysis as any).anxiety_triggers),
+          recommendedTechniques: toStringArray((analysis as any).recommendedTechniques ?? (analysis as any).copingStrategies),
+          copingStrategies: toStringArray((analysis as any).copingStrategies ?? (analysis as any).recommendedTechniques),
           patient_message: patientMessages.length > 0 ? patientMessages[0].content : null,
           session_id: patientMessages.length > 0 ? patientMessages[0].sessionId : null
         };
@@ -581,7 +603,6 @@ Key therapeutic themes addressed:
         
         // Create demo patient profile
         patient = await storage.createProfile({
-          id: `demo_patient_${timestamp}`,
           email: demoEmail,
           firstName: 'Demo',
           lastName: 'Patient',
@@ -723,6 +744,7 @@ Key therapeutic themes addressed:
       const patientsWithDetails = await Promise.all(
         connections.map(async (connection) => {
           const patient = await storage.getProfile(connection.patientId);
+          const patientDetails = patient as Record<string, any> | undefined;
           return {
             connectionId: connection.id,
             patientId: connection.patientId,
@@ -730,9 +752,9 @@ Key therapeutic themes addressed:
             patientCode: patient?.patientCode,
             firstName: patient?.firstName,
             lastName: patient?.lastName,
-            dateOfBirth: patient?.dateOfBirth,
-            gender: patient?.gender,
-            phoneNumber: patient?.phoneNumber,
+            dateOfBirth: patientDetails?.dateOfBirth ?? null,
+            gender: patientDetails?.gender ?? null,
+            phoneNumber: patientDetails?.phoneNumber ?? null,
             connectedAt: connection.connectionAcceptedDate,
             shareAnalytics: connection.shareAnalytics,
             shareReports: connection.shareReports,
@@ -777,6 +799,7 @@ Key therapeutic themes addressed:
 
         // Get patient details to reveal after acceptance
         const patient = await storage.getProfile(connection.patientId);
+        const patientDetails = patient as Record<string, any> | undefined;
 
         res.json({
           success: true,
@@ -787,9 +810,9 @@ Key therapeutic themes addressed:
             patientCode: patient?.patientCode,
             firstName: patient?.firstName,
             lastName: patient?.lastName,
-            dateOfBirth: patient?.dateOfBirth,
-            gender: patient?.gender,
-            phoneNumber: patient?.phoneNumber,
+            dateOfBirth: patientDetails?.dateOfBirth ?? null,
+            gender: patientDetails?.gender ?? null,
+            phoneNumber: patientDetails?.phoneNumber ?? null,
             shareReport: connection.shareAnalytics || connection.shareReports
           }
         });
@@ -1522,18 +1545,15 @@ Key therapeutic themes addressed:
       const patientCode = 'PT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 4).toUpperCase();
       
       // Create new user profile - generate UUID and timestamps for SQLite
-      const { randomUUID } = await import('crypto');
-      const nowMs = Date.now(); // SQLite expects integer timestamps
       const newUser = {
-        id: randomUUID(),
         email: email,
         firstName: req.body.firstName || null,
         lastName: req.body.lastName || null,
         role: role,
         hashedPassword: hashedPassword,
         patientCode: patientCode,
-        createdAt: nowMs,
-        updatedAt: nowMs
+        emailVerified: false,
+        authMethod: 'email'
       };
       
       try {
@@ -1803,10 +1823,7 @@ Key therapeutic themes addressed:
       const patientCode = 'PT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 4).toUpperCase();
       
       // Create new user profile for Google OAuth - must include ID and timestamps
-      const { randomUUID } = await import('crypto');
-      const nowMs = Date.now();
       const newUser = {
-        id: randomUUID(),
         email: email,
         firstName: firstName || null,
         lastName: lastName || null,
@@ -1814,8 +1831,6 @@ Key therapeutic themes addressed:
         patientCode: patientCode,
         authMethod: 'google',
         emailVerified: false,
-        createdAt: nowMs,
-        updatedAt: nowMs
       };
 
       try {
@@ -2162,7 +2177,6 @@ Key therapeutic themes addressed:
       const patientCode = 'PT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 4).toUpperCase();
       const nowMs = Date.now();
       const newProfile = await storage.createProfile({
-        id: randomUUID(),
         email: googleUser.email,
         firstName: googleUser.given_name || googleUser.name?.split(' ')[0] || null,
         lastName: googleUser.family_name || googleUser.name?.split(' ').slice(1).join(' ') || null,
@@ -2170,8 +2184,6 @@ Key therapeutic themes addressed:
         patientCode: userState.role === 'patient' ? patientCode : null,
         authMethod: 'google',
         emailVerified: false,
-        createdAt: nowMs,
-        updatedAt: nowMs
       });
       
       // Generate verification token and update profile

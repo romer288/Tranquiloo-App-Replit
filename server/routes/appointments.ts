@@ -3,6 +3,7 @@ import { db } from '../db';
 import { appointments } from '@shared/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { storage } from '../storage';
+import { randomUUID } from 'crypto';
 
 const router = Router();
 
@@ -31,7 +32,10 @@ router.post('/schedule', async (req: Request, res: Response) => {
     // Combine date and time into ISO string
     const scheduledDateTime = new Date(`${appointmentDate}T${appointmentTime}`).toISOString();
 
+    const appointmentId = randomUUID();
+
     const [appointment] = await db.insert(appointments).values({
+      id: appointmentId,
       patientId,
       therapistEmail,
       scheduledAt: scheduledDateTime,

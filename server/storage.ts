@@ -156,7 +156,15 @@ export class DatabaseStorage implements IStorage {
   async createProfile(profile: InsertProfile): Promise<Profile> {
     // SQLite doesn't support returning() the same way as PostgreSQL
     // Insert the profile first
-    await db.insert(profiles).values(profile);
+    const now = Date.now();
+    const profileRecord = {
+      ...(profile as any),
+      id: (profile as any).id ?? randomUUID(),
+      createdAt: (profile as any).createdAt ?? now,
+      updatedAt: (profile as any).updatedAt ?? now,
+    };
+
+    await db.insert(profiles).values(profileRecord);
     // Then fetch it back by email (which is unique)
     const result = await db.select().from(profiles).where(eq(profiles.email, profile.email)).limit(1);
     return result[0];
@@ -186,15 +194,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createChatSession(session: InsertChatSession): Promise<ChatSession> {
-    const sessionId = session.id || randomUUID();
-    await db.insert(chatSessions).values({...session, id: sessionId});
+    const now = Date.now();
+    const sessionId = (session as any)?.id ?? randomUUID();
+    await db.insert(chatSessions).values({
+      ...(session as any),
+      id: sessionId,
+      createdAt: (session as any)?.createdAt ?? now,
+      updatedAt: (session as any)?.updatedAt ?? now,
+    });
     const result = await db.select().from(chatSessions).where(eq(chatSessions.id, sessionId)).limit(1);
     return result[0];
   }
 
   async updateChatSession(id: string, session: Partial<InsertChatSession>): Promise<ChatSession | undefined> {
     await db.update(chatSessions).set({
-      ...session,
+      ...(session as any),
       updatedAt: Date.now()
     }).where(eq(chatSessions.id, id));
     const result = await db.select().from(chatSessions).where(eq(chatSessions.id, id)).limit(1);
@@ -251,8 +265,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
-    const messageId = message.id || randomUUID();
-    await db.insert(chatMessages).values({...message, id: messageId});
+    const messageId = (message as any)?.id ?? randomUUID();
+    const createdAt = (message as any)?.createdAt ?? Date.now();
+    await db.insert(chatMessages).values({
+      ...(message as any),
+      id: messageId,
+      createdAt,
+    });
     const result = await db.select().from(chatMessages).where(eq(chatMessages.id, messageId)).limit(1);
     return result[0];
   }
@@ -272,8 +291,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAnxietyAnalysis(analysis: InsertAnxietyAnalysis): Promise<AnxietyAnalysis> {
-    const analysisId = analysis.id || randomUUID();
-    await db.insert(anxietyAnalyses).values({...analysis, id: analysisId});
+    const analysisId = (analysis as any)?.id ?? randomUUID();
+    const createdAt = (analysis as any)?.createdAt ?? Date.now();
+    await db.insert(anxietyAnalyses).values({
+      ...(analysis as any),
+      id: analysisId,
+      createdAt,
+    });
     const result = await db.select().from(anxietyAnalyses).where(eq(anxietyAnalyses.id, analysisId)).limit(1);
     return result[0];
   }
@@ -295,7 +319,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTherapist(therapist: InsertTherapist): Promise<Therapist> {
-    const result = await db.insert(therapists).values(therapist).returning();
+    const now = Date.now();
+    const result = await db.insert(therapists).values({
+      ...(therapist as any),
+      id: (therapist as any)?.id ?? randomUUID(),
+      createdAt: (therapist as any)?.createdAt ?? now,
+      updatedAt: (therapist as any)?.updatedAt ?? now,
+    }).returning();
     return result[0];
   }
 
@@ -313,7 +343,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUserTherapist(userTherapist: InsertUserTherapist): Promise<UserTherapist> {
-    const result = await db.insert(userTherapists).values(userTherapist).returning();
+    const now = Date.now();
+    const result = await db.insert(userTherapists).values({
+      ...(userTherapist as any),
+      id: (userTherapist as any)?.id ?? randomUUID(),
+      createdAt: (userTherapist as any)?.createdAt ?? now,
+      updatedAt: (userTherapist as any)?.updatedAt ?? now,
+    }).returning();
     return result[0];
   }
 
@@ -359,12 +395,13 @@ export class DatabaseStorage implements IStorage {
 
   async createUserGoal(goal: InsertUserGoal): Promise<UserGoal> {
     ensureUserGoalsSourceColumn();
-    const goalId = (goal as any).id || randomUUID();
+    const now = Date.now();
+    const goalId = (goal as any)?.id ?? randomUUID();
     const result = await db.insert(userGoals).values({
-      ...goal,
+      ...(goal as any),
       id: goalId,
-      createdAt: goal.createdAt ?? Date.now(),
-      updatedAt: goal.updatedAt ?? Date.now()
+      createdAt: (goal as any)?.createdAt ?? now,
+      updatedAt: (goal as any)?.updatedAt ?? now,
     }).returning();
     return result[0];
   }
@@ -389,7 +426,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createGoalProgress(progress: InsertGoalProgress): Promise<GoalProgress> {
-    const result = await db.insert(goalProgress).values(progress).returning();
+    const result = await db.insert(goalProgress).values({
+      ...(progress as any),
+      id: (progress as any)?.id ?? randomUUID(),
+      createdAt: (progress as any)?.createdAt ?? Date.now(),
+    }).returning();
     return result[0];
   }
 
@@ -405,7 +446,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createInterventionSummary(summary: InsertInterventionSummary): Promise<InterventionSummary> {
-    const result = await db.insert(interventionSummaries).values(summary).returning();
+    const now = Date.now();
+    const result = await db.insert(interventionSummaries).values({
+      ...(summary as any),
+      id: (summary as any)?.id ?? randomUUID(),
+      createdAt: (summary as any)?.createdAt ?? now,
+      updatedAt: (summary as any)?.updatedAt ?? now,
+    }).returning();
     return result[0];
   }
 
@@ -554,20 +601,24 @@ export class DatabaseStorage implements IStorage {
       contactMethod: 'email', // Default to email since contactValue appears to be email
       contactValue: connection.contactValue,
       notes: connection.notes,
-      shareReport: connection.shareReport
+      shareReport: connection.shareReport,
+      id: randomUUID(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     }).returning();
     return result[0];
   }
 
   // HIPAA-compliant connection management
   async createTherapistPatientConnection(connection: InsertTherapistPatientConnection): Promise<TherapistPatientConnection> {
-    const connectionId = connection.id || randomUUID();
+    const connectionId = (connection as any)?.id ?? randomUUID();
+    const now = Date.now();
     await db.insert(therapistPatientConnections).values({
-      ...connection,
+      ...(connection as any),
       id: connectionId,
-      connectionRequestDate: connection.connectionRequestDate || Date.now(),
-      createdAt: connection.createdAt || Date.now(),
-      updatedAt: connection.updatedAt || Date.now()
+      connectionRequestDate: (connection as any)?.connectionRequestDate ?? now,
+      createdAt: (connection as any)?.createdAt ?? now,
+      updatedAt: (connection as any)?.updatedAt ?? now
     });
     const result = await db.select().from(therapistPatientConnections).where(eq(therapistPatientConnections.id, connectionId)).limit(1);
     return result[0];
@@ -668,7 +719,7 @@ export class DatabaseStorage implements IStorage {
   async updateEmailNotificationStatus(connectionId: string, status: string): Promise<void> {
     // Update all notifications for this connection
     await db.update(emailQueue)
-      .set({ status, updatedAt: Date.now() })
+      .set({ status })
       .where(sql`json_extract(metadata, '$.connectionId') = ${connectionId}`);
   }
 
@@ -726,7 +777,7 @@ export class DatabaseStorage implements IStorage {
   async setPasswordResetToken(email: string, token: string, expires: Date): Promise<Profile | undefined> {
     const result = await db.update(profiles).set({
       passwordResetToken: token,
-      passwordResetExpires: expires,
+      passwordResetExpires: expires.getTime(),
       updatedAt: Date.now()
     }).where(eq(profiles.email, email)).returning();
     return result[0];
@@ -766,7 +817,7 @@ export class DatabaseStorage implements IStorage {
     await db.update(profiles).set({
       licenseNumber: licenseNumber,
       licenseState: licenseState,
-      licenseGraceDeadline: graceDeadline,
+      licenseGraceDeadline: graceDeadline ? graceDeadline.getTime() : null,
       updatedAt: Date.now()
     }).where(eq(profiles.id, id));
   }
