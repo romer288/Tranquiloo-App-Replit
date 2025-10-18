@@ -90,7 +90,7 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
         const uniquePatientIds = [...new Set(data.map((apt: Appointment) => apt.patientId))];
         const patientPromises = uniquePatientIds.map(async (patientId) => {
           try {
-            const res = await fetch(`/api/user/profile/${patientId}`);
+            const res = await fetch(`/api/profiles/${patientId}`);
             if (res.ok) {
               return await res.json();
             }
