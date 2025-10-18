@@ -501,6 +501,19 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
                     <p className="font-medium text-gray-800">{typeInfo.label}</p>
                     <p className="text-xs text-gray-500">{typeInfo.description}</p>
                   </div>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="p-0 h-auto w-fit text-blue-600"
+                    onClick={() => {
+                      setFormatEditAppointment(appointment.id);
+                      setRescheduleAppointment(null);
+                      setFormatType(appointment.type);
+                      setFormatLink(appointment.meetingLink || '');
+                    }}
+                  >
+                    Edit session format / meeting link
+                  </Button>
                   {appointment.meetingLink ? (
                     <div className="flex flex-wrap items-center gap-2 text-sm">
                       <Link2 className="w-4 h-4 text-blue-500" />
