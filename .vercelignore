@@ -1,10 +1,11 @@
-# Exclude TypeScript source files (only deploy compiled .js)
+# Exclude TypeScript source files from api folder (only deploy compiled .js)
 api/index.ts
-server/**/*.ts
-client/**
+
+# Exclude server source files
+server/**
+
+# Exclude scripts
 scripts/**
-*.ts
-!*.d.ts
 
 # Development files
 node_modules
@@ -12,5 +13,5 @@ node_modules
 .env.local
 .env.development
 
-# Build artifacts (keep dist)
+# Build artifacts
 *.log
