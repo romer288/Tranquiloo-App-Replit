@@ -14,6 +14,7 @@ import {
   shouldSwitchToMonica
 } from '@/utils/chatUtils';
 import { detectLanguage } from '@/utils/languageDetection';
+import { useAIChat } from '@/hooks/useAIChat';
 
 const normalizeLanguageCode = (code: unknown): 'en' | 'es' | undefined =>
   code === 'en' || code === 'es' ? code : undefined;
@@ -44,7 +45,8 @@ export const useChat = (sessionId?: string | null, manualLanguage?: 'en' | 'es' 
   } = useChatMessages();
 
   const { isAnalyzing, processMessageAnalysis } = useChatAnalysis();
-  
+  const { getAIResponse, isGenerating, researchCited, crisisDetected } = useAIChat();
+
   // Message processing queue to prevent glitches with rapid messages
   const [isProcessingMessage, setIsProcessingMessage] = useState(false);
   const messageQueueRef = useRef<string[]>([]);
@@ -332,15 +334,32 @@ export const useChat = (sessionId?: string | null, manualLanguage?: 'en' | 'es' 
       // Normal response flow - use detected language for response
       const responseLanguage = detectedLanguage === 'es' ? 'es' : 'en';
 
-      // Generate AI response immediately (remove 800ms artificial delay)
-      const contextualResponse = getContextualResponse(anxietyAnalysis, responseLanguage);
-      const aiMessage = createAIMessage(contextualResponse, aiCompanion, responseLanguage);
+      // ✨ NEW: Use advanced RAG AI with research papers
+      const ragHistory = messages.map(m => ({
+        role: m.sender === 'user' ? 'user' : 'assistant',
+        content: m.text,
+        timestamp: m.timestamp
+      }));
+
+      const aiResponse = await getAIResponse(
+        textToSend,
+        currentSession.id,
+        userId,
+        ragHistory as any
+      );
+
+      // Add research citations if any
+      const responseWithCitations = researchCited.length > 0
+        ? `${aiResponse}\n\n📚 Research cited:\n${researchCited.map((p, i) => `${i + 1}. ${p}`).join('\n')}`
+        : aiResponse;
+
+      const aiMessage = createAIMessage(responseWithCitations, aiCompanion, responseLanguage);
 
       addMessage(aiMessage);
       setIsTyping(false);
 
       // Save AI response to database in parallel (don't wait for it)
-      chatService.sendMessage(currentSession.id, contextualResponse, 'assistant', userId, aiMessage.id)
+      chatService.sendMessage(currentSession.id, responseWithCitations, 'assistant', userId, aiMessage.id)
         .catch((error: any) => console.error('Failed to save AI message:', error));
 
     } catch (error) {

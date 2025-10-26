@@ -151,15 +151,25 @@ router.get('/therapist/:therapistEmail', async (req: Request, res: Response) => 
 router.patch('/:appointmentId/status', async (req: Request, res: Response) => {
   try {
     const { appointmentId } = req.params;
-    const { status } = req.body;
+    const { status, scheduledAt } = req.body;
 
     if (!['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
 
+    const updateData: any = {
+      status,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Allow rescheduling by updating scheduledAt
+    if (scheduledAt) {
+      updateData.scheduledAt = scheduledAt;
+    }
+
     const [updated] = await db
       .update(appointments)
-      .set({ status, updatedAt: new Date().toISOString() })
+      .set(updateData)
       .where(eq(appointments.id, appointmentId))
       .returning();
 

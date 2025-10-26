@@ -1,0 +1,29 @@
+category,pmid,title,authors,year,journal,citations,article_type,notes
+anxiety_disorders,18640499,Cognitive behavioral therapy for anxiety disorders: an update on the empirical evidence,"Hofmann SG, Smits JA",2008,Dialogues in Clinical Neuroscience,1847,Review,Core CBT principles for anxiety
+depression_treatment,15809407,Cognitive therapy vs medications in the treatment of moderate to severe depression,"DeRubeis RJ, Hollon SD, Amsterdam JD",2005,Archives of General Psychiatry,892,RCT,CBT vs medication comparison
+mindfulness_interventions,15256293,Mindfulness-based stress reduction and health benefits: A meta-analysis,"Grossman P, Niemann L, Schmidt S, Walach H",2004,Journal of Psychosomatic Research,4521,Meta-Analysis,MBSR effectiveness across conditions
+cbt_techniques,23459093,The efficacy of cognitive behavioral therapy: A review of meta-analyses,"Hofmann SG, Asnaani A, Vonk IJ, Sawyer AT, Fang A",2012,Cognitive Therapy and Research,3124,Review,CBT meta-analyses summary
+stress_management,21858602,Stress management and resilience training among Department of Medicine faculty,"Sood A, Prasad K, Schroeder D, Varkey P",2011,Journal of General Internal Medicine,287,RCT,Brief mindfulness intervention
+sleep_mental_health,26054060,Cognitive behavioral therapy for insomnia: A meta-analysis,"Trauer JM, Qian MY, Doyle JS, Rajaratnam SM, Cunnington D",2015,Annals of Internal Medicine,634,Meta-Analysis,CBT-I effectiveness
+panic_disorder,10815122,Cognitive-behavioral therapy imipramine or their combination for panic disorder,"Barlow DH, Gorman JM, Shear MK, Woods SW",2000,JAMA,1245,RCT,CBT vs medication for panic
+social_anxiety,9750321,Cognitive-behavioral group therapy versus phenelzine therapy for social phobia,"Heimberg RG, Liebowitz MR, Hope DA",1998,Archives of General Psychiatry,987,RCT,CBT group vs medication
+ptsd_trauma,12206292,Prolonged exposure cognitive processing therapy and relaxation for PTSD,"Resick PA, Nishith P, Weaver TL, Astin MC, Feuer CA",2002,Journal of Consulting and Clinical Psychology,1534,RCT,PE and CPT for PTSD
+
+# Instructions for adding more papers:
+# 1. Go to https://pubmed.ncbi.nlm.nih.gov/
+# 2. Use the search queries provided in the documentation
+# 3. Find the PMID (PubMed ID) - it's the number in the URL or at top of abstract
+# 4. Add a row with: category,pmid,title,authors,year,journal,citations,article_type,notes
+# 5. The script will automatically fetch abstracts and create embeddings
+#
+# Categories to fill (aim for 20 papers each):
+# - anxiety_disorders
+# - depression_treatment
+# - ptsd_trauma
+# - ocd_related
+# - bipolar_disorders
+# - eating_disorders
+# - sleep_disorders
+# - substance_use
+# - adhd_neurodevelopmental
+# - personality_disorders

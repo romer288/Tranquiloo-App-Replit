@@ -22,6 +22,8 @@ import {
   Link2,
   ExternalLink,
   Clipboard as ClipboardIcon,
+  Download,
+  CalendarPlus,
 } from 'lucide-react';
 
 interface Appointment {
@@ -206,6 +208,7 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
       });
 
       if (response.ok) {
+        const data = await response.json();
         toast({
           title: 'Appointment Rescheduled',
           description: 'The appointment has been rescheduled successfully',
@@ -214,6 +217,16 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
         setNewDate('');
         setNewTime('');
         await loadAppointments();
+
+        // Show calendar update options
+        const updatedAppointment = data.appointment;
+        if (updatedAppointment) {
+          toast({
+            title: 'Update your calendar',
+            description: 'Don\'t forget to update the appointment in your calendar!',
+            duration: 5000,
+          });
+        }
       }
     } catch (error) {
       console.error('Failed to reschedule appointment:', error);
@@ -272,6 +285,137 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
         variant: 'destructive',
       });
     }
+  };
+
+  // Generate ICS file for calendar export
+  const generateICSFile = (appointment: Appointment) => {
+    const patient = patients[appointment.patientId];
+    const patientName = patient ? `${patient.firstName} ${patient.lastName}` : 'Patient';
+
+    const startDate = new Date(appointment.scheduledAt);
+    const endDate = new Date(startDate.getTime() + appointment.duration * 60000);
+
+    const formatDateForICS = (date: Date) => {
+      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    };
+
+    const typeLabel = appointment.type === 'video' ? 'Video Session' :
+                      appointment.type === 'audio' ? 'Audio Session' :
+                      'In-Person Session';
+
+    let description = `${typeLabel} with ${patientName}`;
+    if (appointment.meetingLink) {
+      description += `\\n\\nMeeting Link: ${appointment.meetingLink}`;
+    }
+    if (appointment.notes) {
+      description += `\\n\\nNotes: ${appointment.notes}`;
+    }
+
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Tranquiloo//Appointment//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      `UID:${appointment.id}@tranquiloo.app`,
+      `DTSTAMP:${formatDateForICS(new Date())}`,
+      `DTSTART:${formatDateForICS(startDate)}`,
+      `DTEND:${formatDateForICS(endDate)}`,
+      `SUMMARY:${patientName} - ${typeLabel}`,
+      `DESCRIPTION:${description}`,
+      appointment.meetingLink ? `URL:${appointment.meetingLink}` : '',
+      'STATUS:CONFIRMED',
+      'SEQUENCE:0',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].filter(Boolean).join('\r\n');
+
+    return icsContent;
+  };
+
+  const downloadICSFile = (appointment: Appointment) => {
+    const icsContent = generateICSFile(appointment);
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `appointment-${appointment.id}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: 'Calendar file downloaded',
+      description: 'Import this file to your calendar app',
+    });
+  };
+
+  const addToGoogleCalendar = (appointment: Appointment) => {
+    const patient = patients[appointment.patientId];
+    const patientName = patient ? `${patient.firstName} ${patient.lastName}` : 'Patient';
+
+    const startDate = new Date(appointment.scheduledAt);
+    const endDate = new Date(startDate.getTime() + appointment.duration * 60000);
+
+    const formatDateForGoogle = (date: Date) => {
+      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    };
+
+    const typeLabel = appointment.type === 'video' ? 'Video Session' :
+                      appointment.type === 'audio' ? 'Audio Session' :
+                      'In-Person Session';
+
+    let description = `${typeLabel} with ${patientName}`;
+    if (appointment.meetingLink) {
+      description += `\n\nMeeting Link: ${appointment.meetingLink}`;
+    }
+    if (appointment.notes) {
+      description += `\n\nNotes: ${appointment.notes}`;
+    }
+
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: `${patientName} - ${typeLabel}`,
+      dates: `${formatDateForGoogle(startDate)}/${formatDateForGoogle(endDate)}`,
+      details: description,
+      location: appointment.meetingLink || '',
+    });
+
+    window.open(`https://calendar.google.com/calendar/render?${params.toString()}`, '_blank');
+  };
+
+  const addToOutlookCalendar = (appointment: Appointment) => {
+    const patient = patients[appointment.patientId];
+    const patientName = patient ? `${patient.firstName} ${patient.lastName}` : 'Patient';
+
+    const startDate = new Date(appointment.scheduledAt);
+    const endDate = new Date(startDate.getTime() + appointment.duration * 60000);
+
+    const typeLabel = appointment.type === 'video' ? 'Video Session' :
+                      appointment.type === 'audio' ? 'Audio Session' :
+                      'In-Person Session';
+
+    let description = `${typeLabel} with ${patientName}`;
+    if (appointment.meetingLink) {
+      description += `\n\nMeeting Link: ${appointment.meetingLink}`;
+    }
+    if (appointment.notes) {
+      description += `\n\nNotes: ${appointment.notes}`;
+    }
+
+    const params = new URLSearchParams({
+      path: '/calendar/action/compose',
+      rru: 'addevent',
+      subject: `${patientName} - ${typeLabel}`,
+      startdt: startDate.toISOString(),
+      enddt: endDate.toISOString(),
+      body: description,
+      location: appointment.meetingLink || '',
+    });
+
+    window.open(`https://outlook.live.com/calendar/0/deeplink/compose?${params.toString()}`, '_blank');
   };
 
   // Calendar helper functions
@@ -453,7 +597,7 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
           const isUpcoming = new Date(appointment.scheduledAt) >= new Date();
           const canStartCall =
             isUpcoming &&
-            appointment.status === 'scheduled' &&
+            (appointment.status === 'scheduled' || appointment.status === 'in_progress') &&
             appointment.type !== 'in_person';
           const isRescheduling = rescheduleAppointment === appointment.id;
           const isEditingFormat = formatEditAppointment === appointment.id;
@@ -517,22 +661,27 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
                   {appointment.meetingLink ? (
                     <div className="flex flex-wrap items-center gap-2 text-sm">
                       <Link2 className="w-4 h-4 text-blue-500" />
-                      <span className="truncate max-w-[240px] text-blue-600">
+                      <a
+                        href={appointment.meetingLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="truncate max-w-[240px] text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
+                      >
                         {appointment.meetingLink}
-                      </span>
+                      </a>
                       <Button
                         variant="outline"
-                        size="xs"
+                        size="sm"
                         onClick={() => handleCopyLink(appointment.meetingLink || '')}
-                        className="flex items-center gap-1"
+                        className="flex items-center gap-1 h-7 px-2 text-xs"
                       >
                         <ClipboardIcon className="w-3 h-3" /> Copy
                       </Button>
                       <Button
                         variant="ghost"
-                        size="xs"
-                        className="text-blue-600 hover:text-blue-700"
-                        onClick={() => window.open(appointment.meetingLink || '', '_blank', 'noopener')}
+                        size="sm"
+                        className="text-blue-600 hover:text-blue-700 h-7 px-2 text-xs"
+                        onClick={() => window.open(appointment.meetingLink || '', '_blank', 'noopener noreferrer')}
                       >
                         <ExternalLink className="w-3 h-3 mr-1" /> Open
                       </Button>
@@ -599,6 +748,39 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
                       Cancel
                     </Button>
                   </div>
+                  <div className="pt-3 border-t border-blue-200">
+                    <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <CalendarPlus className="w-4 h-4" />
+                      After rescheduling, update your calendar:
+                    </p>
+                    <div className="flex gap-2 flex-wrap">
+                      <Button
+                        onClick={() => addToGoogleCalendar(appointment)}
+                        variant="outline"
+                        size="sm"
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-100 h-8 px-2 text-xs"
+                      >
+                        Google Calendar
+                      </Button>
+                      <Button
+                        onClick={() => addToOutlookCalendar(appointment)}
+                        variant="outline"
+                        size="sm"
+                        className="text-blue-700 hover:text-blue-800 hover:bg-blue-100 h-8 px-2 text-xs"
+                      >
+                        Outlook
+                      </Button>
+                      <Button
+                        onClick={() => downloadICSFile(appointment)}
+                        variant="outline"
+                        size="sm"
+                        className="text-gray-700 hover:text-gray-800 hover:bg-blue-100 h-8 px-2 text-xs"
+                      >
+                        <Download className="w-3 h-3 mr-1" />
+                        Download .ics
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               ) : isEditingFormat ? (
                 <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-3">
@@ -664,73 +846,119 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
                   </div>
                 </div>
               ) : (
-                <div className="flex gap-2 flex-wrap">
-                  {canStartCall && (
-                    <Button
-                      onClick={() => handleStartCall(appointment.id)}
-                      className="bg-green-600 hover:bg-green-700"
-                      size="sm"
-                    >
-                      <PlayCircle className="w-4 h-4 mr-2" />
-                      Start Call
-                    </Button>
-                  )}
-                  {appointment.status === 'scheduled' && (
-                    <>
+                <>
+                  <div className="flex gap-2 flex-wrap">
+                    {canStartCall && (
                       <Button
-                        onClick={() => {
-                          setRescheduleAppointment(appointment.id);
-                          setFormatEditAppointment(null);
-                          setFormatLink('');
-                          const aptDate = new Date(appointment.scheduledAt);
-                          setNewDate(aptDate.toISOString().split('T')[0]);
-                          setNewTime(aptDate.toTimeString().slice(0, 5));
-                        }}
+                        onClick={() => handleStartCall(appointment.id)}
+                        className="bg-green-600 hover:bg-green-700"
+                        size="sm"
+                      >
+                        <PlayCircle className="w-4 h-4 mr-2" />
+                        {appointment.status === 'in_progress' ? 'Rejoin Call' : 'Start Call'}
+                      </Button>
+                    )}
+                    {appointment.status === 'scheduled' && (
+                      <>
+                        <Button
+                          onClick={() => {
+                            setRescheduleAppointment(appointment.id);
+                            setFormatEditAppointment(null);
+                            setFormatLink('');
+                            const aptDate = new Date(appointment.scheduledAt);
+                            setNewDate(aptDate.toISOString().split('T')[0]);
+                            setNewTime(aptDate.toTimeString().slice(0, 5));
+                          }}
+                          variant="outline"
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          size="sm"
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Reschedule
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setFormatEditAppointment(appointment.id);
+                            setRescheduleAppointment(null);
+                            setFormatType(appointment.type);
+                            setFormatLink(appointment.meetingLink || '');
+                          }}
+                          variant="outline"
+                          className="text-slate-600 hover:text-slate-800 hover:bg-slate-100"
+                          size="sm"
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit session format
+                        </Button>
+                        <Button
+                          onClick={() => handleCancelAppointment(appointment.id)}
+                          variant="outline"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          size="sm"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Cancel
+                        </Button>
+                      </>
+                    )}
+                    {appointment.transcript && (
+                      <Button
                         variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          alert(appointment.transcript);
+                        }}
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        View Transcript
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Calendar Integration Options */}
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-xs font-semibold text-gray-600 mb-3 flex items-center gap-2">
+                      <CalendarPlus className="w-4 h-4" />
+                      Add to your calendar:
+                    </p>
+                    <div className="flex gap-2 flex-wrap">
+                      <Button
+                        onClick={() => addToGoogleCalendar(appointment)}
+                        variant="outline"
+                        size="sm"
                         className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                        size="sm"
                       >
-                        <Edit className="w-4 h-4 mr-2" />
-                        Reschedule
+                        <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M19.5 8.25h-4.5V3.75A1.5 1.5 0 0013.5 2.25h-3A1.5 1.5 0 009 3.75v4.5H4.5A1.5 1.5 0 003 9.75v3a1.5 1.5 0 001.5 1.5H9v4.5a1.5 1.5 0 001.5 1.5h3a1.5 1.5 0 001.5-1.5v-4.5h4.5a1.5 1.5 0 001.5-1.5v-3a1.5 1.5 0 00-1.5-1.5z"/>
+                        </svg>
+                        Google Calendar
                       </Button>
                       <Button
-                        onClick={() => {
-                          setFormatEditAppointment(appointment.id);
-                          setRescheduleAppointment(null);
-                          setFormatType(appointment.type);
-                          setFormatLink(appointment.meetingLink || '');
-                        }}
+                        onClick={() => addToOutlookCalendar(appointment)}
                         variant="outline"
-                        className="text-slate-600 hover:text-slate-800 hover:bg-slate-100"
                         size="sm"
+                        className="text-blue-700 hover:text-blue-800 hover:bg-blue-50"
                       >
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit session format
+                        <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M7 2h10a2 2 0 012 2v16a2 2 0 01-2 2H7a2 2 0 01-2-2V4a2 2 0 012-2zm5 14a4 4 0 100-8 4 4 0 000 8z"/>
+                        </svg>
+                        Outlook
                       </Button>
                       <Button
-                        onClick={() => handleCancelAppointment(appointment.id)}
+                        onClick={() => downloadICSFile(appointment)}
                         variant="outline"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         size="sm"
+                        className="text-gray-700 hover:text-gray-800 hover:bg-gray-50"
                       >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Cancel
+                        <Download className="w-4 h-4 mr-2" />
+                        Download .ics
                       </Button>
-                    </>
-                  )}
-                  {appointment.transcript && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        alert(appointment.transcript);
-                      }}
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      View Transcript
-                    </Button>
-                  )}
-                </div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Export to any calendar app (Apple Calendar, Zoom, etc.)
+                    </p>
+                  </div>
+                </>
               )}
             </div>
           );

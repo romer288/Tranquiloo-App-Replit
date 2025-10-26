@@ -1,7 +1,10 @@
+import dotenv from "dotenv";
+dotenv.config(); // MUST be first before any other imports that use process.env
+
 import cors from "cors";
 import chatRoutes from "./routes/chat";
-import dotenv from "dotenv";
-dotenv.config();
+import aiChatRoutes from "./routes/ai-chat";
+import wellnessRoutes from "./routes/wellness";
 
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
@@ -16,14 +19,15 @@ app.use(cors({
   credentials: true,
 }));
 
-
-app.use("/api/chat", chatRoutes);
-
 // Trust proxy to get correct protocol/host from Replit's HTTPS proxy
 app.set('trust proxy', true);
 
 app.use(express.json({ limit: '10mb' })); // Increased limit for audio data
 app.use(express.urlencoded({ extended: false }));
+
+app.use("/api/chat", chatRoutes);
+app.use("/api/ai-chat", aiChatRoutes);
+app.use("/api/wellness", wellnessRoutes);
 
 app.use((req, res, next) => {
   const start = Date.now();

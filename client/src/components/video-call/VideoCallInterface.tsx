@@ -573,11 +573,21 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
     <div className="fixed inset-0 z-50 bg-gray-900 flex flex-col">
       {/* Header */}
       <div className="bg-gray-800 p-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-white font-semibold">
-            {userRole === 'therapist' ? 'Therapy Session' : 'Session with Therapist'}
-          </h2>
-          <p className="text-gray-400 text-sm">Room: {roomId}</p>
+        <div className="flex items-center gap-4">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onEndCall}
+            className="text-white hover:bg-gray-700"
+          >
+            ← Back
+          </Button>
+          <div>
+            <h2 className="text-white font-semibold">
+              {userRole === 'therapist' ? 'Therapy Session' : 'Session with Therapist'}
+            </h2>
+            <p className="text-gray-400 text-sm">Room: {roomId}</p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {isRecording && (

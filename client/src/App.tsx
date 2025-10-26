@@ -41,6 +41,7 @@ import MobileNavigation from "./components/MobileNavigation";
 import MobileHeader from "./components/MobileHeader";
 import Appointments from "./pages/Appointments";
 import VideoCall from "./pages/VideoCall";
+import CrisisFooter from "./components/layout/CrisisFooter";
 
 // Create QueryClient outside of component to avoid hooks violations
 const queryClient = new QueryClient();
@@ -70,6 +71,9 @@ const App = () => {
           
           {/* Mobile Bottom Navigation */}
           <MobileNavigation />
+
+          {/* Crisis Resources Footer - Always Visible */}
+          <CrisisFooter />
         </div>
       </SidebarProvider>
     );
