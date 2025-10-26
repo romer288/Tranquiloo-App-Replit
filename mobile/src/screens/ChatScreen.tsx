@@ -1,35 +1,60 @@
-import React, { useState, useEffect } from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {
-  View,
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Alert,
+  View,
 } from 'react-native';
 import Tts from 'react-native-tts';
+import {useAuth} from '../contexts/AuthContext';
+import {
+  AIMessage as ServiceMessage,
+  detectCrisisKeywords,
+  sendAIMessage,
+} from '../../../shared/services/aiChatService';
 
 interface Message {
   id: string;
   text: string;
   sender: 'user' | 'ai';
   timestamp: Date;
+  citations?: string[];
+  isCrisis?: boolean;
 }
 
+const CRISIS_RESPONSE = `I'm very concerned about what you're sharing. Please reach out for immediate help:\n\n🆘 Call 988 - Suicide & Crisis Lifeline (US)\n📱 Text HOME to 741741 - Crisis Text Line\n🚨 Call 911 for emergencies`;
+
+const generateId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
 const ChatScreen: React.FC = () => {
+  const {user} = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
-      text: "Hi there! I'm Vanessa, your AI companion. I'm here to listen and support you through your mental health journey. How are you feeling today?",
+      id: generateId(),
+      text: "Hi there! I'm Vanessa, your AI companion. I'm here to listen and support you. How are you feeling today?",
       sender: 'ai',
       timestamp: new Date(),
     },
   ]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const conversationIdRef = useRef<string>(`mobile-${generateId()}`);
 
-  // Configure TTS once
+  const historyForService = useMemo<ServiceMessage[]>(
+    () =>
+      messages.map(message => ({
+        role: message.sender === 'user' ? 'user' : 'assistant',
+        content: message.text,
+        timestamp: message.timestamp.toISOString(),
+      })),
+    [messages],
+  );
+
   useEffect(() => {
     Tts.setDefaultLanguage('en-US');
     Tts.setDucking(true);
@@ -37,18 +62,47 @@ const ChatScreen: React.FC = () => {
   }, []);
 
   const speak = (text: string) => {
-    if (!text) return;
-    const isSpanish = /[\u00C0-\u00FF]/i.test(text);
-    Tts.setDefaultLanguage(isSpanish ? 'es-MX' : 'en-US');
+    if (!text) {
+      return;
+    }
+
+    const isSpanish = /[\u00C0-\u017F]/i.test(text);
+    const locale = isSpanish ? 'es-MX' : 'en-US';
+    Tts.setDefaultLanguage(locale);
+
+    if (Platform.OS === 'android') {
+      // Slow down TTS a bit on Android for clarity
+      Tts.setDefaultRate(0.5);
+      Tts.setDefaultPitch(1.0);
+    }
+
     Tts.speak(text);
   };
 
+  const handleCrisis = (text: string) => {
+    console.warn('Crisis keywords detected in mobile message:', text);
+    const crisisMessage: Message = {
+      id: generateId(),
+      text: CRISIS_RESPONSE,
+      sender: 'ai',
+      timestamp: new Date(),
+      isCrisis: true,
+    };
+
+    setMessages(prev => [...prev, crisisMessage]);
+    speak(crisisMessage.text);
+    Alert.alert('Immediate Help Recommended', CRISIS_RESPONSE.replace(/\n/g, '\n'));
+  };
+
   const sendMessage = async () => {
-    if (!inputText.trim() || isLoading) return;
+    const trimmed = inputText.trim();
+    if (!trimmed || isLoading) {
+      return;
+    }
 
     const userMessage: Message = {
-      id: Date.now().toString(),
-      text: inputText.trim(),
+      id: generateId(),
+      text: trimmed,
       sender: 'user',
       timestamp: new Date(),
     };
@@ -56,22 +110,46 @@ const ChatScreen: React.FC = () => {
     setMessages(prev => [...prev, userMessage]);
     setInputText('');
     setIsLoading(true);
+    setErrorMessage(null);
 
     try {
-      // Simulate AI response - in real app, this would call your backend
-      setTimeout(() => {
-        const aiResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          text: `Thank you for sharing that with me. I can hear that you're going through something, and I want you to know that your feelings are valid. Would you like to tell me more about what's on your mind?`,
-          sender: 'ai',
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, aiResponse]);
+      if (detectCrisisKeywords(trimmed)) {
+        handleCrisis(trimmed);
         setIsLoading(false);
-        speak(aiResponse.text);
-      }, 1500);
+        return;
+      }
+
+      const response = await sendAIMessage(
+        trimmed,
+        conversationIdRef.current,
+        user?.id ?? 'guest-user',
+        [...historyForService, {role: 'user', content: trimmed}],
+      );
+
+      const aiMessage: Message = {
+        id: generateId(),
+        text: response.response,
+        sender: 'ai',
+        timestamp: new Date(),
+        citations: response.researchUsed,
+        isCrisis: response.shouldAlert,
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+      speak(aiMessage.text);
+
+      if (response.shouldAlert) {
+        Alert.alert(
+          'Important',
+          'This conversation may need therapist attention. A support contact will be notified.',
+        );
+      }
     } catch (error) {
-      Alert.alert('Error', 'Failed to send message. Please try again.');
+      console.error('AI chat error', error);
+      const fallback = 'Unable to contact the AI companion. Please try again.';
+      setErrorMessage(fallback);
+      Alert.alert('Connection Issue', fallback);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -82,25 +160,52 @@ const ChatScreen: React.FC = () => {
       style={[
         styles.messageContainer,
         message.sender === 'user' ? styles.userMessage : styles.aiMessage,
-      ]}
-    >
+        message.isCrisis && styles.crisisMessage,
+      ]}>
       <Text style={styles.messageText}>{message.text}</Text>
+
+      {message.citations && message.citations.length > 0 && (
+        <View style={styles.citationContainer}>
+          <Text style={styles.citationTitle}>Research cited:</Text>
+          {message.citations.map((citation, index) => (
+            <Text key={`${message.id}-citation-${index}`} style={styles.citationText}>
+              • {citation}
+            </Text>
+          ))}
+        </View>
+      )}
+
+      {message.isCrisis && (
+        <Text style={styles.crisisNotice}>
+          If you're in immediate danger, call local emergency services right away.
+        </Text>
+      )}
+
       <Text style={styles.timestamp}>
-        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        {message.timestamp.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
       </Text>
     </View>
   );
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.messagesContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.messagesContainer}
+        contentContainerStyle={styles.messagesContent}
+        showsVerticalScrollIndicator={false}>
         {messages.map(renderMessage)}
         {isLoading && (
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Vanessa is typing...</Text>
+            <Text style={styles.loadingText}>Vanessa is reviewing the latest research...</Text>
           </View>
         )}
       </ScrollView>
+
+      {errorMessage && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        </View>
+      )}
 
       <View style={styles.inputContainer}>
         <TextInput
@@ -110,14 +215,21 @@ const ChatScreen: React.FC = () => {
           placeholder="Share what's on your mind..."
           multiline
           maxLength={500}
+          editable={!isLoading}
         />
         <TouchableOpacity
           style={[styles.sendButton, (!inputText.trim() || isLoading) && styles.sendButtonDisabled]}
           onPress={sendMessage}
-          disabled={!inputText.trim() || isLoading}
-        >
+          disabled={!inputText.trim() || isLoading}>
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
+      </View>
+
+      <View style={styles.disclaimerContainer}>
+        <Text style={styles.disclaimerText}>
+          Tranquiloo is a wellness companion and does not provide medical advice. If you're in
+          crisis, contact 988 or your local emergency services immediately.
+        </Text>
       </View>
     </View>
   );
@@ -131,6 +243,9 @@ const styles = StyleSheet.create({
   messagesContainer: {
     flex: 1,
     padding: 16,
+  },
+  messagesContent: {
+    paddingBottom: 24,
   },
   messageContainer: {
     marginBottom: 16,
@@ -148,10 +263,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e5e7eb',
   },
+  crisisMessage: {
+    borderColor: '#ef4444',
+    backgroundColor: '#fee2e2',
+  },
   messageText: {
     fontSize: 16,
     lineHeight: 24,
     color: '#1f2937',
+  },
+  citationContainer: {
+    marginTop: 8,
+    padding: 10,
+    backgroundColor: '#eff6ff',
+    borderRadius: 12,
+  },
+  citationTitle: {
+    fontWeight: '600',
+    fontSize: 14,
+    marginBottom: 4,
+    color: '#1d4ed8',
+  },
+  citationText: {
+    fontSize: 13,
+    color: '#1f2937',
+    marginBottom: 2,
+  },
+  crisisNotice: {
+    marginTop: 12,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#b91c1c',
   },
   timestamp: {
     fontSize: 12,
@@ -167,6 +309,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontStyle: 'italic',
     color: '#6b7280',
+  },
+  errorContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#fee2e2',
+  },
+  errorText: {
+    color: '#b91c1c',
+    fontSize: 14,
+    textAlign: 'center',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -200,6 +352,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 16,
+  },
+  disclaimerContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    backgroundColor: '#f8fafc',
+  },
+  disclaimerText: {
+    fontSize: 12,
+    color: '#6b7280',
+    textAlign: 'center',
   },
 });
 

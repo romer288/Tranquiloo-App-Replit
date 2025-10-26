@@ -52,7 +52,10 @@ const DashboardScreen = () => {
           </Text>
           
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.primaryButton}>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => navigation.navigate('Chat' as never)}
+            >
               <Text style={styles.primaryButtonText}>Start AI Chat</Text>
             </TouchableOpacity>
             

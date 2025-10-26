@@ -1,9 +1,21 @@
+const path = require('path');
 const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
 
 /**
- * Metro configuration
- * https://facebook.github.io/metro/docs/configuration
+ * Allow the React Native bundle to consume files from the shared folder in the
+ * root of the repository (used for cross-platform AI services).
  */
-const config = {};
+const defaultConfig = getDefaultConfig(__dirname);
 
-module.exports = mergeConfig(getDefaultConfig(__dirname), config);
+const config = {
+  watchFolders: [path.resolve(__dirname, '..', 'shared')],
+  resolver: {
+    ...defaultConfig.resolver,
+    nodeModulesPaths: [
+      path.resolve(__dirname, 'node_modules'),
+      path.resolve(__dirname, '..', 'node_modules'),
+    ],
+  },
+};
+
+module.exports = mergeConfig(defaultConfig, config);

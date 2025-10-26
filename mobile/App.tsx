@@ -5,7 +5,9 @@ import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import LoginScreen from './src/screens/LoginScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import TherapistDashboardScreen from './src/screens/TherapistDashboardScreen';
+import ChatScreen from './src/screens/ChatScreen';
 import {AuthProvider} from './src/contexts/AuthContext';
+import './src/config/api';
 
 // Configure Google Sign-In
 GoogleSignin.configure({
@@ -48,6 +50,13 @@ function App(): React.JSX.Element {
             options={{
               title: 'Patient Dashboard',
               headerLeft: () => null,
+            }}
+          />
+          <Stack.Screen
+            name="Chat"
+            component={ChatScreen}
+            options={{
+              title: 'AI Companion',
             }}
           />
           <Stack.Screen 

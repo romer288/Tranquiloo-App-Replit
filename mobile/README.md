@@ -9,6 +9,7 @@ A React Native mobile application for both iOS and Android platforms providing m
 - **Role-Based Authentication**: Support for both patients and therapists
 - **Unified Registration**: Single portal with role selection
 - **Native UI**: Platform-specific design patterns
+- **Evidence-Based AI Companion**: Reuses the same research-backed AI as the web app, including crisis safeguards
 
 ## Setup Instructions
 
@@ -18,6 +19,7 @@ A React Native mobile application for both iOS and Android platforms providing m
 2. React Native development environment set up
 3. Android Studio (for Android development)
 4. Xcode (for iOS development on macOS)
+5. Backend API running locally or deployed (the mobile app now calls the `/api/ai-chat/*` endpoints)
 
 ### Installation
 
@@ -25,6 +27,8 @@ A React Native mobile application for both iOS and Android platforms providing m
 cd mobile
 npm install
 ```
+
+> Tip: the shared AI services live in `../shared`. Metro is already configured to watch that folder.
 
 ### Android Setup
 
@@ -50,6 +54,23 @@ echo "$IOS_GOOGLE_SERVICE_INFO" | base64 --decode > ios/TranquilSupport/GoogleSe
 ```
 
 Never commit the real `GoogleService-Info.plist` to version control.
+
+### Connecting to the Backend API
+
+Mobile builds need a fully qualified API base URL:
+
+1. Open `src/config/api.ts`.
+2. Update the `LOCAL_ANDROID`, `LOCAL_IOS`, and `PRODUCTION_API` constants to match your environment (e.g. `http://10.0.2.2:5000` for Android emulator, `http://localhost:5000` for iOS simulator).
+3. The config sets the base URL at runtime using the shared `setApiBaseUrl` helper so both web and mobile share the same AI chat pipeline.
+
+```ts
+// Example for local development
+const LOCAL_ANDROID = 'http://10.0.2.2:5000';
+const LOCAL_IOS = 'http://localhost:5000';
+const PRODUCTION_API = 'https://your-production-domain.com';
+```
+
+Make sure the backend server allows CORS for mobile origins if it is hosted remotely.
 
 ## OAuth Configuration
 
@@ -79,6 +100,7 @@ mobile/
 ├── android/                    # Android-specific files
 ├── ios/                       # iOS-specific files
 ├── App.tsx                    # Main app component
+├── src/config/api.ts          # API base URL configuration (edits required per environment)
 └── package.json              # Dependencies and scripts
 ```
 
@@ -98,6 +120,7 @@ mobile/
 
 ### Navigation
 - Stack navigation with React Navigation
+- Dedicated AI chat screen registered in the stack
 - Role-based dashboard routing
 - Secure authentication flow
 
@@ -132,6 +155,7 @@ npm run build:ios
 - Platform-specific Google OAuth client configurations
 - Secure certificate-based Android authentication
 - iOS Keychain integration support
+- AI chat API base URL configured at runtime (no hard-coded secrets in source control)
 
 ## Support
 
