@@ -1,0 +1,16 @@
+# Exclude TypeScript source files (only deploy compiled .js)
+api/index.ts
+server/**/*.ts
+client/**
+scripts/**
+*.ts
+!*.d.ts
+
+# Development files
+node_modules
+.git
+.env.local
+.env.development
+
+# Build artifacts (keep dist)
+*.log
