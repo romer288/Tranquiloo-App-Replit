@@ -1,6 +1,3 @@
-# Exclude TypeScript source (use compiled .js)
-api/index.ts
-
 # Exclude scripts (not needed for production)
 scripts/**
 
