@@ -1,11 +1,11 @@
-// Using SQLite for now due to database issues - will switch back to PostgreSQL later
-import { sqliteTable as pgTable, text, integer } from "drizzle-orm/sqlite-core";
-// Temporary type mappings for SQLite compatibility
-const uuid = (name: string) => text(name);
-const timestamp = (name: string) => integer(name); // Store as integer milliseconds
-const boolean = (name: string) => integer(name, { mode: 'boolean' });
-const numeric = (name: string, opts?: any) => text(name);
-const json = (name: string) => text(name);
+// PostgreSQL schema for Supabase
+import { pgTable, text, integer, uuid as pgUuid, timestamp as pgTimestamp, boolean as pgBoolean, numeric as pgNumeric, json as pgJson } from "drizzle-orm/pg-core";
+// PostgreSQL type mappings
+const uuid = (name: string) => text(name); // Use text for UUIDs for compatibility
+const timestamp = (name: string) => integer(name); // Store as integer milliseconds for compatibility
+const boolean = (name: string) => pgBoolean(name);
+const numeric = (name: string, opts?: any) => pgNumeric(name, opts);
+const json = (name: string) => pgJson(name);
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
