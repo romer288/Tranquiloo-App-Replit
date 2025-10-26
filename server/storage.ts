@@ -11,42 +11,11 @@ import {
   type TherapistPatientConnection, type InsertTherapistPatientConnection,
   type NormalizedInterventionSummary
 } from "@shared/schema";
-import { db, sqliteDatabase } from "./db";
+import { db } from "./db";
 import { eq, and, desc, gt, sql } from "drizzle-orm";
 import { randomUUID } from 'crypto';
 
-const ensureTreatmentPlanTable = () => {
-  try {
-    sqliteDatabase.prepare('SELECT 1 FROM treatment_plans LIMIT 1').get();
-  } catch (error: any) {
-    if (error?.message?.includes('no such table')) {
-      sqliteDatabase.exec(`
-        CREATE TABLE IF NOT EXISTS treatment_plans (
-          id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
-          patient_id TEXT UNIQUE NOT NULL,
-          plan TEXT NOT NULL,
-          created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
-          updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
-        );
-      `);
-    } else {
-      throw error;
-    }
-  }
-};
-
-const ensureUserGoalsSourceColumn = () => {
-  try {
-    const columns = sqliteDatabase.prepare('PRAGMA table_info(user_goals);').all() as { name: string }[];
-    const hasSource = columns.some((column) => column.name === 'source');
-    if (!hasSource) {
-      sqliteDatabase.exec('ALTER TABLE user_goals ADD COLUMN source TEXT;');
-    }
-  } catch (error) {
-    console.error('Failed to ensure user_goals.source column:', error);
-    throw error;
-  }
-};
+// Tables already exist in Supabase from migrations - no need to create them
 
 const logTreatmentPlanDebug = (...args: unknown[]) => {
   console.log('[TreatmentPlan::Storage]', ...args);
@@ -363,13 +332,11 @@ export class DatabaseStorage implements IStorage {
 
   // User goals
   async getUserGoal(id: string): Promise<UserGoal | undefined> {
-    ensureUserGoalsSourceColumn();
     const result = await db.select().from(userGoals).where(eq(userGoals.id, id)).limit(1);
     return result[0];
   }
 
   async getUserGoalsByUser(userId: string): Promise<UserGoal[]> {
-    ensureUserGoalsSourceColumn();
     const goals = await db.select().from(userGoals).where(eq(userGoals.userId, userId));
 
     // Backfill missing IDs for legacy rows created before UUID support
@@ -394,7 +361,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUserGoal(goal: InsertUserGoal): Promise<UserGoal> {
-    ensureUserGoalsSourceColumn();
     const now = Date.now();
     const goalId = (goal as any)?.id ?? randomUUID();
     const result = await db.insert(userGoals).values({
@@ -407,7 +373,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserGoal(id: string, goal: Partial<InsertUserGoal>): Promise<UserGoal | undefined> {
-    ensureUserGoalsSourceColumn();
     const result = await db.update(userGoals).set({
       ...goal,
       updatedAt: Date.now()
@@ -416,7 +381,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUserGoal(id: string): Promise<void> {
-    ensureUserGoalsSourceColumn();
     await db.delete(userGoals).where(eq(userGoals.id, id));
   }
 
@@ -465,13 +429,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTreatmentPlanByPatient(patientId: string): Promise<{ plan: any; updatedAt: number } | undefined> {
-    ensureTreatmentPlanTable();
     logTreatmentPlanDebug('Fetching treatment plan for patient', patientId);
-    const row = sqliteDatabase
-      .prepare(
-        'SELECT plan, updated_at AS updatedAt, created_at AS createdAt FROM treatment_plans WHERE patient_id = ? LIMIT 1'
-      )
-      .get(patientId) as { plan: string; updatedAt?: number; createdAt?: number } | undefined;
+    const result = await db.select().from(treatmentPlans).where(eq(treatmentPlans.patientId, patientId)).limit(1);
+    const row = result[0];
 
     if (!row) {
       logTreatmentPlanDebug('No plan found for patient', patientId);
@@ -480,7 +440,7 @@ export class DatabaseStorage implements IStorage {
 
     let parsedPlan: any = null;
     try {
-      parsedPlan = row.plan ? JSON.parse(row.plan) : null;
+      parsedPlan = row.plan ? JSON.parse(row.plan as string) : null;
     } catch (error) {
       console.error('Failed to parse treatment plan JSON for patient', patientId, error);
     }
@@ -493,25 +453,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertTreatmentPlan(patientId: string, plan: any): Promise<{ plan: any; updatedAt: number }> {
-    ensureTreatmentPlanTable();
     const planJson = JSON.stringify(plan);
     const timestamp = Date.now();
 
     logTreatmentPlanDebug('Saving plan for patient', patientId, 'goals:', Array.isArray(plan?.goals) ? plan.goals.length : 'n/a', 'sessionNotes:', Array.isArray(plan?.sessionNotes) ? plan.sessionNotes.length : 'n/a');
 
-    const existing = sqliteDatabase
-      .prepare('SELECT id FROM treatment_plans WHERE patient_id = ? LIMIT 1')
-      .get(patientId) as { id: string } | undefined;
+    const existing = await db.select().from(treatmentPlans).where(eq(treatmentPlans.patientId, patientId)).limit(1);
 
-    if (existing?.id) {
-      sqliteDatabase
-        .prepare('UPDATE treatment_plans SET plan = ?, updated_at = ? WHERE patient_id = ?')
-        .run(planJson, timestamp, patientId);
+    if (existing[0]) {
+      await db.update(treatmentPlans).set({ plan: planJson, updatedAt: timestamp }).where(eq(treatmentPlans.patientId, patientId));
       logTreatmentPlanDebug('Updated existing plan for patient', patientId);
     } else {
-      sqliteDatabase
-        .prepare('INSERT INTO treatment_plans (id, patient_id, plan, created_at, updated_at) VALUES (?, ?, ?, ?, ?)')
-        .run(randomUUID(), patientId, planJson, timestamp, timestamp);
+      await db.insert(treatmentPlans).values({ id: randomUUID(), patientId, plan: planJson, createdAt: timestamp, updatedAt: timestamp });
       logTreatmentPlanDebug('Inserted new plan for patient', patientId);
     }
 
@@ -519,77 +472,52 @@ export class DatabaseStorage implements IStorage {
   }
 
   async syncTreatmentPlanGoals(patientId: string, plan: any): Promise<void> {
-    ensureUserGoalsSourceColumn();
-
     const goalsArray = Array.isArray(plan?.goals) ? plan.goals : [];
     const timestamp = Date.now();
 
-    const deleteStmt = sqliteDatabase.prepare('DELETE FROM user_goals WHERE user_id = ? AND source = ?');
-    const insertStmt = sqliteDatabase.prepare(
-      `INSERT INTO user_goals (
-        id,
-        user_id,
+    // Delete existing treatment plan goals for this patient
+    await db.delete(userGoals).where(
+      and(eq(userGoals.userId, patientId), eq(userGoals.source, TREATMENT_PLAN_GOAL_SOURCE))
+    );
+
+    // Insert new goals from treatment plan
+    for (const goal of goalsArray) {
+      const goalId = goal?.id ?? randomUUID();
+      const title = goal?.title ?? 'Therapy Goal';
+      const description = goal?.description ?? '';
+      const category = (goal?.category ?? 'treatment').toString();
+      const priority = goal?.priority ?? 'medium';
+      const frequency = (goal?.frequency ?? 'weekly').toString();
+      const notes = goal?.therapistNotes ?? '';
+      const milestones = Array.isArray(goal?.milestones) ? JSON.stringify(goal.milestones) : JSON.stringify([]);
+      const baseTargetValue = goal?.targetValue ?? goal?.target_value;
+      const targetValue = baseTargetValue !== undefined && baseTargetValue !== null ? String(baseTargetValue) : '';
+      const unit = goal?.unit ?? '';
+      const startDate = goal?.startDate ?? new Date(timestamp).toISOString().split('T')[0];
+      const endDate = goal?.targetDate ?? goal?.endDate ?? null;
+
+      await db.insert(userGoals).values({
+        id: goalId,
+        userId: patientId,
         title,
         description,
         category,
         priority,
-        status,
-        created_at,
-        updated_at,
+        status: 'active',
+        createdAt: timestamp,
+        updatedAt: timestamp,
         frequency,
         notes,
         milestones,
-        target_value,
+        targetValue,
         unit,
-        start_date,
-        end_date,
-        is_active,
-        source
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    );
+        startDate,
+        endDate,
+        isActive: true,
+        source: TREATMENT_PLAN_GOAL_SOURCE
+      } as any);
+    }
 
-    const runSync = sqliteDatabase.transaction(() => {
-      deleteStmt.run(patientId, TREATMENT_PLAN_GOAL_SOURCE);
-
-      goalsArray.forEach((goal: any) => {
-        const goalId = goal?.id ?? randomUUID();
-        const title = goal?.title ?? 'Therapy Goal';
-        const description = goal?.description ?? '';
-        const category = (goal?.category ?? 'treatment').toString();
-        const priority = goal?.priority ?? 'medium';
-        const frequency = (goal?.frequency ?? 'weekly').toString();
-        const notes = goal?.therapistNotes ?? '';
-        const milestones = Array.isArray(goal?.milestones) ? JSON.stringify(goal.milestones) : JSON.stringify([]);
-        const baseTargetValue = goal?.targetValue ?? goal?.target_value;
-        const targetValue = baseTargetValue !== undefined && baseTargetValue !== null ? String(baseTargetValue) : '';
-        const unit = goal?.unit ?? '';
-        const startDate = goal?.startDate ?? new Date(timestamp).toISOString().split('T')[0];
-        const endDate = goal?.targetDate ?? goal?.endDate ?? null;
-
-        insertStmt.run(
-          goalId,
-          patientId,
-          title,
-          description,
-          category,
-          priority,
-          'active',
-          timestamp,
-          timestamp,
-          frequency,
-          notes,
-          milestones,
-          targetValue,
-          unit,
-          startDate,
-          endDate,
-          1,
-          TREATMENT_PLAN_GOAL_SOURCE
-        );
-      });
-    });
-
-    runSync();
     logTreatmentPlanDebug('Synced treatment goals to user_goals for patient', patientId, 'count:', goalsArray.length);
   }
 
