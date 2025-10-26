@@ -1,8 +1,8 @@
-# Exclude TypeScript source files from api folder (only deploy compiled .js)
-api/index.ts
-
 # Exclude scripts (not needed for production)
 scripts/**
+
+# Exclude compiled api folder output (Vercel compiles .ts directly)
+api/index.js
 
 # Development files
 node_modules
