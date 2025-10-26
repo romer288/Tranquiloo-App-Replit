@@ -1,10 +1,7 @@
 # Exclude TypeScript source files from api folder (only deploy compiled .js)
 api/index.ts
 
-# Exclude server source files
-server/**
-
-# Exclude scripts
+# Exclude scripts (not needed for production)
 scripts/**
 
 # Development files
@@ -15,3 +12,6 @@ node_modules
 
 # Build artifacts
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
