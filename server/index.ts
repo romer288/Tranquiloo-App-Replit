@@ -96,22 +96,29 @@ app.use((req, res, next) => {
 
   console.log('📹 Video call WebSocket server initialized on /ws/video-call');
 
-  // Serve the app on port 5000 for Replit compatibility
-  // this serves both the API and the client.
-  const port = process.env.PORT || 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
+  // Only listen when running locally (not on Vercel)
+  if (
+    process.env.NODE_ENV !== 'production' ||
+    process.env.RUNNING_LOCALLY === 'true'
+  ) {
+    const port = process.env.PORT || 5000;
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      log(`serving on port ${port}`);
 
-    // Start email service after server is running
-    import('./emailService').then(({ emailService }) => {
-      emailService.startEmailProcessor();
-      console.log('✉️ Email service started - processing queue every 30 seconds');
-    }).catch(err => {
-      console.error('Failed to start email service:', err);
+      // Start email service after server is running
+      import('./emailService').then(({ emailService }) => {
+        emailService.startEmailProcessor();
+        console.log('✉️ Email service started - processing queue every 30 seconds');
+      }).catch(err => {
+        console.error('Failed to start email service:', err);
+      });
     });
-  });
+  }
 })();
+
+// Export the Express app for Vercel serverless
+export default app;
