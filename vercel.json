@@ -7,7 +7,7 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/api/_serverless"
+      "destination": "/api"
     }
   ],
   "outputDirectory": "dist/public",
