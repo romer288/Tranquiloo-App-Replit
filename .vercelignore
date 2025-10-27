@@ -1,8 +1,9 @@
-# Exclude TypeScript source (use compiled .js)
-api/index.ts
-
 # Exclude scripts (not needed for production)
 scripts/**
+
+# Exclude server and shared source files (bundled into api/index.js)
+server/**
+shared/**
 
 # Development files
 node_modules
