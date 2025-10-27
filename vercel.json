@@ -4,15 +4,10 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": null,
-  "functions": {
-    "api/dist/index.js": {
-      "memory": 1024
-    }
-  },
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/api/dist"
+      "destination": "/api"
     }
   ],
   "outputDirectory": "dist/public",
