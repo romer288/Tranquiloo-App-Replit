@@ -61,8 +61,8 @@ export const analyticsService = {
         })
       ]);
 
-      let messages = [];
-      let anxietyAnalyses = [];
+      let messages: any[] = [];
+      let anxietyAnalyses: any[] = [];
 
       if (messagesResponse.ok) {
         const messageText = await messagesResponse.text();

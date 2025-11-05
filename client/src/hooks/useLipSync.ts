@@ -67,7 +67,7 @@ export default function useLipSync(
     
     // Reset all morph targets
     if (mesh.current.morphTargetInfluences) {
-      mesh.current.morphTargetInfluences.forEach((_, index) => {
+      mesh.current.morphTargetInfluences.forEach((_: number, index: number) => {
         if (mesh.current?.morphTargetInfluences) {
           mesh.current.morphTargetInfluences[index] *= 0.9; // Smooth decay
         }
