@@ -2221,6 +2221,217 @@ Key therapeutic themes addressed:
     }
   });
 
+  // Facebook OAuth initiation route
+  app.get('/auth/facebook', (req, res) => {
+    const clientId = process.env.FACEBOOK_CLIENT_ID as string;
+    console.log('Facebook OAuth initiation - Using App ID:', clientId ? clientId.substring(0, 10) + '...' : 'NOT SET');
+
+    // Get correct protocol/host from proxy headers or environment
+    const forwardedProto = (req.headers['x-forwarded-proto'] as string)?.split(',')[0] || 'https';
+    const forwardedHost = (req.headers['x-forwarded-host'] as string) || req.headers.host;
+    const replitDomains = process.env.REPLIT_DOMAINS;
+    const protocol = replitDomains ? 'https' : forwardedProto;
+    const host = replitDomains || forwardedHost || req.get('host');
+
+    const redirectUri = `${protocol}://${host}/auth/facebook/callback`;
+
+    if (!clientId) {
+      return res.redirect('/login?error=server_config');
+    }
+
+    // Get role and return URL from query parameters
+    const role = req.query.role || 'patient';
+    const returnUrl = req.query.returnUrl || '/dashboard';
+
+    // Create state parameter to pass role information
+    const state = encodeURIComponent(JSON.stringify({
+      role: role,
+      returnUrl: returnUrl,
+      isSignUp: true
+    }));
+
+    // Build Facebook OAuth URL
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: 'email,public_profile',
+      state: state
+    });
+
+    const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?${params.toString()}`;
+    console.log('Redirecting to Facebook OAuth with redirect_uri:', redirectUri);
+    res.redirect(authUrl);
+  });
+
+  // Facebook OAuth callback route
+  app.get('/auth/facebook/callback', async (req, res) => {
+    try {
+      const { code, state } = req.query;
+
+      if (!code) {
+        return res.redirect('/login?error=oauth_failed');
+      }
+
+      // Parse state parameter
+      let userState = { role: 'patient', isSignUp: false, returnUrl: '/dashboard' };
+      if (state && typeof state === 'string') {
+        try {
+          userState = JSON.parse(decodeURIComponent(state));
+        } catch (e) {
+          console.error('Failed to parse Facebook OAuth state:', e);
+        }
+      }
+
+      // Exchange code for access token
+      const clientId = process.env.FACEBOOK_CLIENT_ID as string;
+      const clientSecret = process.env.FACEBOOK_CLIENT_SECRET as string;
+      console.log('Facebook OAuth callback - Using App ID:', clientId ? clientId.substring(0, 10) + '...' : 'NOT SET');
+
+      // Get correct protocol/host
+      const forwardedProto = (req.headers['x-forwarded-proto'] as string)?.split(',')[0] || 'https';
+      const forwardedHost = (req.headers['x-forwarded-host'] as string) || req.headers.host;
+      const replitDomains = process.env.REPLIT_DOMAINS;
+      const protocol = replitDomains ? 'https' : forwardedProto;
+      const host = replitDomains || forwardedHost || req.get('host');
+
+      const redirectUri = `${protocol}://${host}/auth/facebook/callback`;
+
+      if (!clientId || !clientSecret) {
+        console.error('Facebook OAuth not configured: set FACEBOOK_CLIENT_ID and FACEBOOK_CLIENT_SECRET');
+        return res.redirect('/login?error=server_config');
+      }
+
+      // Exchange code for access token
+      const tokenUrl = `https://graph.facebook.com/v18.0/oauth/access_token?${new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri,
+        code: code as string
+      })}`;
+
+      const tokenResponse = await fetch(tokenUrl);
+      const tokens = await tokenResponse.json();
+
+      if (!tokens.access_token) {
+        console.error('Facebook token exchange failed:', tokens);
+        return res.redirect('/login?error=token_failed');
+      }
+
+      // Get user info from Facebook
+      const userResponse = await fetch(`https://graph.facebook.com/me?fields=id,name,email,first_name,last_name,picture&access_token=${tokens.access_token}`);
+      const facebookUser = await userResponse.json();
+
+      if (!facebookUser.email) {
+        console.error('Facebook user has no email:', facebookUser);
+        return res.redirect('/login?error=no_email');
+      }
+
+      // Check if user exists
+      let existingProfile = null;
+      try {
+        existingProfile = await storage.getProfileByEmail(facebookUser.email);
+      } catch (err) {
+        console.log('Profile lookup error:', err);
+      }
+
+      // Get the correct origin for the redirect
+      const origin = `${protocol}://${host}`;
+
+      if (existingProfile) {
+        // Check if email is verified
+        if (!existingProfile.emailVerified) {
+          return res.redirect(`${origin}/login?error=verification_required&email=${encodeURIComponent(facebookUser.email)}`);
+        }
+
+        // User exists and is verified - proceed to dashboard
+        const userData = {
+          id: existingProfile.id,
+          email: existingProfile.email,
+          name: facebookUser.name,
+          picture: facebookUser.picture?.data?.url,
+          role: existingProfile.role,
+          emailVerified: true,
+          authMethod: 'facebook'
+        };
+
+        // Check if therapist needs license verification
+        if (existingProfile.role === 'therapist' && !existingProfile.licenseNumber) {
+          return res.redirect(`${origin}/therapist-license-verification`);
+        }
+
+        const redirectPath = existingProfile.role === 'therapist' ? '/therapist-dashboard' : '/dashboard';
+        const fullRedirectUrl = `${origin}${redirectPath}`;
+
+        // Store user data and redirect
+        const userDataScript = `
+          <script>
+            localStorage.setItem('user', ${JSON.stringify(JSON.stringify(userData))});
+            localStorage.setItem('auth_user', ${JSON.stringify(JSON.stringify(userData))});
+            localStorage.setItem('authToken', ${JSON.stringify(tokens.access_token)});
+            window.location.href = '${fullRedirectUrl}';
+          </script>
+        `;
+
+        return res.send(`
+          <html>
+            <head><title>Authentication Success</title></head>
+            <body>
+              <p>Authentication successful! Redirecting...</p>
+              ${userDataScript}
+            </body>
+          </html>
+        `);
+      }
+
+      // New user - create profile
+      const { randomUUID } = await import('crypto');
+      const patientCode = 'PT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 4).toUpperCase();
+      const newProfile = await storage.createProfile({
+        email: facebookUser.email,
+        firstName: facebookUser.first_name || facebookUser.name?.split(' ')[0] || null,
+        lastName: facebookUser.last_name || facebookUser.name?.split(' ').slice(1).join(' ') || null,
+        role: userState.role || 'patient',
+        patientCode: userState.role === 'patient' ? patientCode : null,
+        authMethod: 'facebook',
+        emailVerified: false,
+      });
+
+      // Generate verification token and update profile
+      const verificationToken = randomBytes(32).toString('hex');
+      await storage.updateProfileVerification(newProfile.id, verificationToken);
+
+      // Send verification email
+      const verificationUrl = `${protocol}://${host}/verify-email?token=${verificationToken}`;
+
+      if (userState.role === 'therapist') {
+        await emailService.sendTherapistVerificationEmail(
+          newProfile.email!,
+          newProfile.firstName || 'Therapist',
+          verificationToken,
+          verificationUrl
+        );
+      } else {
+        await emailService.sendVerificationEmail(
+          newProfile.email!,
+          newProfile.firstName || 'User',
+          verificationToken
+        );
+      }
+
+      // Redirect to appropriate signup success page
+      if (userState.role === 'therapist') {
+        res.redirect(`${origin}/therapist-login?signup_success=true&email=${encodeURIComponent(facebookUser.email)}`);
+      } else {
+        res.redirect(`${origin}/login?signup_success=true&email=${encodeURIComponent(facebookUser.email)}`);
+      }
+
+    } catch (error) {
+      console.error('Facebook OAuth callback error:', error);
+      res.redirect('/login?error=oauth_error');
+    }
+  });
+
   // Therapist license verification endpoints
   app.post('/api/therapist/license-verification', async (req, res) => {
     try {
