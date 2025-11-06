@@ -52,8 +52,11 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
+// Register routes immediately for serverless (synchronously for Vercel)
+let routesRegistered = false;
+const initPromise = (async () => {
   const server = await registerRoutes(app);
+  routesRegistered = true;
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -119,6 +122,10 @@ app.use((req, res, next) => {
     });
   }
 })();
+
+// Export app initialization promise for Vercel serverless
+// This ensures routes are registered before handling requests
+export const ready = initPromise;
 
 // Export the Express app for Vercel serverless
 export default app;
