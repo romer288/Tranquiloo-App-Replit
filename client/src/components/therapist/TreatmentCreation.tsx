@@ -479,7 +479,7 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
         const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(config.key, config.region);
         speechConfig.speechRecognitionLanguage = transcriptionLanguage === 'es' ? 'es-ES' : 'en-US';
 
-        const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophone();
+        const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
         const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
 
         let fullTranscript = '';

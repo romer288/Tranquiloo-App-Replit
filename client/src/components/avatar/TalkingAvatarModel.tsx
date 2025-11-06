@@ -22,7 +22,7 @@ export const TalkingAvatarModel: React.FC<TalkingAvatarModelProps> = ({
   isPlaying,
   startTime
 }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const meshRef = useRef<THREE.Mesh | null>(null);
   const [avatarMesh, setAvatarMesh] = useState<THREE.Mesh | null>(null);
   
   // Convert timeline to the format expected by useLipSync

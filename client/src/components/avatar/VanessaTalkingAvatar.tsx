@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { BlondeAvatar } from './BlondeAvatar';
+import BlondeAvatar from './BlondeAvatar';
 import { PrivacyNotice } from './PrivacyNotice';
 import { Loader2, Heart } from 'lucide-react';
 import useFPS from '@/hooks/useFPS';

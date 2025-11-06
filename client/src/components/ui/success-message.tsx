@@ -53,7 +53,7 @@ const SuccessMessage: React.FC<SuccessMessageProps> = ({ email, onBack }) => {
           )}
           
           <div className="text-center">
-            <Link href="/login">
+            <Link to="/login">
               <Button className="w-full">
                 Go to Sign In Page
               </Button>

@@ -51,9 +51,17 @@ export const GoalSuggestionModal: React.FC<GoalSuggestionModalProps> = ({
 
     setIsCreating(true);
     try {
+      // Get current user
+      const authUser = localStorage.getItem('auth_user');
+      if (!authUser) {
+        throw new Error('User not authenticated');
+      }
+      const user = JSON.parse(authUser);
+
       const promises = Array.from(selectedGoals).map(index => {
         const goal = suggestedGoals[index];
         return goalsService.createGoal({
+          user_id: user.id,
           title: goal.title,
           description: goal.description,
           category: goal.category,

@@ -257,9 +257,13 @@ export async function streamAIResponse(
   // Check for crisis first
   const crisisAssessment = await detectCrisisContext(userMessage);
   if (crisisAssessment.requiresScreening) {
-    const crisisResponse = generateCrisisResponse(crisisAssessment);
-    onChunk(crisisResponse.response);
-    return crisisResponse;
+    const crisisResponseText = generateCrisisResponse(crisisAssessment);
+    onChunk(crisisResponseText);
+    return {
+      response: crisisResponseText,
+      researchUsed: [],
+      shouldAlert: true,
+    };
   }
 
   // Get research context

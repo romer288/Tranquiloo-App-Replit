@@ -54,7 +54,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
     try {
       // For now during migration, just show success message
       console.log('Password reset requested for:', formData.email);
-      const error = null; // Placeholder - in full implementation would call authService
+      const error: { message: string } | null = null; // Placeholder - in full implementation would call authService
 
       if (error) {
         toast({

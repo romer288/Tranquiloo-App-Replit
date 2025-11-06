@@ -72,7 +72,7 @@ export const useRegistrationAuth = () => {
     }
   };
 
-  const handleEmailSignUp = async (formData: FormData): Promise<{ success: boolean; needsVerification?: boolean }> => {
+  const handleEmailSignUp = async (formData: FormData): Promise<{ success: boolean; needsVerification?: boolean; user?: any; error?: any }> => {
     const validation = validateRegistrationForm(formData);
     
     if (!validation.isValid && validation.error) {
