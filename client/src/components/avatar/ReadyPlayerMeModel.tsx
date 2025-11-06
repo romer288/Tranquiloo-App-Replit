@@ -13,17 +13,17 @@ interface ReadyPlayerMeModelProps {
   onStoppedSpeaking?: () => void;
 }
 
-export const ReadyPlayerMeModel: React.FC<ReadyPlayerMeModelProps> = ({ 
-  url, 
-  isAnimating, 
-  emotion, 
+export const ReadyPlayerMeModel: React.FC<ReadyPlayerMeModelProps> = ({
+  url,
+  isAnimating,
+  emotion,
   onError,
   onLoaded,
   onStoppedSpeaking
 }) => {
   const modelRef = useRef<THREE.Group>(null);
-  
-  const { gltf, mixer, morphTargets, headBone } = useReadyPlayerMeLoader({
+
+  const { gltf, mixer, morphTargets, headBone }: { gltf: any; mixer: any; morphTargets: any; headBone: any } = useReadyPlayerMeLoader({
     url,
     onError,
     onLoaded

@@ -22,12 +22,12 @@ export const TalkingAvatarModel: React.FC<TalkingAvatarModelProps> = ({
   isPlaying,
   startTime
 }) => {
-  const meshRef = useRef<THREE.Mesh | null>(null);
-  const [avatarMesh, setAvatarMesh] = useState<THREE.Mesh | null>(null);
-  
+  const meshRef = useRef<THREE.Mesh>(null!);
+  const [avatarMesh, setAvatarMesh] = useState<THREE.Mesh | undefined>(undefined);
+
   // Convert timeline to the format expected by useLipSync
   const timelineFrames = timeline ? timeline.frames : null;
-  
+
   // For now, create a simple geometric avatar until we have the GLB file
   const lipSyncState = useLipSync(
     { current: avatarMesh },

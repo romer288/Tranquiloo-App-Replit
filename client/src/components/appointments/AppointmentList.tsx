@@ -317,7 +317,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
                           </span>
                           <Button
                             variant="outline"
-                            size="xs"
+                            size="sm"
                             onClick={() => copyMeetingLink(appointment.meetingLink || '')}
                             className="flex items-center gap-1"
                           >
@@ -325,7 +325,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
                           </Button>
                           <Button
                             variant="ghost"
-                            size="xs"
+                            size="sm"
                             className="text-blue-600 hover:text-blue-700"
                             onClick={() => openMeetingLink(appointment)}
                           >

@@ -157,7 +157,7 @@ const aggregateAnalysesByPeriod = (
       .map(([name, count]) => ({
         name,
         count,
-        adherence: count >= sessions ? '✔' : count >= Math.ceil(sessions / 2) ? 'Partial' : '✖',
+        adherence: (count >= sessions ? '✔' : count >= Math.ceil(sessions / 2) ? 'Partial' : '✖') as "✔" | "Partial" | "✖",
       }));
 
     const topTrigger = triggers[0]?.name;

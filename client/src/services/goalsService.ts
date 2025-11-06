@@ -166,7 +166,7 @@ export const goalsService = {
       const authUser = localStorage.getItem('auth_user');
       const user = authUser ? JSON.parse(authUser) : null;
 
-      const updatePayload = mapGoalPayload(updates, updates.user_id || updates.userId || user?.id);
+      const updatePayload = mapGoalPayload(updates, updates.user_id || (updates as any).userId || user?.id);
       const response = await fetch(`/api/user-goals/${goalId}`, {
         method: 'PUT',
         headers: {

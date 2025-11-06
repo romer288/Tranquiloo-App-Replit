@@ -34,7 +34,7 @@ class AzureSTTService {
 
     this.handleVisibilityChange = () => {
       if (document.visibilityState === 'visible'
-        && this.safariUnlockContext?.state === 'interrupted') {
+        && this.safariUnlockContext && (this.safariUnlockContext.state as string) === 'interrupted') {
         console.debug('🔁 Safari visibility change detected, attempting to resume AudioContext');
         void this.resumeSafariUnlockContext();
       }
