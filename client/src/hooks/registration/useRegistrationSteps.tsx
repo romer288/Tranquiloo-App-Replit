@@ -98,7 +98,7 @@ export const useRegistrationSteps = () => {
         console.log('Current step:', step, 'Initial check done:', initialCheckDone.current);
         
         // For migration, automatically advance to registration-complete
-        if (step === 'form') {
+        if ((step as string) === 'form') {
           setStep('registration-complete');
         }
       }

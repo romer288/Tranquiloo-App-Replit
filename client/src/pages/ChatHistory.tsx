@@ -234,7 +234,7 @@ const ChatHistory = () => {
                             {formatDateTime(
                               parseDateSafe(
                                 analysis.createdAt ??
-                                  analysis.updatedAt ??
+                                  (analysis as any).updatedAt ??
                                   (analysis as any).created_at ??
                                   (analysis as any).updated_at ??
                                   (analysis as any).timestamp ??

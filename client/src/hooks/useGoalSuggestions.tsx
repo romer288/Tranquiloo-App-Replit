@@ -81,10 +81,10 @@ export const useGoalSuggestions = () => {
       anxietyLevel: analysis?.anxietyLevel
     });
     
-    return drivingAnxiety || 
-           hasGoalKeywords || 
+    return Boolean(drivingAnxiety ||
+           hasGoalKeywords ||
            strugglingWithImpact ||
-           (hasHighAnxiety && hasWorkableTrigggers);
+           (hasHighAnxiety && hasWorkableTrigggers));
   };
 
   const generateGoalSuggestions = (

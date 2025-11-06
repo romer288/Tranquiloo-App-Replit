@@ -25,8 +25,10 @@ export default function AuthCallback() {
           
           if (response.ok) {
             const userData = await response.json();
-            await authService.setCurrentUser(userData.user);
-            
+            // Store user data in localStorage (authService doesn't have setCurrentUser)
+            localStorage.setItem('user', JSON.stringify(userData.user));
+            localStorage.setItem('auth_user', JSON.stringify(userData.user));
+
             // Redirect based on user role
             if (userData.user.role === 'therapist') {
               navigate('/therapist-dashboard');

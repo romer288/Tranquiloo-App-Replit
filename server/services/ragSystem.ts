@@ -255,23 +255,15 @@ export async function streamAIResponse(
 ): Promise<RAGResponse> {
 
   // Check for crisis first
-  const isCrisis = detectCrisis(userMessage);
-  if (isCrisis) {
-    const crisisResponse = {
-      response: `I'm very concerned about what you're sharing. Please reach out for immediate help:
-
-🆘 **Call 988** - Suicide & Crisis Lifeline (US)
-📱 **Text HOME to 741741** - Crisis Text Line
-🚨 **Call 911** - For emergencies`,
-      researchUsed: [],
-      shouldAlert: true,
-    };
+  const crisisAssessment = await detectCrisisContext(userMessage);
+  if (crisisAssessment.requiresScreening) {
+    const crisisResponse = generateCrisisResponse(crisisAssessment);
     onChunk(crisisResponse.response);
     return crisisResponse;
   }
 
   // Get research context
-  const researchContext = await getResearchContext(userMessage, 3);
+  const researchContext = await getEnhancedResearchContext(userMessage, 3);
   const conversationSummary = await getConversationSummary(conversationId, userId);
 
   // Build messages

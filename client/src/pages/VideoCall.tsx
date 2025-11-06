@@ -45,7 +45,7 @@ const VideoCall: React.FC = () => {
     );
   }
 
-  const userName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email;
+  const userName = (user as any).name || user.email || 'User';
   const userRole = user.role === 'therapist' ? 'therapist' : 'patient';
 
   const handleEndCall = () => {
@@ -59,7 +59,7 @@ const VideoCall: React.FC = () => {
 
   return (
     <VideoCallInterface
-      roomId={roomId}
+      roomId={roomId!}
       userName={userName}
       userRole={userRole}
       appointmentId={appointmentId || undefined}

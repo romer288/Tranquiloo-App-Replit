@@ -119,7 +119,7 @@ router.get('/summary/:userId', async (req: Request, res: Response) => {
 
     const { data, error } = await supabase
       .from('wellness_tracking')
-      .select('mood_score, energy_level, stress_level, sleep_quality')
+      .select('mood_score, energy_level, stress_level, sleep_quality, created_at')
       .eq('user_id', userId)
       .gte('created_at', daysAgo.toISOString());
 

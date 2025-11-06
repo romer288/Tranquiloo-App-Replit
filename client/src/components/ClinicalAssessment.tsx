@@ -344,7 +344,7 @@ const ClinicalAssessment: React.FC<ClinicalAssessmentProps> = ({ onComplete }) =
       riskLevel = 'high';
       potentialConditions.push('Moderate to Severe Generalized Anxiety Disorder');
     } else if (gad7Score >= 5) {
-      riskLevel = riskLevel === 'severe' ? 'severe' : 'moderate';
+      riskLevel = (riskLevel as string) === 'severe' ? 'severe' : 'moderate';
       potentialConditions.push('Mild Generalized Anxiety Disorder');
     }
     
