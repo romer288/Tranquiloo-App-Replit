@@ -1,7 +1,8 @@
 // In production (Vercel), environment variables are automatically injected
 // No need for dotenv - it's only needed for local development
 import cors from "cors";
-import chatRoutes from "./routes/chat";
+// Note: ./routes/chat uses SQLite (better-sqlite3) which doesn't work in serverless
+// Chat functionality is handled by ./routes (registerRoutes) with PostgreSQL
 import aiChatRoutes from "./routes/ai-chat";
 import wellnessRoutes from "./routes/wellness";
 
@@ -21,7 +22,8 @@ app.set('trust proxy', true);
 app.use(express.json({ limit: '10mb' })); // Increased limit for audio data
 app.use(express.urlencoded({ extended: false }));
 
-app.use("/api/chat", chatRoutes);
+// Note: /api/chat route removed - uses SQLite which doesn't work in serverless
+// Chat functionality is available through registerRoutes() below
 app.use("/api/ai-chat", aiChatRoutes);
 app.use("/api/wellness", wellnessRoutes);
 
