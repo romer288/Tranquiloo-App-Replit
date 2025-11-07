@@ -5,9 +5,13 @@ import cors from "cors";
 // Chat functionality is handled by ./routes (registerRoutes) with PostgreSQL
 import aiChatRoutes from "./routes/ai-chat";
 import wellnessRoutes from "./routes/wellness";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
@@ -47,6 +51,15 @@ registerRoutes(app).then(() => {
   console.log('✅ Routes registered successfully');
 }).catch(err => {
   console.error('❌ Failed to register routes:', err);
+});
+
+// Serve static files from dist/public (for client-side assets)
+const distPath = path.resolve(__dirname, "public");
+app.use(express.static(distPath));
+
+// Serve index.html for all non-API routes (SPA fallback)
+app.use("*", (_req, res) => {
+  res.sendFile(path.resolve(distPath, "index.html"));
 });
 
 // Error handler
