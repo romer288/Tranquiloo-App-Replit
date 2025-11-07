@@ -1,6 +1,5 @@
-import dotenv from "dotenv";
-dotenv.config(); // MUST be first before any other imports that use process.env
-
+// In production (Vercel), environment variables are automatically injected
+// No need for dotenv - it's only needed for local development
 import cors from "cors";
 import chatRoutes from "./routes/chat";
 import aiChatRoutes from "./routes/ai-chat";

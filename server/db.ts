@@ -1,5 +1,5 @@
-import dotenv from "dotenv";
-dotenv.config();
+// Note: dotenv is loaded in server/index.ts (dev) before this file is imported
+// In production (Vercel), environment variables are automatically available
 
 // Disable SSL certificate verification for Supabase
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
