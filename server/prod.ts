@@ -26,6 +26,10 @@ app.set('trust proxy', true);
 app.use(express.json({ limit: '10mb' })); // Increased limit for audio data
 app.use(express.urlencoded({ extended: false }));
 
+// Serve static files FIRST (before any auth middleware)
+const distPath = path.resolve(__dirname, "public");
+app.use(express.static(distPath));
+
 // Note: /api/chat route removed - uses SQLite which doesn't work in serverless
 // Chat functionality is available through registerRoutes() below
 app.use("/api/ai-chat", aiChatRoutes);
@@ -53,11 +57,8 @@ registerRoutes(app).then(() => {
   console.error('❌ Failed to register routes:', err);
 });
 
-// Serve static files from dist/public (for client-side assets)
-const distPath = path.resolve(__dirname, "public");
-app.use(express.static(distPath));
-
 // Serve index.html for all non-API routes (SPA fallback)
+// This MUST be last, after all API routes
 app.use("*", (_req, res) => {
   res.sendFile(path.resolve(distPath, "index.html"));
 });
