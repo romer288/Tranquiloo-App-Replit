@@ -14,6 +14,10 @@ import { registerRoutes } from "./routes";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distPath = path.resolve(__dirname, "public");
 
+console.log('[Static Files] __dirname:', __dirname);
+console.log('[Static Files] distPath:', distPath);
+console.log('[Static Files] Resolved path:', path.resolve(__dirname, "public"));
+
 // Initialize app with async routes
 async function createApp() {
   const app = express();
@@ -30,7 +34,16 @@ async function createApp() {
   app.use(express.urlencoded({ extended: false }));
 
   // Serve static files FIRST (before any auth middleware)
-  app.use(express.static(distPath));
+  console.log('[Static Files] Setting up express.static with path:', distPath);
+  app.use((req, res, next) => {
+    console.log(`[Request] ${req.method} ${req.path}`);
+    next();
+  });
+  app.use(express.static(distPath, {
+    setHeaders: (res, filepath) => {
+      console.log('[Static] Serving:', filepath);
+    }
+  }));
 
   // Note: /api/chat route removed - uses SQLite which doesn't work in serverless
   // Chat functionality is available through registerRoutes() below
