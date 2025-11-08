@@ -10,7 +10,7 @@
       "destination": "/api"
     },
     {
-      "source": "/((?!api|assets|manifest\\.json|robots\\.txt|favicon\\.ico|icon\\.svg).*)",
+      "source": "/:path((?!api|assets|manifest\\.json|robots\\.txt|favicon\\.ico|icon\\.svg).*)",
       "destination": "/api"
     }
   ],
