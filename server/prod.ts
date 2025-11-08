@@ -12,65 +12,71 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-const app = express();
-
-app.use(cors({
-  origin: true, // Allow all origins in production (Vercel handles this)
-  credentials: true,
-}));
-
-// Trust proxy to get correct protocol/host from Vercel
-app.set('trust proxy', true);
-
-app.use(express.json({ limit: '10mb' })); // Increased limit for audio data
-app.use(express.urlencoded({ extended: false }));
-
-// Serve static files FIRST (before any auth middleware)
 const distPath = path.resolve(__dirname, "public");
-app.use(express.static(distPath));
 
-// Note: /api/chat route removed - uses SQLite which doesn't work in serverless
-// Chat functionality is available through registerRoutes() below
-app.use("/api/ai-chat", aiChatRoutes);
-app.use("/api/wellness", wellnessRoutes);
+// Initialize app with async routes
+async function createApp() {
+  const app = express();
 
-// Simple request logging for production
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
+  app.use(cors({
+    origin: true, // Allow all origins in production (Vercel handles this)
+    credentials: true,
+  }));
 
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      console.log(`${req.method} ${path} ${res.statusCode} in ${duration}ms`);
-    }
+  // Trust proxy to get correct protocol/host from Vercel
+  app.set('trust proxy', true);
+
+  app.use(express.json({ limit: '10mb' })); // Increased limit for audio data
+  app.use(express.urlencoded({ extended: false }));
+
+  // Serve static files FIRST (before any auth middleware)
+  app.use(express.static(distPath));
+
+  // Note: /api/chat route removed - uses SQLite which doesn't work in serverless
+  // Chat functionality is available through registerRoutes() below
+  app.use("/api/ai-chat", aiChatRoutes);
+  app.use("/api/wellness", wellnessRoutes);
+
+  // Simple request logging for production
+  app.use((req, res, next) => {
+    const start = Date.now();
+    const path = req.path;
+
+    res.on("finish", () => {
+      const duration = Date.now() - start;
+      if (path.startsWith("/api")) {
+        console.log(`${req.method} ${path} ${res.statusCode} in ${duration}ms`);
+      }
+    });
+
+    next();
   });
 
-  next();
-});
+  // Register all routes (auth, therapist, etc.) - AWAIT to ensure they're registered
+  try {
+    await registerRoutes(app);
+    console.log('✅ Routes registered successfully');
+  } catch (err) {
+    console.error('❌ Failed to register routes:', err);
+  }
 
-// Register all routes (auth, therapist, etc.)
-registerRoutes(app).then(() => {
-  console.log('✅ Routes registered successfully');
-}).catch(err => {
-  console.error('❌ Failed to register routes:', err);
-});
+  // Serve index.html for all non-API routes (SPA fallback)
+  // This MUST be last, after all API routes
+  app.use("*", (_req, res) => {
+    res.sendFile(path.resolve(distPath, "index.html"));
+  });
 
-// Serve index.html for all non-API routes (SPA fallback)
-// This MUST be last, after all API routes
-app.use("*", (_req, res) => {
-  res.sendFile(path.resolve(distPath, "index.html"));
-});
+  // Error handler
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
 
-// Error handler
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  const status = err.status || err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
+    res.status(status).json({ message });
+    console.error("Unhandled error:", err);
+  });
 
-  res.status(status).json({ message });
-  console.error("Unhandled error:", err);
-});
+  return app;
+}
 
 // Export the Express app for Vercel serverless
-export default app;
+export default await createApp();
