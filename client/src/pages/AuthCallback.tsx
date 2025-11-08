@@ -7,46 +7,38 @@ export default function AuthCallback() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const state = urlParams.get('state');
-        
-        console.log('OAuth callback received:', { code: code?.substring(0, 10) + '...', state });
-        
-        if (code) {
-          // Handle OAuth code from Google - use correct endpoint
-          const response = await fetch('/auth/google/callback', {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-          
-          if (response.ok) {
-            const userData = await response.json();
-            // Store user data in localStorage (authService doesn't have setCurrentUser)
-            localStorage.setItem('user', JSON.stringify(userData.user));
-            localStorage.setItem('auth_user', JSON.stringify(userData.user));
+      // The server-side OAuth callback at /auth/google/callback handles everything:
+      // 1. Exchanges the OAuth code for tokens
+      // 2. Gets user info from Google
+      // 3. Creates/updates user profile in database
+      // 4. Sends HTML with a script that sets localStorage and redirects
+      //
+      // This component only exists to show a loading state while the server
+      // processes the callback. The server will send HTML that redirects automatically.
+      //
+      // If we're here, it means either:
+      // - The server is processing the callback (wait for redirect)
+      // - There was an error (check URL params)
 
-            // Redirect based on user role
-            if (userData.user.role === 'therapist') {
-              navigate('/therapist-dashboard');
-            } else {
-              navigate('/dashboard');
-            }
-            return;
-          }
-        }
-        
-        // If callback fails, redirect to login with error
-        console.error('OAuth callback failed');
-        navigate('/login?error=oauth_failed');
-        
-      } catch (error) {
-        console.error('Auth callback error:', error);
-        navigate('/login?error=oauth_error');
+      const urlParams = new URLSearchParams(window.location.search);
+      const error = urlParams.get('error');
+      const signupSuccess = urlParams.get('signup_success');
+
+      if (error) {
+        console.error('OAuth error:', error);
+        navigate(`/login?error=${error}`);
+        return;
       }
+
+      if (signupSuccess) {
+        console.log('Signup successful, check email for verification');
+        navigate(`/login?signup_success=true&email=${urlParams.get('email')}`);
+        return;
+      }
+
+      // If no error and no success redirect, the server is still processing
+      // The server will send HTML with redirect script, so just wait
+      console.log('OAuth callback in progress, waiting for server redirect...');
     };
 
     handleCallback();
