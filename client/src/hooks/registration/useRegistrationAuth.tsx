@@ -4,7 +4,6 @@ import { useToast } from '@/hooks/use-toast';
 import { FormData } from '@/types/registration';
 import { validateRegistrationForm } from '@/utils/registrationValidation';
 import { AuthService } from '@/services/authService';
-import { GoogleAuthService } from '@/services/googleAuth';
 import { safeStorage } from '@/services/safeStorage';
 
 export const useRegistrationAuth = () => {
@@ -12,59 +11,28 @@ export const useRegistrationAuth = () => {
   const { toast } = useToast();
 
   const handleGoogleSignUp = async (role: 'patient' | 'therapist'): Promise<{ success: boolean }> => {
-    console.log('Starting Google OAuth for role:', role);
+    console.log('Starting Google OAuth via server redirect for role:', role);
     setIsLoading(true);
-    
+
     try {
-      // Store role for after OAuth completes
+      // Store so we can recover intent after redirect
       localStorage.setItem('pending_user_role', role);
-      
-      // Check if we're on iPhone/Safari - redirect to server-side OAuth with role
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-      
-      if (isIOS || isSafari) {
-        console.log('iPhone/Safari detected, redirecting to server-side OAuth with role:', role);
-        // Redirect to server-side OAuth with role parameter
-        const params = new URLSearchParams({
-          role: role,
-          returnUrl: role === 'therapist' ? '/therapist-dashboard' : '/dashboard'
-        });
-        window.location.href = `/auth/google?${params.toString()}`;
-        return { success: false }; // This won't actually be returned due to redirect
-      }
-      
-      // For other browsers, attempt client-side OAuth
-      const result = await GoogleAuthService.signIn();
-      
-      if (result.success && result.user) {
-        // Store user data  
-        safeStorage.setItem('auth_user', JSON.stringify(result.user));
-        
-        // DO NOT create duplicate profile - server-side OAuth already handles this
-        
-        toast({
-          title: "Success!",
-          description: `Signed in with Gmail as ${role}`,
-        });
-        
-        setIsLoading(false);
-        return { success: true };
-      } else {
-        toast({
-          title: "Sign-in cancelled", 
-          description: result.error || "Google sign-in was cancelled",
-          variant: "destructive"
-        });
-        
-        setIsLoading(false);
-        return { success: false };
-      }
+
+      const params = new URLSearchParams({
+        role,
+        returnUrl: role === 'therapist' ? '/therapist-dashboard' : '/dashboard'
+      });
+
+      // Always let the server own the OAuth flow so Google sends the code there
+      window.location.href = `/auth/google?${params.toString()}`;
+
+      // The navigation should unload the page, so this return value is never used.
+      return { success: true };
     } catch (error) {
-      console.error('Google OAuth error:', error);
+      console.error('Google OAuth redirect failed:', error);
       toast({
         title: "Error",
-        description: "Failed to sign in with Google. Please try again.",
+        description: "Failed to start Google sign-in. Please try again.",
         variant: "destructive"
       });
       setIsLoading(false);
