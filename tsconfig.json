@@ -1,5 +1,5 @@
 {
-  "include": ["shared/**/*", "server/**/*"],
+  "include": ["shared/**/*", "server/**/*", "api/**/*"],
   "exclude": ["node_modules", "build", "dist", "client/src/**/*", "**/*.test.ts"],
   "compilerOptions": {
     "incremental": true,
@@ -12,6 +12,7 @@
     "lib": ["esnext", "dom", "dom.iterable"],
     "jsx": "preserve",
     "esModuleInterop": true,
+    "allowJs": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "moduleResolution": "bundler",
