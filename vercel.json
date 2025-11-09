@@ -11,8 +11,8 @@
       "destination": "/api/:path*"
     },
     {
-      "source": "/((?!api|assets|manifest\\.json|robots\\.txt|favicon\\.ico|icon\\.svg).*)",
-      "destination": "/api"
+      "source": "/:path((?!api|assets|manifest\\.json|robots\\.txt|favicon\\.ico|icon\\.svg).*)",
+      "destination": "/api/:path"
     }
   ],
   "outputDirectory": "dist/public",
