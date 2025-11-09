@@ -6,13 +6,13 @@ const handler = serverless(app);
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   try {
-    const invokePath = req.headers['x-invoke-path'] as string | undefined;
-    if (invokePath) {
+    const forwardedPath = (req.headers['x-forwarded-path'] ||
+      req.headers['x-invoke-path']) as string | undefined;
+    if (forwardedPath) {
       const queryIndex = req.url?.indexOf('?') ?? -1;
       const queryString = queryIndex >= 0 ? req.url!.slice(queryIndex) : '';
-      req.url = `${invokePath}${queryString}`;
+      req.url = `${forwardedPath}${queryString}`;
     }
-
     return await handler(req, res);
   } catch (error) {
     console.error('Serverless handler error:', error);
