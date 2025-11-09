@@ -6,32 +6,31 @@ const handler = serverless(app);
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   try {
+    // Vercel passes the catch-all segments in req.query.all
+    // For example, /auth/google becomes req.query.all = ['auth', 'google']
+    const catchAllParam = req.query?.all;
+
     // Special diagnostic endpoint to see what we're receiving
     if (req.url?.includes('/__debug')) {
       return res.status(200).json({
         originalReqUrl: req.url,
-        headers: {
-          'x-forwarded-uri': req.headers['x-forwarded-uri'],
-          'x-vercel-original-pathname': req.headers['x-vercel-original-pathname'],
-          'x-forwarded-host': req.headers['x-forwarded-host'],
-          'x-forwarded-proto': req.headers['x-forwarded-proto'],
-          'x-vercel-deployment-url': req.headers['x-vercel-deployment-url'],
-        },
+        catchAllParam: catchAllParam,
+        queryObject: req.query,
         method: req.method,
-        allHeaders: req.headers
       });
     }
 
-    // Restore the original URL from Vercel headers before Express sees it
-    // x-forwarded-uri contains the full original path + query string
-    // x-vercel-original-pathname contains just the pathname (not guaranteed on all accounts)
-    const originalPath =
-      (req.headers['x-forwarded-uri'] as string) ||
-      (req.headers['x-vercel-original-pathname'] as string) ||
-      req.url;
+    // Reconstruct the original path from the catch-all parameter
+    if (catchAllParam) {
+      const segments = Array.isArray(catchAllParam) ? catchAllParam : [catchAllParam];
+      const originalPath = '/' + segments.join('/');
 
-    if (originalPath) {
-      req.url = originalPath;
+      // Preserve query string if present (remove the ...all query param)
+      const url = new URL(req.url!, `http://${req.headers.host}`);
+      url.searchParams.delete('all');
+      const queryString = url.search;
+
+      req.url = originalPath + queryString;
     }
 
     return await handler(req, res);
