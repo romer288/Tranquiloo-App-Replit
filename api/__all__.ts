@@ -6,20 +6,31 @@ const handler = serverless(app);
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   try {
-    // This function receives requests rewritten from non-static paths
-    // Vercel preserves the original URL in req.url, so we can pass it directly to Express
+    // Parse URL to get the pathname and clean query params
+    const url = new URL(req.url!, `http://${req.headers.host}`);
 
     // Special diagnostic endpoint
-    if (req.url?.includes('/__debug')) {
+    if (url.pathname.includes('/__debug')) {
       return res.status(200).json({
         originalReqUrl: req.url,
+        pathname: url.pathname,
+        cleanedSearchParams: Array.from(url.searchParams.entries()).filter(
+          ([key]) => !key.startsWith('...') && key !== 'path'
+        ),
         method: req.method,
         host: req.headers.host,
-        note: 'This is the __all__ handler - req.url should already be the original path'
+        note: 'This is the __all__ handler'
       });
     }
 
-    // Pass the request directly to Express - req.url already contains the original path
+    // Remove Vercel's internal query params (...all, path)
+    url.searchParams.delete('...all');
+    url.searchParams.delete('path');
+
+    // Reconstruct the clean URL with original pathname and cleaned query string
+    req.url = url.pathname + url.search;
+
+    // Pass the cleaned request to Express
     return await handler(req, res);
   } catch (error) {
     console.error('Serverless __all__ handler error:', error);
