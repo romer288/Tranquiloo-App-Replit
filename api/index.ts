@@ -13,6 +13,13 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       (req.headers['x-invoke-path'] as string | undefined) ||
       req.url;
 
+    console.log('[Proxy] forward headers', {
+      forwardedUri: req.headers['x-forwarded-uri'],
+      originalPathname: req.headers['x-vercel-original-pathname'],
+      invokePath: req.headers['x-invoke-path'],
+      currentUrl: req.url,
+    });
+
     if (originalPath) {
       req.url = originalPath;
     }
