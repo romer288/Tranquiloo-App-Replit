@@ -4,14 +4,10 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": null,
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
-    },
-    {
-      "source": "/((?!api|assets|manifest\\.json|robots\\.txt|favicon\\.ico|icon\\.svg).*)",
-      "destination": "/api/$1"
+      "src": "/(?!api|assets|manifest\\.json|robots\\.txt|favicon\\.ico|icon\\.svg).*$",
+      "dest": "/api"
     }
   ],
   "outputDirectory": "dist/public",
