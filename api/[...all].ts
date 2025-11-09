@@ -6,20 +6,17 @@ const handler = serverless(app);
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   try {
-    const segmentsParam = req.query.all;
-    const segmentsArray = Array.isArray(segmentsParam)
-      ? segmentsParam
-      : typeof segmentsParam === 'string'
-        ? [segmentsParam]
-        : [];
+    // Restore the original URL from Vercel headers before Express sees it
+    // x-forwarded-uri contains the full original path + query string
+    // x-vercel-original-pathname contains just the pathname (not guaranteed on all accounts)
+    const originalPath =
+      (req.headers['x-forwarded-uri'] as string) ||
+      (req.headers['x-vercel-original-pathname'] as string) ||
+      req.url;
 
-    const reconstructedPath =
-      segmentsArray.length > 0 ? `/${segmentsArray.join('/')}` : '/';
-
-    const queryStart = req.url?.indexOf('?') ?? -1;
-    const queryString = queryStart >= 0 ? req.url!.slice(queryStart) : '';
-
-    req.url = `${reconstructedPath}${queryString}`;
+    if (originalPath) {
+      req.url = originalPath;
+    }
 
     return await handler(req, res);
   } catch (error) {
