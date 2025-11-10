@@ -39,6 +39,8 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     const rewritten = url.pathname + url.search;
     console.log('[Proxy] rewrote URL', { rewritten });
     req.url = rewritten;
+    (req as any).originalUrl = rewritten;
+    (req as any)._parsedUrl = undefined;
 
     // Pass to Express
     return await handler(req, res);
