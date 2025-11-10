@@ -2003,6 +2003,15 @@ Key therapeutic themes addressed:
 
   // Google OAuth initiation route for iPhone Safari
   app.get('/auth/google', (req, res) => {
+    console.log('[OAuth] /auth/google hit', {
+      originalUrl: req.originalUrl,
+      query: req.query,
+      headers: {
+        forwardedProto: req.headers['x-forwarded-proto'],
+        forwardedHost: req.headers['x-forwarded-host'],
+        host: req.headers.host
+      }
+    });
     // Use the correct Web Client ID - prefer VITE_GOOGLE_CLIENT_ID as it has the correct value
     const clientId = (process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_OAUTH_CLIENT_ID) as string;
     console.log('OAuth initiation - Using Client ID:', clientId ? clientId.substring(0, 20) + '...' : 'NOT SET');
