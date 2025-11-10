@@ -42,6 +42,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     (req as any).originalUrl = rewritten;
     (req as any)._parsedUrl = undefined;
 
+    console.log('[Proxy] final req.url', req.url);
     // Pass to Express
     return await handler(req, res);
   } catch (error) {
