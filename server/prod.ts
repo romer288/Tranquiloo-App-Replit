@@ -33,17 +33,11 @@ async function createApp() {
   app.use(express.json({ limit: '10mb' })); // Increased limit for audio data
   app.use(express.urlencoded({ extended: false }));
 
-  // Serve static files FIRST (before any auth middleware)
-  console.log('[Static Files] Setting up express.static with path:', distPath);
+
   app.use((req, res, next) => {
     console.log(`[Request] ${req.method} ${req.path}`);
     next();
   });
-  // app.use(express.static(distPath, {
-  //   setHeaders: (res, filepath) => {
-  //     console.log('[Static] Serving:', filepath);
-  //   }
-  // }));
 
   // Note: /api/chat route removed - uses SQLite which doesn't work in serverless
   // Chat functionality is available through registerRoutes() below
@@ -72,12 +66,14 @@ async function createApp() {
   } catch (err) {
     console.error('❌ Failed to register routes:', err);
   }
-
+  console.log('Registering static file serving middleware');
+  // Serve static files FIRST (before any auth middleware)
   app.use(express.static(distPath, {
     setHeaders: (res, filepath) => {
       console.log('[Static] Serving:', filepath);
     }
   }));
+  
   // Serve index.html for all non-API routes (SPA fallback)
   // This MUST be last, after all API routes
   app.use("*", (_req, res) => {
