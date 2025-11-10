@@ -9,6 +9,16 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     // Parse the URL - Vercel preserves the pathname correctly
     const url = new URL(req.url!, `http://${req.headers.host}`);
 
+    console.log('[Proxy] incoming', {
+      originalUrl: req.url,
+      pathname: url.pathname,
+      rawSearch: url.search,
+      queryEntries: Array.from(url.searchParams.entries()),
+      method: req.method,
+      host: req.headers.host,
+      queryAll: req.query.all
+    });
+
     // Special diagnostic endpoint
     if (url.pathname.includes('/__debug')) {
       return res.status(200).json({
