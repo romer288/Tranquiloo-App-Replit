@@ -39,11 +39,11 @@ async function createApp() {
     console.log(`[Request] ${req.method} ${req.path}`);
     next();
   });
-  app.use(express.static(distPath, {
-    setHeaders: (res, filepath) => {
-      console.log('[Static] Serving:', filepath);
-    }
-  }));
+  // app.use(express.static(distPath, {
+  //   setHeaders: (res, filepath) => {
+  //     console.log('[Static] Serving:', filepath);
+  //   }
+  // }));
 
   // Note: /api/chat route removed - uses SQLite which doesn't work in serverless
   // Chat functionality is available through registerRoutes() below
@@ -73,6 +73,11 @@ async function createApp() {
     console.error('❌ Failed to register routes:', err);
   }
 
+  app.use(express.static(distPath, {
+    setHeaders: (res, filepath) => {
+      console.log('[Static] Serving:', filepath);
+    }
+  }));
   // Serve index.html for all non-API routes (SPA fallback)
   // This MUST be last, after all API routes
   app.use("*", (_req, res) => {
@@ -87,6 +92,8 @@ async function createApp() {
     res.status(status).json({ message });
     console.error("Unhandled error:", err);
   });
+
+
 
   return app;
 }
