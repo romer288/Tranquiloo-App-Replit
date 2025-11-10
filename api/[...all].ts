@@ -38,11 +38,23 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     // Just need to append the cleaned query string
     const rewritten = url.pathname + url.search;
     console.log('[Proxy] rewrote URL', { rewritten });
+
+    // Update all URL-related properties that Express/serverless-http might read
     req.url = rewritten;
     (req as any).originalUrl = rewritten;
-    (req as any)._parsedUrl = undefined;
+    (req as any).path = url.pathname;
+    (req as any).query = Object.fromEntries(url.searchParams.entries());
 
-    console.log('[Proxy] final req.url', req.url);
+    // Clear any cached URL parsing
+    (req as any)._parsedUrl = undefined;
+    (req as any)._parsedOriginalUrl = undefined;
+
+    console.log('[Proxy] final state', {
+      url: req.url,
+      path: (req as any).path,
+      query: (req as any).query
+    });
+
     // Pass to Express
     return await handler(req, res);
   } catch (error) {
