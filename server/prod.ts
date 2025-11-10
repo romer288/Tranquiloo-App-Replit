@@ -34,10 +34,6 @@ async function createApp() {
   app.use(express.urlencoded({ extended: false }));
 
 
-  // app.use((req, res, next) => {
-  //   console.log(`[Request] ${req.method} ${req.path}`);
-  //   next();
-  // });
 
   // Note: /api/chat route removed - uses SQLite which doesn't work in serverless
   // Chat functionality is available through registerRoutes() below
