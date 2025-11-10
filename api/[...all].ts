@@ -36,7 +36,9 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
     // Reconstruct clean URL: pathname is already correct (e.g., /auth/google)
     // Just need to append the cleaned query string
-    req.url = url.pathname + url.search;
+    const rewritten = url.pathname + url.search;
+    console.log('[Proxy] rewrote URL', { rewritten });
+    req.url = rewritten;
 
     // Pass to Express
     return await handler(req, res);
