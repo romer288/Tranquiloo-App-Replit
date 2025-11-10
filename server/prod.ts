@@ -44,10 +44,11 @@ async function createApp() {
   app.use((req, res, next) => {
     const start = Date.now();
     const path = req.path;
+    console.log(`[Request] ${req.method} ${path}`);
 
     res.on("finish", () => {
       const duration = Date.now() - start;
-      if (path.startsWith("/api")) {
+      if (path.startsWith("/api") || path.startsWith("/auth")) {
         console.log(`${req.method} ${path} ${res.statusCode} in ${duration}ms`);
       }
     });
@@ -59,20 +60,28 @@ async function createApp() {
   try {
     await registerRoutes(app);
     console.log('✅ Routes registered successfully');
+    // Log registered routes for debugging
+    console.log('[Routes] Registered routes:', app._router.stack
+      .filter((r: any) => r.route)
+      .map((r: any) => `${Object.keys(r.route.methods)} ${r.route.path}`)
+      .join(', '));
   } catch (err) {
     console.error('❌ Failed to register routes:', err);
   }
-  // console.log('Registering static file serving middleware');
-  // Serve static files FIRST (before any auth middleware)
+
+  // Serve static files only for requests with file extensions or specific paths
+  // This prevents static middleware from catching API routes like /auth/google
   app.use(express.static(distPath, {
+    index: false, // Don't serve index.html automatically
     setHeaders: (res, filepath) => {
       console.log('[Static] Serving:', filepath);
     }
   }));
-  
+
   // Serve index.html for all non-API routes (SPA fallback)
   // This MUST be last, after all API routes
   app.use("*", (_req, res) => {
+    console.log('[SPA Fallback] Serving index.html for:', _req.path);
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 
