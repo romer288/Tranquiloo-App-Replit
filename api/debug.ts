@@ -34,6 +34,13 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     // Check current working directory
     debug.filesystem.cwdContents = fs.readdirSync(process.cwd());
 
+    // Check api directory
+    const apiPath = path.join(process.cwd(), 'api');
+    debug.filesystem.apiExists = fs.existsSync(apiPath);
+    if (debug.filesystem.apiExists) {
+      debug.filesystem.apiContents = fs.readdirSync(apiPath);
+    }
+
     // Check if dist exists
     const distPath = path.join(process.cwd(), 'dist');
     debug.filesystem.distExists = fs.existsSync(distPath);
