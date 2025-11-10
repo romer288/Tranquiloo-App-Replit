@@ -6,7 +6,7 @@ const handler = serverless(app);
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   try {
-    // Parse URL to get the pathname and clean query params
+    // Parse the URL - Vercel preserves the pathname correctly
     const url = new URL(req.url!, `http://${req.headers.host}`);
 
     // Special diagnostic endpoint
@@ -14,26 +14,24 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       return res.status(200).json({
         originalReqUrl: req.url,
         pathname: url.pathname,
-        cleanedSearchParams: Array.from(url.searchParams.entries()).filter(
-          ([key]) => !key.startsWith('...') && key !== 'path'
-        ),
+        searchParams: Array.from(url.searchParams.entries()),
         method: req.method,
-        host: req.headers.host,
-        note: 'This is the __all__ handler'
+        host: req.headers.host
       });
     }
 
-    // Remove Vercel's internal query params (...all, path)
+    // Clean up Vercel's internal query params
     url.searchParams.delete('...all');
     url.searchParams.delete('path');
 
-    // Reconstruct the clean URL with original pathname and cleaned query string
+    // Reconstruct clean URL: pathname is already correct (e.g., /auth/google)
+    // Just need to append the cleaned query string
     req.url = url.pathname + url.search;
 
-    // Pass the cleaned request to Express
+    // Pass to Express
     return await handler(req, res);
   } catch (error) {
-    console.error('Serverless __all__ handler error:', error);
+    console.error('Serverless handler error:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error'

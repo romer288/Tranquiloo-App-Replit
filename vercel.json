@@ -12,7 +12,7 @@
     },
     {
       "source": "/:path((?!api|assets|manifest\\.json|robots\\.txt|favicon\\.ico|icon\\.svg).*)",
-      "destination": "/api/handler"
+      "destination": "/api/[...all]"
     }
   ],
   "outputDirectory": "dist/public",
