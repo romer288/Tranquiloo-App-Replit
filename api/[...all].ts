@@ -2,7 +2,11 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import serverless from 'serverless-http';
 import app from '../dist/prod.js';
 
-const handler = serverless(app);
+// Configure serverless-http to not wait for empty event loop
+// This prevents hanging on database connections or other async operations
+const handler = serverless(app, {
+  provider: 'aws' // Use AWS Lambda compatibility mode for Vercel
+});
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   try {
@@ -55,8 +59,10 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       query: (req as any).query
     });
 
-    // Pass to Express
-    return await handler(req, res);
+    // Pass to Express and wait for response
+    const result = await handler(req, res);
+    console.log('[Proxy] handler completed, returning result');
+    return result;
   } catch (error) {
     console.error('Serverless handler error:', error);
     res.status(500).json({
