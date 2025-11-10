@@ -64,11 +64,11 @@ async function createApp() {
   }
   // console.log('Registering static file serving middleware');
   // Serve static files FIRST (before any auth middleware)
-  // app.use(express.static(distPath, {
-  //   setHeaders: (res, filepath) => {
-  //     console.log('[Static] Serving:', filepath);
-  //   }
-  // }));
+  app.use(express.static(distPath, {
+    setHeaders: (res, filepath) => {
+      console.log('[Static] Serving:', filepath);
+    }
+  }));
   
   // Serve index.html for all non-API routes (SPA fallback)
   // This MUST be last, after all API routes
