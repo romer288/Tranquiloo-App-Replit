@@ -1,9 +1,6 @@
 // Note: dotenv is loaded in server/index.ts (dev) before this file is imported
 // In production (Vercel), environment variables are automatically available
 
-// Disable SSL certificate verification for Supabase
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from "@shared/schema";
@@ -20,13 +17,15 @@ function getConnection() {
 
     console.log('[DB] Lazy-connecting to Supabase PostgreSQL...');
 
-    // Create PostgreSQL connection with timeout
+    // Create PostgreSQL connection with proper Supabase settings
+    // Supabase requires SSL and prepare: false for pooled connections
     client = postgres(connectionString, {
-      prepare: false,
-      ssl: false,
+      prepare: false, // Required for Supabase connection pooler
+      ssl: 'require', // Supabase requires SSL
       connect_timeout: 5, // 5 second timeout
       idle_timeout: 20,
-      max_lifetime: 60 * 30 // 30 minutes
+      max_lifetime: 60 * 30, // 30 minutes
+      max: 1 // Limit to 1 connection in serverless environment
     });
 
     dbInstance = drizzle(client, { schema });
