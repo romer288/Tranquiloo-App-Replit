@@ -13,7 +13,7 @@ function getConnection() {
   if (!client) {
     // Get Supabase connection string
     const connectionString = process.env.DATABASE_URL ||
-      `postgresql://postgres.przforeyoxweawyfrxws:${process.env.SUPABASE_DB_PASSWORD}@aws-0-us-east-1.pooler.supabase.com:6543/postgres`;
+      `postgresql://postgres.przforeyoxweawyfrxws:${process.env.SUPABASE_DB_PASSWORD}@aws-1-us-east-2.pooler.supabase.com:6543/postgres`;
 
     console.log('[DB] Lazy-connecting to Supabase PostgreSQL...');
 
