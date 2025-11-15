@@ -5,6 +5,7 @@ import * as bcrypt from "bcryptjs";
 import { emailService } from "./emailService";
 import { randomBytes } from "crypto";
 import appointmentsRouter from "./routes/appointments";
+import processEmailsRouter from "./routes/process-emails";
 import { supabase } from "./lib/supabase";
 
 import { analyzeAnxietyContext, detectAnxietyTriggers } from "@shared/mentalHealth/anxietyContexts";
@@ -180,6 +181,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register appointments routes
   app.use('/api/appointments', appointmentsRouter);
   console.log('✅ Appointments routes registered');
+
+  // Register email processing route (for manual triggering and Vercel Cron)
+  app.use('/api/process-emails', processEmailsRouter);
+  console.log('✅ Email processing route registered');
 
   // Therapist API endpoints
   app.post('/api/therapist/search-patient', async (req, res) => {
