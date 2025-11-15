@@ -1,0 +1,25 @@
+ALTER TABLE "anxiety_analyses" ALTER COLUMN "created_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "chat_messages" ALTER COLUMN "created_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "chat_sessions" ALTER COLUMN "created_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "chat_sessions" ALTER COLUMN "updated_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "email_queue" ALTER COLUMN "sent_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "email_queue" ALTER COLUMN "created_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "goal_progress" ALTER COLUMN "created_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "intervention_summaries" ALTER COLUMN "created_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "intervention_summaries" ALTER COLUMN "updated_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "profiles" ALTER COLUMN "password_reset_expires" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "profiles" ALTER COLUMN "license_grace_deadline" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "profiles" ALTER COLUMN "created_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "profiles" ALTER COLUMN "updated_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "therapist_patient_connections" ALTER COLUMN "connection_request_date" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "therapist_patient_connections" ALTER COLUMN "connection_accepted_date" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "therapist_patient_connections" ALTER COLUMN "created_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "therapist_patient_connections" ALTER COLUMN "updated_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "therapists" ALTER COLUMN "created_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "therapists" ALTER COLUMN "updated_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "treatment_plans" ALTER COLUMN "created_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "treatment_plans" ALTER COLUMN "updated_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "user_goals" ALTER COLUMN "created_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "user_goals" ALTER COLUMN "updated_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "user_therapists" ALTER COLUMN "created_at" SET DATA TYPE bigint;--> statement-breakpoint
+ALTER TABLE "user_therapists" ALTER COLUMN "updated_at" SET DATA TYPE bigint;

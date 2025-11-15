@@ -1,11 +1,11 @@
 import { defineConfig } from "drizzle-kit";
 
-// Using SQLite temporarily due to Neon database issues
+// PostgreSQL configuration for Supabase
 export default defineConfig({
   out: "./migrations",
   schema: "./shared/schema.ts",
-  dialect: "sqlite",
+  dialect: "postgresql",
   dbCredentials: {
-    url: "./data/tranquiloo.db",
+    url: process.env.DATABASE_URL!,
   },
 });

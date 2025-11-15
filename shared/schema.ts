@@ -1,8 +1,8 @@
 // PostgreSQL schema for Supabase
-import { pgTable, text, integer, uuid as pgUuid, timestamp as pgTimestamp, boolean as pgBoolean, numeric as pgNumeric, json as pgJson } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, bigint, uuid as pgUuid, timestamp as pgTimestamp, boolean as pgBoolean, numeric as pgNumeric, json as pgJson } from "drizzle-orm/pg-core";
 // PostgreSQL type mappings
 const uuid = (name: string) => text(name); // Use text for UUIDs for compatibility
-const timestamp = (name: string) => integer(name); // Store as integer milliseconds for compatibility
+const timestamp = (name: string) => bigint(name, { mode: 'number' }); // Store as bigint milliseconds for large timestamps
 const boolean = (name: string) => pgBoolean(name);
 const numeric = (name: string, opts?: any) => pgNumeric(name, opts);
 const json = (name: string) => pgJson(name);
