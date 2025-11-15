@@ -7,11 +7,7 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
-    },
-    {
-      "source": "/:path((?!api|assets|manifest\\.json|robots\\.txt|favicon\\.ico|icon\\.svg).*)",
+      "source": "/:path((?!assets|manifest\\.json|robots\\.txt|favicon\\.ico|icon\\.svg).*)",
       "destination": "/api/[...all]"
     }
   ],
