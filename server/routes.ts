@@ -5,6 +5,7 @@ import * as bcrypt from "bcryptjs";
 import { emailService } from "./emailService";
 import { randomBytes } from "crypto";
 import appointmentsRouter from "./routes/appointments";
+import { supabase } from "./lib/supabase";
 
 import { analyzeAnxietyContext, detectAnxietyTriggers } from "@shared/mentalHealth/anxietyContexts";
 
@@ -2140,8 +2141,19 @@ Key therapeutic themes addressed:
           // Redirect to login with verification needed message
           return res.redirect(`${origin}/login?error=verification_required&email=${encodeURIComponent(googleUser.email)}`);
         }
-        
-        // User exists and is verified - proceed to dashboard
+
+        // User exists - create Supabase session using admin API
+        // Sign in the user to get a proper Supabase session token
+        const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
+          type: 'magiclink',
+          email: existingProfile.email!,
+        });
+
+        if (sessionError || !sessionData) {
+          console.error('Failed to generate Supabase session:', sessionError);
+          return res.redirect('/login?error=session_failed');
+        }
+
         const userData = {
           id: existingProfile.id,
           email: existingProfile.email,
@@ -2151,25 +2163,29 @@ Key therapeutic themes addressed:
           emailVerified: true,
           authMethod: 'google'
         };
-        
+
         // Check if therapist needs license verification
         if (existingProfile.role === 'therapist' && !existingProfile.licenseNumber) {
           return res.redirect(`${origin}/therapist-license-verification`);
         }
-        
+
         const redirectPath = existingProfile.role === 'therapist' ? '/therapist-dashboard' : '/dashboard';
         const fullRedirectUrl = `${origin}${redirectPath}`;
-        
-        // Store user data and redirect
+
+        // Store user data with Supabase session and redirect
         const userDataScript = `
           <script>
             localStorage.setItem('user', ${JSON.stringify(JSON.stringify(userData))});
             localStorage.setItem('auth_user', ${JSON.stringify(JSON.stringify(userData))});
-            localStorage.setItem('authToken', ${JSON.stringify(tokens.access_token)});
+            // Store the Supabase session data
+            localStorage.setItem('supabase.auth.token', ${JSON.stringify(JSON.stringify({
+              currentSession: sessionData,
+              expiresAt: Date.now() + 3600000
+            }))});
             window.location.href = '${fullRedirectUrl}';
           </script>
         `;
-        
+
         return res.send(`
           <html>
             <head><title>Authentication Success</title></head>
@@ -2181,18 +2197,36 @@ Key therapeutic themes addressed:
         `);
       }
       
-      // New user - create profile with proper ID and timestamps
-      const { randomUUID } = await import('crypto');
+      // New user - create Supabase Auth user first
+      const password = randomBytes(32).toString('hex'); // Random password for OAuth users
+
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: googleUser.email,
+        password: password,
+        email_confirm: true, // Auto-verify email for Google OAuth users
+        user_metadata: {
+          full_name: googleUser.name,
+          avatar_url: googleUser.picture,
+          provider: 'google'
+        }
+      });
+
+      if (authError || !authData.user) {
+        console.error('Failed to create Supabase Auth user:', authError);
+        return res.redirect('/login?error=auth_failed');
+      }
+
+      // Now create profile with Supabase Auth user ID
       const patientCode = 'PT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 4).toUpperCase();
-      const nowMs = Date.now();
       const newProfile = await storage.createProfile({
+        id: authData.user.id, // Use Supabase Auth user ID
         email: googleUser.email,
         firstName: googleUser.given_name || googleUser.name?.split(' ')[0] || null,
         lastName: googleUser.family_name || googleUser.name?.split(' ').slice(1).join(' ') || null,
         role: userState.role || 'patient',
         patientCode: userState.role === 'patient' ? patientCode : null,
         authMethod: 'google',
-        emailVerified: false,
+        emailVerified: true, // Already verified via Google
       });
       
       // Generate verification token and update profile
