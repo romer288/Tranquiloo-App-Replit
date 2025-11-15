@@ -1,8 +1,12 @@
 import express, { Request, Response } from 'express';
 import { getAIResponse, streamAIResponse } from '../services/ragSystem';
 import { supabase } from '../lib/supabase';
+import { requireAuth } from '../middleware/auth';
 
 const router = express.Router();
+
+// Apply authentication to all routes in this router
+router.use(requireAuth);
 
 /**
  * POST /api/ai-chat/message
@@ -10,11 +14,14 @@ const router = express.Router();
  */
 router.post('/message', async (req: Request, res: Response) => {
   try {
-    const { message, conversationId, userId, history } = req.body;
+    const { message, conversationId, history } = req.body;
 
-    if (!message || !conversationId || !userId) {
+    // Use authenticated user ID instead of accepting it from request body
+    const userId = req.user!.id;
+
+    if (!message || !conversationId) {
       return res.status(400).json({
-        error: 'Missing required fields: message, conversationId, userId'
+        error: 'Missing required fields: message, conversationId'
       });
     }
 
@@ -58,11 +65,14 @@ router.post('/message', async (req: Request, res: Response) => {
  */
 router.post('/stream', async (req: Request, res: Response) => {
   try {
-    const { message, conversationId, userId, history } = req.body;
+    const { message, conversationId, history } = req.body;
 
-    if (!message || !conversationId || !userId) {
+    // Use authenticated user ID
+    const userId = req.user!.id;
+
+    if (!message || !conversationId) {
       return res.status(400).json({
-        error: 'Missing required fields: message, conversationId, userId'
+        error: 'Missing required fields: message, conversationId'
       });
     }
 
@@ -152,11 +162,10 @@ router.get('/history/:conversationId', async (req: Request, res: Response) => {
  */
 router.post('/new-conversation', async (req: Request, res: Response) => {
   try {
-    const { userId, title } = req.body;
+    const { title } = req.body;
 
-    if (!userId) {
-      return res.status(400).json({ error: 'userId is required' });
-    }
+    // Use authenticated user ID
+    const userId = req.user!.id;
 
     const { data, error } = await supabase
       .from('chat_sessions')
@@ -178,12 +187,13 @@ router.post('/new-conversation', async (req: Request, res: Response) => {
 });
 
 /**
- * GET /api/ai-chat/conversations/:userId
- * Get user's conversations
+ * GET /api/ai-chat/conversations
+ * Get authenticated user's conversations
  */
-router.get('/conversations/:userId', async (req: Request, res: Response) => {
+router.get('/conversations', async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
+    // Use authenticated user ID
+    const userId = req.user!.id;
 
     const { data, error } = await supabase
       .from('chat_sessions')

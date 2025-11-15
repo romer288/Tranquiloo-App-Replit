@@ -1,7 +1,11 @@
 import express, { Request, Response } from 'express';
 import { supabase } from '../lib/supabase';
+import { requireAuth } from '../middleware/auth';
 
 const router = express.Router();
+
+// Apply authentication to all routes
+router.use(requireAuth);
 
 /**
  * POST /api/wellness/track
@@ -10,7 +14,6 @@ const router = express.Router();
 router.post('/track', async (req: Request, res: Response) => {
   try {
     const {
-      userId,
       moodScore,
       energyLevel,
       heartRateFeeling,
@@ -19,9 +22,8 @@ router.post('/track', async (req: Request, res: Response) => {
       notes
     } = req.body;
 
-    if (!userId) {
-      return res.status(400).json({ error: 'userId is required' });
-    }
+    // Use authenticated user ID
+    const userId = req.user!.id;
 
     const { data, error } = await supabase
       .from('wellness_tracking')
@@ -51,12 +53,13 @@ router.post('/track', async (req: Request, res: Response) => {
 });
 
 /**
- * GET /api/wellness/history/:userId
- * Get wellness tracking history for a user
+ * GET /api/wellness/history
+ * Get wellness tracking history for authenticated user
  */
-router.get('/history/:userId', async (req: Request, res: Response) => {
+router.get('/history', async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
+    // Use authenticated user ID
+    const userId = req.user!.id;
     const { days = 30, limit = 100 } = req.query;
 
     const daysAgo = new Date();
@@ -81,12 +84,13 @@ router.get('/history/:userId', async (req: Request, res: Response) => {
 });
 
 /**
- * GET /api/wellness/trends/:userId
- * Get wellness trends (averages over time)
+ * GET /api/wellness/trends
+ * Get wellness trends (averages over time) for authenticated user
  */
-router.get('/trends/:userId', async (req: Request, res: Response) => {
+router.get('/trends', async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
+    // Use authenticated user ID
+    const userId = req.user!.id;
     const { days = 30 } = req.query;
 
     const { data, error } = await supabase
@@ -106,12 +110,13 @@ router.get('/trends/:userId', async (req: Request, res: Response) => {
 });
 
 /**
- * GET /api/wellness/summary/:userId
- * Get wellness summary stats
+ * GET /api/wellness/summary
+ * Get wellness summary stats for authenticated user
  */
-router.get('/summary/:userId', async (req: Request, res: Response) => {
+router.get('/summary', async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
+    // Use authenticated user ID
+    const userId = req.user!.id;
     const { days = 7 } = req.query;
 
     const daysAgo = new Date();
