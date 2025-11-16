@@ -2224,7 +2224,6 @@ Key therapeutic themes addressed:
       // Now create profile with Supabase Auth user ID
       const patientCode = 'PT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 4).toUpperCase();
       const newProfile = await storage.createProfile({
-        id: authData.user.id, // Use Supabase Auth user ID
         email: googleUser.email,
         firstName: googleUser.given_name || googleUser.name?.split(' ')[0] || null,
         lastName: googleUser.family_name || googleUser.name?.split(' ').slice(1).join(' ') || null,
@@ -2232,6 +2231,7 @@ Key therapeutic themes addressed:
         patientCode: userState.role === 'patient' ? patientCode : null,
         authMethod: 'google',
         emailVerified: true, // Already verified via Google
+        ...({ id: authData.user.id } as any), // Use Supabase Auth user ID
       });
       
       // Generate verification token and update profile

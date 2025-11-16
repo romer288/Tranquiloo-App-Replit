@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config(); // MUST be first before any other imports that use process.env
 
 import cors from "cors";
-import chatRoutes from "./routes/chat";
+// import chatRoutes from "./routes/chat"; // File doesn't exist
 import aiChatRoutes from "./routes/ai-chat";
 import wellnessRoutes from "./routes/wellness";
 
@@ -25,7 +25,7 @@ app.set('trust proxy', true);
 app.use(express.json({ limit: '10mb' })); // Increased limit for audio data
 app.use(express.urlencoded({ extended: false }));
 
-app.use("/api/chat", chatRoutes);
+// app.use("/api/chat", chatRoutes); // File doesn't exist
 app.use("/api/ai-chat", aiChatRoutes);
 app.use("/api/wellness", wellnessRoutes);
 

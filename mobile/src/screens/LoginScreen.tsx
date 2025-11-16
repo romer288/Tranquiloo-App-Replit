@@ -72,15 +72,29 @@ const LoginScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Beta Testing Disclaimer */}
+        <View style={styles.betaWarning}>
+          <Text style={styles.betaIcon}>⚠️</Text>
+          <Text style={styles.betaTitle}>BETA TESTING MODE</Text>
+          <Text style={styles.betaText}>
+            This is a research prototype for testing purposes only.{'\n'}
+            <Text style={styles.betaBold}>DO NOT enter real patient information or personal health data.</Text>{'\n'}
+            Use test accounts only (test@example.com).
+          </Text>
+          <Text style={styles.betaAcknowledge}>
+            By continuing, you acknowledge this is for testing only.
+          </Text>
+        </View>
+
         <View style={styles.header}>
           <View style={styles.logoContainer}>
             <Text style={styles.logoText}>💙</Text>
           </View>
           <Text style={styles.title}>
-            {isSignUp ? 'Join Tranquil Support' : 'Welcome Back'}
+            {isSignUp ? 'Join Tranquil Support (Beta)' : 'Welcome Back'}
           </Text>
           <Text style={styles.subtitle}>
-            {isSignUp 
+            {isSignUp
               ? 'Choose your role and create your account'
               : 'Sign in to continue your mental health journey'
             }
@@ -234,6 +248,43 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
+  },
+  betaWarning: {
+    backgroundColor: '#fef3c7',
+    borderWidth: 2,
+    borderColor: '#f59e0b',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  betaIcon: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  betaTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#92400e',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  betaText: {
+    fontSize: 14,
+    color: '#78350f',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  betaBold: {
+    fontWeight: 'bold',
+    color: '#b45309',
+  },
+  betaAcknowledge: {
+    fontSize: 12,
+    color: '#92400e',
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
   header: {
     alignItems: 'center',

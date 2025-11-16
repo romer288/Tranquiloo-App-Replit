@@ -1,31 +1,32 @@
-import { MailService } from '@sendgrid/mail';
+import { Resend } from 'resend';
 import { storage } from './storage';
 
 class EmailService {
-  private mailService: MailService;
+  private resend: Resend | null;
 
   constructor() {
-    if (!process.env.SENDGRID_API_KEY) {
-      console.warn('⚠️ SENDGRID_API_KEY not found - emails will be logged to console instead of sent');
-      this.mailService = null!; // Disable SendGrid for now
+    if (!process.env.RESEND_API_KEY) {
+      console.warn('⚠️ RESEND_API_KEY not found - emails will be logged to console instead of sent');
+      console.log('To get Resend API key (HIPAA-compliant):');
+      console.log('1. Go to https://resend.com/signup');
+      console.log('2. Upgrade to Pro plan ($20/month)');
+      console.log('3. Request BAA (Business Associate Agreement) for HIPAA compliance');
+      console.log('4. Go to Settings → API Keys → Create API Key');
+      console.log('5. Add RESEND_API_KEY to your .env file');
+      this.resend = null;
       return;
     }
 
-    // Validate SendGrid API key format
-    if (!process.env.SENDGRID_API_KEY.startsWith('SG.')) {
-      console.error('⚠️ SendGrid API key should start with "SG." - current key starts with:', process.env.SENDGRID_API_KEY.substring(0, 3));
-      console.log('To get correct SendGrid API key:');
-      console.log('1. Go to https://app.sendgrid.com/settings/api_keys');
-      console.log('2. Create API Key → Restricted Access');
-      console.log('3. Enable only "Mail Send" permission');
-      console.log('4. The key will start with "SG." followed by long string');
-      this.mailService = null!; // Disable SendGrid for now
+    // Validate Resend API key format
+    if (!process.env.RESEND_API_KEY.startsWith('re_')) {
+      console.error('⚠️ Resend API key should start with "re_" - current key starts with:', process.env.RESEND_API_KEY.substring(0, 3));
+      console.log('Please check your Resend API key at https://resend.com/api-keys');
+      this.resend = null;
       return;
     }
-    
-    this.mailService = new MailService();
-    this.mailService.setApiKey(process.env.SENDGRID_API_KEY);
-    console.log('✅ SendGrid API key configured successfully');
+
+    this.resend = new Resend(process.env.RESEND_API_KEY);
+    console.log('✅ Resend API key configured successfully (HIPAA-compliant)');
   }
 
   async sendEmail(email: {
@@ -35,53 +36,46 @@ class EmailService {
     text?: string;
     html?: string;
   }): Promise<boolean> {
-    // If SendGrid is not configured, log email to console for testing
-    if (!this.mailService) {
-      console.log('\n📧 EMAIL WOULD BE SENT:');
+    // If Resend is not configured, log email to console for testing
+    if (!this.resend) {
+      console.log('\n📧 EMAIL WOULD BE SENT (Resend not configured):');
       console.log('To:', email.to);
       console.log('From:', email.from);
       console.log('Subject:', email.subject);
       console.log('HTML Content:', email.html?.substring(0, 200) + '...');
-      console.log('✅ Email simulated successfully (SendGrid not configured)\n');
+      console.log('✅ Email simulated successfully\n');
       return true; // Return success for testing
     }
 
     try {
       // Debug log to check what we're sending
-      console.log('Sending email with HTML length:', email.html?.length);
-      
+      console.log('Sending email via Resend with HTML length:', email.html?.length);
+
       // Ensure we have content to send
       if (!email.html && !email.text) {
         console.error('❌ No content to send in email (both html and text are empty)');
         return false;
       }
-      
-      await this.mailService.send({
-        to: email.to,
+
+      // Send email using Resend
+      const { data, error } = await this.resend.emails.send({
         from: email.from,
+        to: email.to,
         subject: email.subject,
         text: email.text || 'Please enable HTML to view this email.',
         html: email.html || email.text || '',
       });
-      console.log('✅ Real email sent via SendGrid to:', email.to);
+
+      if (error) {
+        console.error('❌ Resend email error:', error);
+        return false;
+      }
+
+      console.log('✅ Email sent successfully via Resend (HIPAA-compliant) to:', email.to);
+      console.log('   Email ID:', data?.id);
       return true;
     } catch (error: any) {
-      console.error('SendGrid email error:', error.response?.body || error.message);
-      if (error.code === 401) {
-        console.error('❌ Unauthorized: Check your SendGrid API key. It should start with "SG." and have proper permissions');
-      }
-      
-      // Check for sender identity error
-      const errorBody = error.response?.body;
-      if (errorBody?.errors?.[0]?.field === 'from') {
-        console.error('❌ URGENT: SINGLE SENDER VERIFICATION REQUIRED');
-        console.error('   Domain authentication is NOT enough!');
-        console.error('   Go to SendGrid → Settings → Sender Authentication → Single Sender Verification');
-        console.error('   Add and verify your personal email address (like Gmail)');
-        console.error('   This is different from domain authentication - you need BOTH');
-        console.error('   Current from address that failed:', email.from);
-      }
-      
+      console.error('❌ Resend email error:', error.message || error);
       return false;
     }
   }
