@@ -104,7 +104,7 @@ class EmailService {
         
         const success = await this.sendEmail({
           to: email.toEmail,
-          from: email.fromEmail || 'info@tranquiloo-app.com',
+          from: email.fromEmail || 'noreply@tranquiloo-app.com',
           subject: email.subject,
           html: cleanHtml,
           text: email.textContent || ''
@@ -319,7 +319,7 @@ This email was sent to ${email}. If you didn't create this account, please conta
     const html = `<p>Hello ${firstName},</p><p>Please verify your therapist account by clicking <a href="${verificationUrl}">here</a>.</p>`;
     const success = await this.sendEmail({
       to: email,
-      from: 'info@tranquiloo-app.com',
+      from: 'noreply@tranquiloo-app.com',
       subject,
       html,
     });

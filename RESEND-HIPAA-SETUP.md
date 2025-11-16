@@ -300,11 +300,14 @@ Compare to:
 ✅ Resend library installed (`npm install resend`)
 ✅ EmailService updated to use Resend
 ✅ SendGrid removed
-⏳ Waiting for you to:
-  1. Sign up for Resend
-  2. Upgrade to Pro plan ($20/month)
-  3. Request and sign BAA
-  4. Verify domain
-  5. Add API key to .env and Vercel
+✅ Signed up for Resend
+✅ Upgraded to Pro plan ($20/month)
+✅ API key added to Vercel (`re_wcXuihD6_KgujZDKU4guDSPtbxU6o4o4B`)
+✅ Domain verified (tranquiloo-app.com)
+✅ DNS records configured in Squarespace
+✅ Email "from" address updated to noreply@tranquiloo-app.com
 
-Once you complete these steps, your email system will be HIPAA-compliant!
+⏳ Next steps:
+  1. **Request BAA from Resend** (Critical for HIPAA compliance!)
+  2. Test email sending functionality
+  3. Once BAA is signed, your email system will be fully HIPAA-compliant!
