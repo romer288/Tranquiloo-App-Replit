@@ -8,11 +8,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/api/[...all]?path=:path"
+      "destination": "/api"
     },
     {
       "source": "/:path((?!api|assets|manifest\\.json|robots\\.txt|favicon\\.ico|icon\\.svg).*)",
-      "destination": "/api/[...all]?path=:path"
+      "destination": "/api"
     }
   ],
   "outputDirectory": "dist/public",
