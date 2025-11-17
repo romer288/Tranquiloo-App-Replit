@@ -2098,6 +2098,7 @@ Key therapeutic themes addressed:
       const host = replitDomains || forwardedHost || req.get('host');
       
       const redirectUri = `${protocol}://${host}/auth/google/callback`;
+      const origin = `${protocol}://${host}`;
       
       if (!clientId || !clientSecret) {
         console.error('Google OAuth not configured: set GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET');
@@ -2128,6 +2129,11 @@ Key therapeutic themes addressed:
       });
       
       const googleUser = await userResponse.json();
+
+      if (!googleUser.verified_email) {
+        console.warn('Google account email is not verified. Blocking signup for:', googleUser.email);
+        return res.redirect(`${origin}/login?error=google_email_not_verified`);
+      }
       
       // Check if user exists and is verified
       let existingProfile = null;
@@ -2137,9 +2143,8 @@ Key therapeutic themes addressed:
         console.log('Profile lookup error:', err);
       }
 
-      // Get the correct origin for the redirect
-      const origin = `${protocol}://${host}`;
-      
+      // origin already computed above
+
       if (existingProfile) {
         // Check if email is verified
         if (!existingProfile.emailVerified) {
@@ -2165,7 +2170,7 @@ Key therapeutic themes addressed:
           name: googleUser.name,
           picture: googleUser.picture,
           role: existingProfile.role,
-          emailVerified: true,
+        emailVerified: false,
           authMethod: 'google'
         };
 
