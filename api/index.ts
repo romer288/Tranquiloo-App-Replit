@@ -6,14 +6,27 @@ const handler = serverless(app);
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   try {
+    const baseUrl = `http://${req.headers.host}`;
     const forwardedUri = req.headers['x-forwarded-uri'] as string | undefined;
-    if (forwardedUri) {
-      const baseUrl = `http://${req.headers.host}`;
+    const pathParam = req.query.path;
+
+    if (pathParam) {
+      let pathname: string;
+      if (Array.isArray(pathParam)) {
+        pathname = '/' + pathParam.join('/');
+      } else {
+        pathname = pathParam.startsWith('/') ? pathParam : `/${pathParam}`;
+      }
+      const url = new URL(pathname, baseUrl);
+      url.search = new URL(req.url!, baseUrl).search; // preserve query if any
+      req.url = url.pathname + url.search;
+    } else if (forwardedUri) {
       const url = new URL(forwardedUri, baseUrl);
       req.url = url.pathname + url.search;
-      (req as any).originalUrl = req.url;
-      (req as any)._parsedUrl = undefined;
     }
+
+    (req as any).originalUrl = req.url;
+    (req as any)._parsedUrl = undefined;
 
     return handler(req, res);
   } catch (error) {
