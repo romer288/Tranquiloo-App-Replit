@@ -3,16 +3,30 @@ import app from '../dist/prod.js';
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   try {
-    // Parse the URL - Vercel preserves the pathname correctly
-    const url = new URL(req.url!, `http://${req.headers.host}`);
+    const baseUrl = `http://${req.headers.host}`;
+    const forwardedUri = req.headers['x-forwarded-uri'] as string | undefined;
+    const forwardedPath = req.headers['x-vercel-original-pathname'] as string | undefined;
 
-    console.log('[Direct] incoming', {
+    let url: URL;
+    if (forwardedUri) {
+      url = new URL(forwardedUri, baseUrl);
+    } else if (forwardedPath) {
+      url = new URL(forwardedPath, baseUrl);
+    } else {
+      url = new URL(req.url!, baseUrl);
+    }
+
+    console.log('[Proxy] incoming', {
       originalUrl: req.url,
+      forwardedUri,
       pathname: url.pathname,
-      method: req.method
+      rawSearch: url.search,
+      queryEntries: Array.from(url.searchParams.entries()),
+      method: req.method,
+      host: req.headers.host,
+      queryPathParam: req.query.path
     });
 
-    // Special diagnostic endpoint
     if (url.pathname.includes('/__debug')) {
       return res.status(200).json({
         originalReqUrl: req.url,
@@ -23,17 +37,26 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       });
     }
 
-    // Clean up Vercel's internal query params
+    const pathParam = req.query.path;
+    let pathname = url.pathname;
+    if (pathParam) {
+      if (Array.isArray(pathParam)) {
+        pathname = '/' + pathParam.join('/');
+      } else {
+        pathname = pathParam.startsWith('/') ? pathParam : `/${pathParam}`;
+      }
+    }
+
     url.searchParams.delete('...all');
     url.searchParams.delete('path');
 
-    // Reconstruct clean URL
-    req.url = url.pathname + url.search;
+    const rewritten = pathname + url.search;
+    req.url = rewritten;
+    (req as any).originalUrl = rewritten;
+    (req as any)._parsedUrl = undefined;
 
-    console.log('[Direct] calling Express with url:', req.url);
+    console.log('[Proxy] final req.url', req.url);
 
-    // Call Express directly without serverless-http wrapper
-    // This avoids the event loop hanging issue
     return app(req as any, res as any);
   } catch (error) {
     console.error('Serverless handler error:', error);
