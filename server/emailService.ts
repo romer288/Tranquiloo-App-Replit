@@ -104,7 +104,7 @@ class EmailService {
         
         const success = await this.sendEmail({
           to: email.toEmail,
-          from: email.fromEmail || 'noreply@tranquiloo-app.com',
+          from: email.fromEmail || 'info@tranquiloo-app.com',
           subject: email.subject,
           html: cleanHtml,
           text: email.textContent || ''
