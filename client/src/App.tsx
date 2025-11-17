@@ -33,7 +33,6 @@ import TherapistPortal from "./pages/TherapistPortal";
 import TherapistDashboard from "./pages/TherapistDashboard";
 import TherapistLicenseVerification from "./pages/TherapistLicenseVerification";
 import TherapistInfo from "./pages/TherapistInfo";
-import Verify from "./pages/Verify";
 import ForgotPasswordForm from "./components/auth/ForgotPasswordForm";
 import RecommendAppForm from "./components/auth/RecommendAppForm";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
@@ -102,7 +101,6 @@ const App = () => {
               <Route path="/forgot-password" element={<ForgotPasswordForm />} />
               <Route path="/recommend-app" element={<RecommendAppForm />} />
               <Route path="/support" element={<Support />} />
-              <Route path="/verify" element={<Verify />} />
               <Route path="/therapist-portal" element={<ProtectedRoute role="therapist"><TherapistPortal /></ProtectedRoute>} />
               <Route path="/therapist-dashboard" element={<ProtectedRoute role="therapist"><TherapistDashboard /></ProtectedRoute>} />
               <Route path="/therapist-license-verification" element={<TherapistLicenseVerification />} />
