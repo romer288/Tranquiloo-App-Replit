@@ -1798,19 +1798,9 @@ Key therapeutic themes addressed:
         const existingProfile = await storage.getProfileByEmail(email);
         if (existingProfile) {
           // Check if email is verified for existing users
-          if (!existingProfile.emailVerified) {
-            return res.status(403).json({
-              success: false,
-              error: { 
-                code: 'EMAIL_NOT_VERIFIED', 
-                message: 'Please verify your email address before signing in. Check your email for verification link.' 
-              }
-            });
-          }
-          
-          // Return existing verified user
-          return res.json({
-            success: true,
+        // Return existing verified user
+        return res.json({
+          success: true,
             user: {
               id: existingProfile.id,
               email: existingProfile.email,
@@ -1836,52 +1826,24 @@ Key therapeutic themes addressed:
         role: role,
         patientCode: patientCode,
         authMethod: 'google',
-        emailVerified: false,
+        emailVerified: true,
       };
 
       try {
         const createdProfile = await storage.createProfile(newUser);
         console.log('Created new Google OAuth user profile:', createdProfile.id);
         
-        // Generate verification token for ALL users (including Google OAuth)
-      const verificationToken = randomBytes(32).toString('hex');
-        await storage.updateProfileVerification(createdProfile.id, verificationToken);
-        
-        // Send appropriate verification email based on role
-        if (role === 'therapist') {
-          const emailResponse = await emailService.sendTherapistWelcomeEmail(
-            createdProfile.email!,
-            createdProfile.firstName || 'Therapist',
-            verificationToken
-          );
-          
-          if (emailResponse.success) {
-            console.log('Therapist verification email sent to:', createdProfile.email);
-          }
-        } else {
-          // Send patient verification email
-          const emailResponse = await emailService.sendVerificationEmail(
-            createdProfile.email!,
-            createdProfile.firstName || 'User',
-            verificationToken
-          );
-          
-          if (emailResponse.success) {
-            console.log('Patient verification email sent to:', createdProfile.email);
-          }
-        }
-        
-        // Return success but indicate email verification needed
+        // Return success immediately - verification not required
         return res.json({
           success: true,
-          message: 'Account created! Please check your email to verify your account.',
-          requiresVerification: true,
+          message: 'Account created successfully.',
+          requiresVerification: false,
           user: {
             id: createdProfile.id,
             email: createdProfile.email,
             username: createdProfile.email?.split('@')[0],
             role: createdProfile.role,
-            emailVerified: false, // Google OAuth users still need to verify
+            emailVerified: true,
             patientCode: createdProfile.patientCode
           }
         });
@@ -1960,43 +1922,9 @@ Key therapeutic themes addressed:
         });
       }
       
-      if (profile.emailVerified) {
-        return res.json({
-          success: true,
-          message: 'Email is already verified'
-        });
-      }
-      
-      // Generate new verification token
-      const verificationToken = randomBytes(32).toString('hex');
-      await storage.updateProfileVerification(profile.id, verificationToken);
-      
-      // Send verification email based on role
-      // Get correct protocol/host from proxy headers for public URL
-      const forwardedProto = (req.headers['x-forwarded-proto'] as string)?.split(',')[0];
-      const forwardedHost = req.headers['x-forwarded-host'] as string;
-      const protocol = forwardedProto || req.protocol;
-      const host = forwardedHost || req.get('host');
-      const verificationUrl = `${protocol}://${host}/verify-email?token=${verificationToken}`;
-      
-      if (profile.role === 'therapist') {
-        await emailService.sendTherapistVerificationEmail(
-          profile.email!,
-          profile.firstName || 'Therapist',
-          verificationToken,
-          verificationUrl
-        );
-      } else {
-        await emailService.sendVerificationEmail(
-          profile.email!,
-          profile.firstName || 'User',
-          verificationToken
-        );
-      }
-      
       return res.json({
         success: true,
-        message: 'Verification email sent successfully'
+        message: 'Email verification not required'
       });
     } catch (error) {
       console.error('Resend verification error:', error);
@@ -2130,10 +2058,6 @@ Key therapeutic themes addressed:
       
       const googleUser = await userResponse.json();
 
-      if (!googleUser.verified_email) {
-        console.warn('Google account email is not verified. Blocking signup for:', googleUser.email);
-        return res.redirect(`${origin}/login?error=google_email_not_verified`);
-      }
       
       // Check if user exists and is verified
       let existingProfile = null;
@@ -2235,32 +2159,10 @@ Key therapeutic themes addressed:
         role: userState.role || 'patient',
         patientCode: userState.role === 'patient' ? patientCode : null,
         authMethod: 'google',
-        emailVerified: true, // Already verified via Google
+        emailVerified: true,
         ...({ id: authData.user.id } as any), // Use Supabase Auth user ID
       });
-      
-      // Generate verification token and update profile
-      const verificationToken = randomBytes(32).toString('hex');
-      await storage.updateProfileVerification(newProfile.id, verificationToken);
-      
-      // Send verification email
-      const verificationUrl = `${protocol}://${host}/verify-email?token=${verificationToken}`;
-      
-      if (userState.role === 'therapist') {
-        await emailService.sendTherapistVerificationEmail(
-          newProfile.email!,
-          newProfile.firstName || 'Therapist',
-          verificationToken,
-          verificationUrl
-        );
-      } else {
-        await emailService.sendVerificationEmail(
-          newProfile.email!,
-          newProfile.firstName || 'User',
-          verificationToken
-        );
-      }
-      
+
       // Redirect to appropriate signup success page
       if (userState.role === 'therapist') {
         res.redirect(`${origin}/therapist-login?signup_success=true&email=${encodeURIComponent(googleUser.email)}`);
@@ -2392,11 +2294,6 @@ Key therapeutic themes addressed:
       const origin = `${protocol}://${host}`;
 
       if (existingProfile) {
-        // Check if email is verified
-        if (!existingProfile.emailVerified) {
-          return res.redirect(`${origin}/login?error=verification_required&email=${encodeURIComponent(facebookUser.email)}`);
-        }
-
         // User exists and is verified - proceed to dashboard
         const userData = {
           id: existingProfile.id,
@@ -2447,30 +2344,8 @@ Key therapeutic themes addressed:
         role: userState.role || 'patient',
         patientCode: userState.role === 'patient' ? patientCode : null,
         authMethod: 'facebook',
-        emailVerified: false,
+        emailVerified: true,
       });
-
-      // Generate verification token and update profile
-      const verificationToken = randomBytes(32).toString('hex');
-      await storage.updateProfileVerification(newProfile.id, verificationToken);
-
-      // Send verification email
-      const verificationUrl = `${protocol}://${host}/verify-email?token=${verificationToken}`;
-
-      if (userState.role === 'therapist') {
-        await emailService.sendTherapistVerificationEmail(
-          newProfile.email!,
-          newProfile.firstName || 'Therapist',
-          verificationToken,
-          verificationUrl
-        );
-      } else {
-        await emailService.sendVerificationEmail(
-          newProfile.email!,
-          newProfile.firstName || 'User',
-          verificationToken
-        );
-      }
 
       // Redirect to appropriate signup success page
       if (userState.role === 'therapist') {
