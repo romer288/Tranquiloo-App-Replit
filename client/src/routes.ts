@@ -5,7 +5,6 @@ export const ROUTES = {
   patientLogin: "/patient-login",
   therapistLogin: "/therapist-login",
   register: "/registration",
-  verify: "/verify",
   resetPassword: "/reset-password",
   forgotPassword: "/forgot-password",
   dashboard: "/dashboard",

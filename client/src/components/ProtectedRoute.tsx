@@ -29,12 +29,7 @@ const ProtectedRoute = ({ children, role, requireVerification = true }: Protecte
     return <Navigate to={ROUTES.login} replace />;
   }
 
-  // Email verification enforcement
-  if (requireVerification && !user.emailVerified) {
-    // Store the intended destination
-    const intendedPath = window.location.pathname;
-    return <Navigate to={`${ROUTES.verify}?redirect=${encodeURIComponent(intendedPath)}`} replace />;
-  }
+  // Email verification enforcement disabled
 
   // Role-based access control
   if (role && user.role !== role) {

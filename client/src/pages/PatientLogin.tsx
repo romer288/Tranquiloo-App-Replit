@@ -61,19 +61,7 @@ const PatientLogin: React.FC = () => {
       window.history.replaceState({}, document.title, '/login');
     }
     
-    if (params.get('error') === 'verification_required') {
-      const email = params.get('email');
-      setSignInError(`Please verify your email address (${email}) first. Check your inbox for the verification link.`);
-      // Clean up URL
-      window.history.replaceState({}, document.title, '/login');
-    }
-    
-    if (params.get('verified') === 'true') {
-      setSuccessEmail('');
-      setShowSuccessMessage(true);
-      // Clean up URL
-      window.history.replaceState({}, document.title, '/login');
-    }
+    // No verification flow anymore
   }, []);
 
   const handleGoogleSignIn = async (isSignUp: boolean) => {
@@ -165,8 +153,9 @@ const PatientLogin: React.FC = () => {
       if (signInResult.success) {
         // Check if this is a new account that needs verification
         if (signInResult.message && signInResult.message.includes('verify')) {
-          setSuccessEmail(formData.email);
-          setShowSuccessMessage(true);
+          const redirectUrl = formData.role === 'therapist' ? ROUTES.therapistDashboard : ROUTES.dashboard;
+          console.log('Verification bypass, redirecting to:', redirectUrl);
+          navigate(redirectUrl, { replace: true });
           setIsLoading(false);
           return;
         }
@@ -188,11 +177,7 @@ const PatientLogin: React.FC = () => {
         console.log('Authentication successful, redirecting to:', redirectUrl);
         navigate(redirectUrl, { replace: true });
       } else {
-        if (signInResult.error?.code === 'EMAIL_NOT_VERIFIED') {
-          navigate(`${ROUTES.verify}?redirect=${encodeURIComponent(ROUTES.dashboard)}`);
-        } else {
-          alert(signInResult.error?.message || 'Authentication failed');
-        }
+        alert(signInResult.error?.message || 'Authentication failed');
       }
     } catch (error) {
       console.error('Email auth error:', error);
