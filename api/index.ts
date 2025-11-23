@@ -20,13 +20,18 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     });
 
     if (pathParam) {
-      // Always preserve the /api prefix so Express routes like /api/auth/signin are matched
+      // Normalize to the correct Express route:
+      // - /api/* rewrites pass "auth/..." etc. -> needs /api/ prefix
+      // - /auth/* rewrites pass "auth/..." -> should stay at /auth/ (no /api prefix)
       let pathname: string;
       if (Array.isArray(pathParam)) {
-        pathname = '/api/' + pathParam.join('/');
+        const joined = pathParam.join('/');
+        const first = joined.split('/')[0];
+        pathname = (first === 'auth' ? '/' : '/api/') + joined;
       } else {
         const cleaned = pathParam.startsWith('/') ? pathParam.substring(1) : pathParam;
-        pathname = '/api/' + cleaned;
+        const first = cleaned.split('/')[0];
+        pathname = (first === 'auth' ? '/' : '/api/') + cleaned;
       }
       const url = new URL(pathname, baseUrl);
       url.search = new URL(req.url!, baseUrl).search; // preserve query if any
