@@ -10,6 +10,15 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     const forwardedUri = req.headers['x-forwarded-uri'] as string | undefined;
     const pathParam = req.query.path;
 
+    // Trace request rewrite so we can see what reaches Express in Vercel logs
+    const originalUrl = req.url;
+    console.log('[Serverless] Incoming request', {
+      method: req.method,
+      originalUrl,
+      forwardedUri,
+      pathParam
+    });
+
     if (pathParam) {
       // Always preserve the /api prefix so Express routes like /api/auth/signin are matched
       let pathname: string;
@@ -26,6 +35,8 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       const url = new URL(forwardedUri, baseUrl);
       req.url = url.pathname + url.search;
     }
+
+    console.log('[Serverless] Normalized URL for Express:', req.url);
 
     (req as any).originalUrl = req.url;
     (req as any)._parsedUrl = undefined;

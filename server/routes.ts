@@ -1449,6 +1449,8 @@ Key therapeutic themes addressed:
           error: { code: 'MISSING_FIELDS', message: 'Email and password are required' } 
         });
       }
+
+      console.log('[Auth] Checking for existing profile...');
       
       // Check if user profile exists
       try {
@@ -1520,6 +1522,7 @@ Key therapeutic themes addressed:
         
         // If this is a sign-up attempt and user already exists
         if (existingProfile) {
+          console.log('[Auth] Signup attempt but user already exists');
           return res.status(400).json({
             success: false,
             error: { 
@@ -1544,9 +1547,10 @@ Key therapeutic themes addressed:
       
       // Only create new users for sign-up (isSignIn === false or undefined for new registrations)
       if (isSignIn !== true) {
+        console.log('[Auth] Proceeding with signup flow');
         // Hash password for new user
       const hashedPassword = await bcrypt.hash(password, 10);
-      
+      console.log('[Auth] Password hashed, creating profile...');
       // Generate unique patient code
       const patientCode = 'PT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 4).toUpperCase();
       
@@ -1569,6 +1573,7 @@ Key therapeutic themes addressed:
         // Generate email verification token
         const verificationToken = randomBytes(32).toString('hex');
         await storage.updateProfileVerification(createdProfile.id, verificationToken);
+        console.log('[Auth] Verification token generated/ stored');
         
         // Send verification email for both therapists and patients
         // Get correct protocol/host from proxy headers for public URL
@@ -1577,9 +1582,11 @@ Key therapeutic themes addressed:
         const protocol = forwardedProto || req.protocol;
         const host = forwardedHost || req.get('host');
         const verificationUrl = `${protocol}://${host}/verify-email?token=${verificationToken}`;
+        console.log('[Auth] Verification URL:', verificationUrl);
         
         if (role === 'therapist') {
           // Send therapist verification email with dashboard access instructions
+          console.log('[Auth] Sending therapist verification email');
           await emailService.sendTherapistVerificationEmail(
             createdProfile.email!,
             req.body.firstName || 'Therapist',
@@ -1594,6 +1601,7 @@ Key therapeutic themes addressed:
           });
         } else {
           // Create verification email for patients
+          console.log('[Auth] Queuing patient verification email notification');
           const verificationUrl = `${req.protocol}://${req.get('host')}/verify-email?token=${verificationToken}`;
           const emailContent = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -1650,6 +1658,7 @@ Key therapeutic themes addressed:
               verificationToken: verificationToken
             })
           });
+          console.log('[Auth] Email notification queued');
         }
         
         return res.json({
