@@ -8,6 +8,10 @@
     {
       "source": "/api/:path*",
       "destination": "/api?path=:path"
+    },
+    {
+      "source": "/auth/:path*",
+      "destination": "/api?path=auth/:path*"
     }
   ],
   "outputDirectory": "dist/public",
