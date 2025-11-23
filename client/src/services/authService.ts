@@ -36,6 +36,83 @@ export class AuthService {
     }
   }
 
+  static async signUpWithEmail(
+    email: string,
+    password: string,
+    role: 'patient' | 'therapist',
+    firstName?: string,
+    lastName?: string
+  ): Promise<{ success: boolean; error?: AuthError; user?: AuthUser; needsVerification?: boolean; message?: string }> {
+    try {
+      console.log('AuthService: Attempting email signup for:', email, 'role:', role);
+
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          role,
+          firstName,
+          lastName,
+          isSignIn: false
+        })
+      });
+
+      const data = await response.json();
+      console.log('AuthService: Signup response status:', response.status, 'data:', data);
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: {
+            code: data?.error?.code || 'SIGNUP_ERROR',
+            message: data?.error?.message || 'Sign up failed'
+          }
+        };
+      }
+
+      // Therapist signups return message only (verification required)
+      if (!data?.user && data?.message) {
+        return { success: true, needsVerification: true, message: data.message };
+      }
+
+      if (data?.user) {
+        const user: AuthUser = {
+          id: data.user.id,
+          email: data.user.email,
+          username: data.user.username || data.user.email?.split('@')[0],
+          role: data.user.role,
+          patientCode: data.user.patientCode,
+          emailVerified: data.user.emailVerified
+        };
+
+        // For new accounts we don't auto-store if verification pending
+        if (user.emailVerified) {
+          safeStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
+        }
+
+        return {
+          success: true,
+          user,
+          needsVerification: user.emailVerified === false,
+          message: data.message
+        };
+      }
+
+      return {
+        success: false,
+        error: { code: 'SIGNUP_ERROR', message: 'Unexpected signup response' }
+      };
+    } catch (error: any) {
+      console.error('AuthService: Signup error:', error);
+      return {
+        success: false,
+        error: { code: 'NETWORK_ERROR', message: error?.message || 'Network error' }
+      };
+    }
+  }
+
   static async signInWithEmail(email: string, password: string): Promise<{ success: boolean; error?: AuthError; user?: AuthUser; needsVerification?: boolean }> {
     try {
       console.log('AuthService: Attempting email authentication for:', email);

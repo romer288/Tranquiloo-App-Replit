@@ -56,9 +56,15 @@ export const useRegistrationAuth = () => {
       setIsLoading(true);
       console.log('Attempting email signup...');
       
-      const result = await AuthService.signInWithEmail(formData.email, formData.password);
+      const result = await AuthService.signUpWithEmail(
+        formData.email,
+        formData.password,
+        formData.role ?? 'patient',
+        formData.firstName,
+        formData.lastName
+      );
       
-      // Check if email verification is needed
+      // Check if email verification is needed (patients always need verification)
       if (result.needsVerification) {
         toast({
           title: "Check Your Email",
@@ -70,7 +76,7 @@ export const useRegistrationAuth = () => {
       if (result.success) {
         toast({
           title: "Registration Successful",
-          description: "Welcome! Your account has been created.",
+          description: result.message || "Welcome! Please verify your email to finish setup.",
         });
         return { success: true, user: result.user };
       } else {
