@@ -11,11 +11,13 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     const pathParam = req.query.path;
 
     if (pathParam) {
+      // Always preserve the /api prefix so Express routes like /api/auth/signin are matched
       let pathname: string;
       if (Array.isArray(pathParam)) {
-        pathname = '/' + pathParam.join('/');
+        pathname = '/api/' + pathParam.join('/');
       } else {
-        pathname = pathParam.startsWith('/') ? pathParam : `/${pathParam}`;
+        const cleaned = pathParam.startsWith('/') ? pathParam.substring(1) : pathParam;
+        pathname = '/api/' + cleaned;
       }
       const url = new URL(pathname, baseUrl);
       url.search = new URL(req.url!, baseUrl).search; // preserve query if any
