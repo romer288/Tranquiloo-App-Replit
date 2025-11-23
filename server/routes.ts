@@ -186,6 +186,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/process-emails', processEmailsRouter);
   console.log('✅ Email processing route registered');
 
+  // Trace auth route entries in Vercel to see the resolved path
+  app.use(['/auth', '/api/auth'], (req, _res, next) => {
+    console.log('[Auth Route Entry]', { method: req.method, originalUrl: req.originalUrl, path: req.path });
+    next();
+  });
+
   // Therapist API endpoints
   app.post('/api/therapist/search-patient', async (req, res) => {
     try {
@@ -1945,7 +1951,8 @@ Key therapeutic themes addressed:
   });
 
   // Google OAuth initiation route for iPhone Safari
-  app.get('/auth/google', (req, res) => {
+  // Support both /auth/* and /api/auth/* in case of Vercel rewrites
+  app.get(['/auth/google', '/api/auth/google'], (req, res) => {
     console.log('[OAuth] /auth/google hit', {
       originalUrl: req.originalUrl,
       query: req.query,
@@ -2002,7 +2009,7 @@ Key therapeutic themes addressed:
   });
 
   // OAuth callback route for iPhone Safari
-  app.get('/auth/google/callback', async (req, res) => {
+  app.get(['/auth/google/callback', '/api/auth/google/callback'], async (req, res) => {
     try {
       const { code, state } = req.query;
       
@@ -2186,7 +2193,7 @@ Key therapeutic themes addressed:
   });
 
   // Facebook OAuth initiation route
-  app.get('/auth/facebook', (req, res) => {
+  app.get(['/auth/facebook', '/api/auth/facebook'], (req, res) => {
     const clientId = process.env.FACEBOOK_CLIENT_ID as string;
     console.log('Facebook OAuth initiation - Using App ID:', clientId ? clientId.substring(0, 10) + '...' : 'NOT SET');
 
@@ -2229,7 +2236,7 @@ Key therapeutic themes addressed:
   });
 
   // Facebook OAuth callback route
-  app.get('/auth/facebook/callback', async (req, res) => {
+  app.get(['/auth/facebook/callback', '/api/auth/facebook/callback'], async (req, res) => {
     try {
       const { code, state } = req.query;
 
