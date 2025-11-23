@@ -1,8 +1,30 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import serverless from 'serverless-http';
-import app from '../dist/prod.js';
+import fs from 'fs';
+import path from 'path';
 
-const handler = serverless(app);
+// Lazily load the Express app, preferring the built file (dist/prod.js).
+// If the build artifact is missing (e.g., during dev), fall back to source.
+let cachedHandler: any;
+const getHandler = async () => {
+  if (cachedHandler) return cachedHandler;
+
+  const distPath = path.join(process.cwd(), 'dist', 'prod.js');
+  try {
+    if (fs.existsSync(distPath)) {
+      console.log('[Serverless] Loading app from dist/prod.js');
+      const { default: app } = await import('../dist/prod.js');
+      cachedHandler = serverless(app);
+      return cachedHandler;
+    }
+    throw new Error('dist/prod.js not found');
+  } catch (err) {
+    console.warn('[Serverless] Falling back to server/prod.ts', err instanceof Error ? err.message : err);
+    const { default: app } = await import('../server/prod');
+    cachedHandler = serverless(app);
+    return cachedHandler;
+  }
+};
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   try {
@@ -46,6 +68,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     (req as any).originalUrl = req.url;
     (req as any)._parsedUrl = undefined;
 
+    const handler = await getHandler();
     return handler(req, res);
   } catch (error) {
     console.error('Serverless handler error:', error);
