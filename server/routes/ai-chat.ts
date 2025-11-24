@@ -1,12 +1,12 @@
 import express, { Request, Response } from 'express';
 import { getAIResponse, streamAIResponse } from '../services/ragSystem';
 import { supabase } from '../lib/supabase';
-import { requireAuth } from '../middleware/auth';
+import { optionalAuth } from '../middleware/auth';
 
 const router = express.Router();
 
-// Apply authentication to all routes in this router
-router.use(requireAuth);
+// Apply optional auth so we don't 401 when clients don't send bearer tokens
+router.use(optionalAuth);
 
 /**
  * POST /api/ai-chat/message
@@ -14,10 +14,10 @@ router.use(requireAuth);
  */
 router.post('/message', async (req: Request, res: Response) => {
   try {
-    const { message, conversationId, history } = req.body;
+    const { message, conversationId, history, userId: bodyUserId } = req.body;
 
-    // Use authenticated user ID instead of accepting it from request body
-    const userId = req.user!.id;
+    // Prefer authenticated user; fall back to provided userId for legacy clients
+    const userId = req.user?.id ?? bodyUserId;
 
     if (!message || !conversationId) {
       return res.status(400).json({
@@ -65,10 +65,10 @@ router.post('/message', async (req: Request, res: Response) => {
  */
 router.post('/stream', async (req: Request, res: Response) => {
   try {
-    const { message, conversationId, history } = req.body;
+    const { message, conversationId, history, userId: bodyUserId } = req.body;
 
-    // Use authenticated user ID
-    const userId = req.user!.id;
+    // Prefer authenticated user; fall back to provided userId for legacy clients
+    const userId = req.user?.id ?? bodyUserId;
 
     if (!message || !conversationId) {
       return res.status(400).json({
