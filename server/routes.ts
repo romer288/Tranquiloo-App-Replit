@@ -707,6 +707,14 @@ Key therapeutic themes addressed:
         })
       });
 
+      // Immediately process the queue to send the email in serverless environments
+      try {
+        await emailService.processEmailQueue();
+        console.log('📨 Email queue processed after therapist connection creation');
+      } catch (err) {
+        console.error('⚠️ Failed to process email queue:', err);
+      }
+
       console.log(`📧 HIPAA-compliant email notification created for ${therapistName} at ${contactValue}`);
       console.log(`📊 Share report: ${shareReport === 'yes' ? 'Yes' : 'No'}`);
 
