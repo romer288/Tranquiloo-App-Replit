@@ -42,17 +42,26 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
     if (pathParam) {
       // Normalize to the correct Express route:
-      // - /api/* rewrites pass "auth/..." etc. -> needs /api/ prefix
-      // - /auth/* rewrites pass "auth/..." -> should stay at /auth/ (no /api prefix)
+      // - static assets (js/css/png/ico/json/map/etc.) should NOT keep /api prefix
+      // - /auth/* should stay at /auth/*
+      // - everything else stays under /api/*
+      const normalize = (raw: string) => {
+        const cleaned = raw.startsWith('/') ? raw.substring(1) : raw;
+        const first = cleaned.split('/')[0];
+        const isAsset = /\.[a-zA-Z0-9]+$/.test(cleaned) &&
+          cleaned.match(/\.(js|css|png|jpe?g|gif|svg|webp|ico|json|map|txt|woff2?)$/i);
+        if (isAsset || first === 'auth') {
+          return '/' + cleaned;
+        }
+        return '/api/' + cleaned;
+      };
+
       let pathname: string;
       if (Array.isArray(pathParam)) {
         const joined = pathParam.join('/');
-        const first = joined.split('/')[0];
-        pathname = (first === 'auth' ? '/' : '/api/') + joined;
+        pathname = normalize(joined);
       } else {
-        const cleaned = pathParam.startsWith('/') ? pathParam.substring(1) : pathParam;
-        const first = cleaned.split('/')[0];
-        pathname = (first === 'auth' ? '/' : '/api/') + cleaned;
+        pathname = normalize(pathParam);
       }
       const url = new URL(pathname, baseUrl);
       url.search = new URL(req.url!, baseUrl).search; // preserve query if any
