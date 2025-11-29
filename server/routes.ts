@@ -1532,6 +1532,17 @@ Key therapeutic themes addressed:
             });
           }
           
+          // Enforce role match; do not allow cross-role sign-in
+          if (role && existingProfile.role && existingProfile.role !== role) {
+            return res.status(403).json({
+              success: false,
+              error: { 
+                code: 'ROLE_MISMATCH', 
+                message: `This email is registered as a ${existingProfile.role}. Please use the ${existingProfile.role} portal.` 
+              }
+            });
+          }
+          
           // User exists, verified, and password correct - return success
           return res.json({
             success: true,
@@ -1548,33 +1559,14 @@ Key therapeutic themes addressed:
         
         // If this is a sign-up attempt and user already exists
         if (existingProfile) {
-          // Allow role conversion on explicit signup with different role
-          if (role && existingProfile.role !== role) {
-            console.log('[Auth] Converting profile role on signup:', existingProfile.role, '->', role);
-            const hashedPassword = await bcrypt.hash(password, 10);
-            const updates: any = {
-              role,
-              hashedPassword
-            };
-            if (role === 'therapist') {
-              updates.patientCode = null; // Remove patient code when converting to therapist
-            } else if (role === 'patient' && !existingProfile.patientCode) {
-              updates.patientCode = 'PT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 4).toUpperCase();
-            }
-
-            const updatedProfile = await storage.updateProfile(existingProfile.id, updates) ?? { ...existingProfile, ...updates };
-
-            return res.json({
-              success: true,
-              user: {
-                id: updatedProfile.id,
-                email: updatedProfile.email,
-                username: updatedProfile.email?.split('@')[0],
-                role: updatedProfile.role,
-                emailVerified: updatedProfile.emailVerified,
-                patientCode: updatedProfile.patientCode
-              },
-              message: 'Account role updated successfully.'
+          // Enforce original role; do not convert
+          if (role && existingProfile.role && existingProfile.role !== role) {
+            return res.status(403).json({
+              success: false,
+              error: {
+                code: 'ROLE_MISMATCH',
+                message: `This email is registered as a ${existingProfile.role}. Please use the ${existingProfile.role} portal or a different email.`
+              }
             });
           }
 
@@ -2142,17 +2134,9 @@ Key therapeutic themes addressed:
           return res.redirect(`${origin}/login?error=verification_required&email=${encodeURIComponent(googleUser.email)}`);
         }
 
-        // If the requested role differs, convert the profile to the requested role
+        // Enforce original role; do not convert
         if (userState.role && existingProfile.role && existingProfile.role !== userState.role) {
-          console.log('[OAuth] Converting profile role:', existingProfile.role, '->', userState.role);
-          const updates: any = { role: userState.role };
-          if (userState.role === 'therapist') {
-            updates.patientCode = null;
-          } else if (userState.role === 'patient' && !existingProfile.patientCode) {
-            updates.patientCode = 'PT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 4).toUpperCase();
-          }
-          await storage.updateProfile(existingProfile.id, updates);
-          existingProfile = { ...existingProfile, ...updates };
+          return res.redirect(`${origin}/login?error=role_mismatch&expected=${existingProfile.role}`);
         }
 
         // User exists - create Supabase session using admin API
