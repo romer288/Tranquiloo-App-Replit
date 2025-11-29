@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle, Clock, AlertTriangle, Shield, FileText, Clock4 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { safeStorage } from "@/services/safeStorage";
 
 const US_STATES = [
   'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
@@ -33,11 +34,11 @@ export default function TherapistLicenseVerification() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Get user email from URL parameters or localStorage
+    // Get user email from URL parameters or storage
     const urlParams = new URLSearchParams(window.location.search);
     const emailFromUrl = urlParams.get('email');
-    const storedUser = localStorage.getItem('user');
-    
+    const storedUser = safeStorage.getItem('user') || safeStorage.getItem('auth_user');
+
     let email = emailFromUrl;
     if (!email && storedUser) {
       try {
