@@ -29,6 +29,11 @@ const ProtectedRoute = ({ children, role, requireVerification = true }: Protecte
     return <Navigate to={ROUTES.login} replace />;
   }
 
+  // If no specific role is required but user is a therapist, force therapist dashboard
+  if (!role && user.role === 'therapist') {
+    return <Navigate to={ROUTES.therapistDashboard} replace />;
+  }
+
   // Email verification enforcement disabled
 
   // Role-based access control
