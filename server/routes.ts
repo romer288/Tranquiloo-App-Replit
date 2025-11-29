@@ -2443,7 +2443,8 @@ Key therapeutic themes addressed:
   app.post('/api/therapist/license-verification', optionalAuth, async (req, res) => {
     try {
       const { email: emailFromBody, licenseNumber, state, skip } = req.body;
-      const email = emailFromBody || req.user?.email;
+      // Allow email to come from body, authenticated user, or query param (for incognito without stored session)
+      const email = emailFromBody || req.user?.email || (req.query.email as string | undefined);
 
       if (!email) {
         return res.status(400).json({
