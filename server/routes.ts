@@ -7,6 +7,7 @@ import { randomBytes } from "crypto";
 import appointmentsRouter from "./routes/appointments";
 import processEmailsRouter from "./routes/process-emails";
 import { supabase } from "./lib/supabase";
+import { optionalAuth } from "./middleware/auth";
 
 import { analyzeAnxietyContext, detectAnxietyTriggers } from "@shared/mentalHealth/anxietyContexts";
 
@@ -2439,10 +2440,11 @@ Key therapeutic themes addressed:
   });
 
   // Therapist license verification endpoints
-  app.post('/api/therapist/license-verification', async (req, res) => {
+  app.post('/api/therapist/license-verification', optionalAuth, async (req, res) => {
     try {
-      const { email, licenseNumber, state, skip } = req.body;
-      
+      const { email: emailFromBody, licenseNumber, state, skip } = req.body;
+      const email = emailFromBody || req.user?.email;
+
       if (!email) {
         return res.status(400).json({
           success: false,
