@@ -1520,6 +1520,13 @@ Key therapeutic themes addressed:
             });
           }
           
+          // If therapist is signing in but profile role isn't therapist, upgrade role
+          if (role === 'therapist' && existingProfile.role !== 'therapist') {
+            console.log('[Auth] Upgrading existing profile role to therapist for', existingProfile.email);
+            await storage.updateProfile(existingProfile.id, { role: 'therapist' });
+            existingProfile.role = 'therapist';
+          }
+          
           // User exists, verified, and password correct - return success
           return res.json({
             success: true,
