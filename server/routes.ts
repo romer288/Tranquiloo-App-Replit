@@ -1556,6 +1556,17 @@ Key therapeutic themes addressed:
             }
           });
         }
+
+        // Prevent creating a therapist with an existing patient email (or vice versa) when user requests a specific role
+        if (role && existingProfile && existingProfile.role !== role) {
+          return res.status(403).json({
+            success: false,
+            error: {
+              code: 'ROLE_MISMATCH',
+              message: `This email is registered as a ${existingProfile.role}. Please use the ${existingProfile.role} portal or a different email.`
+            }
+          });
+        }
       } catch (err) {
         console.log('Profile lookup error:', err);
         // For sign-in attempts, if there's a database error, still return user not found

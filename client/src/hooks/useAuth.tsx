@@ -25,11 +25,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (legacy && !safeStorage.getItem('auth_user')) { 
       safeStorage.setItem('auth_user', legacy); 
     }
+
+    // Clear any stale auth if not valid JSON
+    const maybeAuthUser = safeStorage.getItem('auth_user');
+    try {
+      if (maybeAuthUser) JSON.parse(maybeAuthUser);
+    } catch {
+      safeStorage.removeItem('auth_user');
+      localStorage.removeItem('user');
+    }
     
     // Get initial user from localStorage
     const loadUser = async () => {
       try {
-        
         const currentUser = await AuthService.getCurrentUser();
         console.log('Auth hook loaded user:', currentUser);
         setUser(currentUser);
@@ -37,6 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setLoading(false);
       } catch (error) {
         console.error('Error loading user:', error);
+        safeStorage.removeItem('auth_user'); // clear corrupted session
         setLoading(false);
       }
     };
