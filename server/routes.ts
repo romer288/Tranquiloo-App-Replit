@@ -1509,6 +1509,17 @@ Key therapeutic themes addressed:
             }
           }
           
+          // Prevent using the same email for a different role
+          if (role && existingProfile.role && existingProfile.role !== role) {
+            return res.status(403).json({
+              success: false,
+              error: { 
+                code: 'ROLE_MISMATCH', 
+                message: `This email is registered as a ${existingProfile.role}. Please sign in with the ${existingProfile.role} portal or use a different email.` 
+              }
+            });
+          }
+          
           // Check if email is verified (enforce for all roles)
           if (!existingProfile.emailVerified) {
             return res.status(403).json({
@@ -1518,13 +1529,6 @@ Key therapeutic themes addressed:
                 message: 'Please verify your email address before signing in. Check your email for verification link.' 
               }
             });
-          }
-          
-          // If therapist is signing in but profile role isn't therapist, upgrade role
-          if (role === 'therapist' && existingProfile.role !== 'therapist') {
-            console.log('[Auth] Upgrading existing profile role to therapist for', existingProfile.email);
-            await storage.updateProfile(existingProfile.id, { role: 'therapist' });
-            existingProfile.role = 'therapist';
           }
           
           // User exists, verified, and password correct - return success
@@ -2105,6 +2109,11 @@ Key therapeutic themes addressed:
         if (!existingProfile.emailVerified) {
           // Redirect to login with verification needed message
           return res.redirect(`${origin}/login?error=verification_required&email=${encodeURIComponent(googleUser.email)}`);
+        }
+
+        // Prevent cross-role reuse of the same email
+        if (userState.role && existingProfile.role && existingProfile.role !== userState.role) {
+          return res.redirect(`${origin}/login?error=role_mismatch&expected=${existingProfile.role}`);
         }
 
         // User exists - create Supabase session using admin API
