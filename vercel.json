@@ -14,8 +14,8 @@
       "destination": "/api?path=auth/:path*"
     },
     {
-      "source": "/:path*",
-      "destination": "/api?path=:path*"
+      "source": "/((?!api|auth|assets|favicon\\.ico|manifest\\.json|service-worker\\.js|robots\\.txt|icon\\.svg).*)",
+      "destination": "/"
     }
   ],
   "outputDirectory": "dist/public",
