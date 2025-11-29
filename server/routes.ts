@@ -1547,23 +1547,42 @@ Key therapeutic themes addressed:
         
         // If this is a sign-up attempt and user already exists
         if (existingProfile) {
-          console.log('[Auth] Signup attempt but user already exists');
+          // Allow role conversion on explicit signup with different role
+          if (role && existingProfile.role !== role) {
+            console.log('[Auth] Converting profile role on signup:', existingProfile.role, '->', role);
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const updates: any = {
+              role,
+              hashedPassword
+            };
+            if (role === 'therapist') {
+              updates.patientCode = null; // Remove patient code when converting to therapist
+            } else if (role === 'patient' && !existingProfile.patientCode) {
+              updates.patientCode = 'PT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 4).toUpperCase();
+            }
+
+            const updatedProfile = await storage.updateProfile(existingProfile.id, updates) ?? { ...existingProfile, ...updates };
+
+            return res.json({
+              success: true,
+              user: {
+                id: updatedProfile.id,
+                email: updatedProfile.email,
+                username: updatedProfile.email?.split('@')[0],
+                role: updatedProfile.role,
+                emailVerified: updatedProfile.emailVerified,
+                patientCode: updatedProfile.patientCode
+              },
+              message: 'Account role updated successfully.'
+            });
+          }
+
+          console.log('[Auth] Signup attempt but user already exists with same role');
           return res.status(400).json({
             success: false,
             error: { 
               code: 'USER_EXISTS', 
               message: 'An account already exists with this email. Please sign in instead.' 
-            }
-          });
-        }
-
-        // Prevent creating a therapist with an existing patient email (or vice versa) when user requests a specific role
-        if (role && existingProfile && existingProfile.role !== role) {
-          return res.status(403).json({
-            success: false,
-            error: {
-              code: 'ROLE_MISMATCH',
-              message: `This email is registered as a ${existingProfile.role}. Please use the ${existingProfile.role} portal or a different email.`
             }
           });
         }
@@ -2122,9 +2141,17 @@ Key therapeutic themes addressed:
           return res.redirect(`${origin}/login?error=verification_required&email=${encodeURIComponent(googleUser.email)}`);
         }
 
-        // Prevent cross-role reuse of the same email
+        // If the requested role differs, convert the profile to the requested role
         if (userState.role && existingProfile.role && existingProfile.role !== userState.role) {
-          return res.redirect(`${origin}/login?error=role_mismatch&expected=${existingProfile.role}`);
+          console.log('[OAuth] Converting profile role:', existingProfile.role, '->', userState.role);
+          const updates: any = { role: userState.role };
+          if (userState.role === 'therapist') {
+            updates.patientCode = null;
+          } else if (userState.role === 'patient' && !existingProfile.patientCode) {
+            updates.patientCode = 'PT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 4).toUpperCase();
+          }
+          await storage.updateProfile(existingProfile.id, updates);
+          existingProfile = { ...existingProfile, ...updates };
         }
 
         // User exists - create Supabase session using admin API
