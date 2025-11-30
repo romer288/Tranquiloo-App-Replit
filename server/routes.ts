@@ -3618,7 +3618,7 @@ ${recentHistory}`;
   };
   app.post("/api/azure-tts", async (req, res) => {
     try {
-      const { text, voice = 'en-US-JennyNeural', language = 'en-US' } = req.body;
+      const { text, voice, language = 'en-US' } = req.body;
 
       if (!text || typeof text !== 'string') {
         return res.status(400).json({ error: "Text is required and must be a string" });
@@ -3631,14 +3631,28 @@ ${recentHistory}`;
         return res.status(400).json({ error: `Text too long (max ${MAX_TOTAL_LENGTH} characters)` });
       }
 
-      const azureKey = process.env.AZURE_API_KEY || process.env.AZURE_TTS_KEY;
-      const azureRegion = process.env.AZURE_TTS_REGION || process.env.AZURE_REGION;
+      const azureKey =
+        process.env.AZURE_API_KEY ||
+        process.env.AZURE_TTS_KEY ||
+        process.env.AZURE_SPEECH_KEY ||
+        process.env.AZURE_SPEECH_TTS_KEY;
+      const azureRegion =
+        process.env.AZURE_TTS_REGION ||
+        process.env.AZURE_REGION ||
+        process.env.AZURE_SPEECH_REGION;
 
       if (!azureKey || !azureRegion) {
         return res.status(503).json({ error: "Azure TTS service not configured" });
       }
 
-      console.log(`🎤 Azure TTS Request: ${text.substring(0, 50)}... (${voice})`);
+      // Choose sensible defaults per language if voice not provided
+      const resolvedVoice = voice
+        ? voice
+        : language.startsWith('es')
+          ? 'es-MX-DaliaNeural'
+          : 'en-GB-LibbyNeural';
+
+      console.log(`🎤 Azure TTS Request: ${text.substring(0, 50)}... (${resolvedVoice})`);
 
       // Language-specific speech settings
       const speechRate = language.startsWith('es') ? '0.9' : '1.1'; // Slower for Spanish
@@ -3684,7 +3698,7 @@ ${recentHistory}`;
       for (const [index, chunk] of chunks.entries()) {
         const ssml = `
           <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${language}">
-            <voice name="${voice}">
+              <voice name="${resolvedVoice}">
               <prosody rate="${speechRate}" pitch="${pitch}">
                 ${chunk}
               </prosody>
