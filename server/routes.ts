@@ -2157,7 +2157,7 @@ Key therapeutic themes addressed:
           name: googleUser.name,
           picture: googleUser.picture,
           role: existingProfile.role,
-        emailVerified: false,
+          emailVerified: existingProfile.emailVerified ?? true,
           authMethod: 'google'
         };
 
