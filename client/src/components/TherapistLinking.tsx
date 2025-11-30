@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Mail, Phone, User, CheckCircle } from 'lucide-react';
 import { TherapistInfo } from '@/types/registration';
 import { AuthService } from '@/services/authService';
+import { useLanguage } from '@/context/LanguageContext';
 
 
 interface TherapistLinkingProps {
@@ -28,6 +29,7 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
   const [step, setStep] = useState<'question' | 'details' | 'confirmation'>('question');
   const [shareReport, setShareReport] = useState<string>('');
   const { toast } = useToast();
+  const { language } = useLanguage();
 
   const handleTherapistResponse = (value: string) => {
     setHasTherapist(value);
@@ -99,7 +101,8 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
         contactValue: contactValue,
         shareReport: shareReport,
         notes: therapistInfo.notes,
-        patientEmail: currentUserEmail
+        patientEmail: currentUserEmail,
+        language
       });
 
       // Send connection request to our backend API with patient email
@@ -115,7 +118,8 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
           contactValue: contactValue,
           shareReport: shareReport,
           notes: therapistInfo.notes,
-          patientEmail: currentUserEmail
+          patientEmail: currentUserEmail,
+          language
         })
       });
 

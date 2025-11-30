@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import { LanguageProvider } from './context/LanguageContext'
 
 // Register service worker for PWA functionality
 if ('serviceWorker' in navigator) {
@@ -29,4 +30,8 @@ window.addEventListener('beforeinstallprompt', (e) => {
   console.log('PWA install prompt available');
 });
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <LanguageProvider>
+    <App />
+  </LanguageProvider>
+);

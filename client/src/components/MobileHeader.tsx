@@ -10,23 +10,26 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/context/LanguageContext';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const MobileHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
+  const { t } = useLanguage();
 
   const getPageTitle = () => {
     const path = location.pathname;
-    if (path.includes('analytics')) return 'Analytics';
-    if (path.includes('chat-history')) return 'Chat History';
-    if (path.includes('chat')) return 'Chat';
-    if (path.includes('treatment')) return 'Track Treatment';
-    if (path.includes('therapist')) return 'Find Therapist';
-    if (path.includes('settings')) return 'Settings';
-    if (path.includes('help')) return 'Help';
-    if (path.includes('dashboard')) return 'Tranquiloo';
-    return 'Tranquiloo';
+    if (path.includes('analytics')) return t('mobile.title.analytics');
+    if (path.includes('chat-history')) return t('mobile.title.chatHistory');
+    if (path.includes('chat')) return t('mobile.title.chat');
+    if (path.includes('treatment')) return t('mobile.title.treatment');
+    if (path.includes('therapist')) return t('mobile.title.therapist');
+    if (path.includes('settings')) return t('mobile.title.settings');
+    if (path.includes('help')) return t('mobile.title.help');
+    if (path.includes('dashboard')) return t('mobile.title.dashboard');
+    return t('mobile.title.dashboard');
   };
 
   const showBackButton = location.pathname !== '/dashboard';
@@ -64,6 +67,8 @@ const MobileHeader = () => {
             <Bell className="w-5 h-5" />
           </Button>
 
+          <LanguageSwitcher size="sm" />
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" data-testid="mobile-menu">
@@ -78,7 +83,7 @@ const MobileHeader = () => {
                   }}
                   className="w-full text-left"
                 >
-                  Settings
+                  {t('nav.settings')}
                 </button>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
@@ -88,7 +93,7 @@ const MobileHeader = () => {
                   }}
                   className="w-full text-left"
                 >
-                  Help & Support
+                  {t('nav.help')}
                 </button>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
@@ -98,7 +103,7 @@ const MobileHeader = () => {
                   }}
                   className="w-full text-left"
                 >
-                  Chat History
+                  {t('nav.chatHistory')}
                 </button>
               </DropdownMenuItem>
               <DropdownMenuSeparator />

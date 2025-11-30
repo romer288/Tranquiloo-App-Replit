@@ -693,11 +693,38 @@ Key therapeutic themes addressed:
       });
 
       const sendConnectionEmail = async (connectionId: string) => {
+        const lang = (req.body.language === 'es' ? 'es' : 'en') as 'en' | 'es';
         const protocol = req.protocol;
         const host = req.get('host');
         const appUrl = `${protocol}://${host}`;
         
-        const emailContent = `
+        const emailContent =
+          lang === 'es'
+            ? `
+          <h2>Nueva Solicitud de Conexión de Paciente</h2>
+          <p>Un paciente ha solicitado conectarse contigo a través de la aplicación Tranquil Support.</p>
+
+          <p><strong>¿Te gustaría ver a este paciente?</strong></p>
+
+          <p>Al aceptar esta conexión, tendrás acceso a:</p>
+          <ul>
+            <li>Informe de situación médica</li>
+            <li>Datos de seguimiento de ansiedad</li>
+            <li>Historial de chat e intervenciones</li>
+            <li>Capacidad para programar citas</li>
+          </ul>
+
+          <h3>Aviso de Privacidad:</h3>
+          <p>Esta conexión requiere tu aceptación explícita. Los datos del paciente solo se mostrarán después de aceptar. Estamos trabajando para alcanzar el cumplimiento HIPAA; por favor evita compartir PHI hasta que los acuerdos estén en vigor.</p>
+
+          <h3>Próximos pasos:</h3>
+          <p>Inicia sesión en tu panel de terapeuta para revisar esta solicitud y tomar una decisión.</p>
+          <p><a href="${appUrl}/therapist-login?redirect=/therapist-dashboard" style="display: inline-block; background: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; margin: 10px 0;">Ver solicitud</a></p>
+
+          <hr>
+          <p><small>Este correo fue generado por la aplicación Tranquil Support. Estamos trabajando para alcanzar el cumplimiento HIPAA; evita compartir PHI hasta que los acuerdos estén en vigor.</small></p>
+        `
+            : `
           <h2>New Patient Connection Request</h2>
           <p>A patient has requested to connect with you through the Tranquil Support app.</p>
 
@@ -724,7 +751,7 @@ Key therapeutic themes addressed:
 
         await storage.createEmailNotification({
           toEmail: contactValue,
-          subject: `New Patient Connection Request - Tranquiloo`,
+          subject: lang === 'es' ? 'Nueva solicitud de conexión de paciente - Tranquiloo' : `New Patient Connection Request - Tranquiloo`,
           htmlContent: emailContent,
           emailType: 'connection_request',
           metadata: JSON.stringify({

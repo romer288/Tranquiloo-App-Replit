@@ -10,10 +10,12 @@ import { Download, Phone, MapPin, User, FileText, Calendar } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { AuthService } from '@/services/authService';
+import { useLanguage } from '@/context/LanguageContext';
 
 const ContactTherapist = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { language } = useLanguage();
   const [choice, setChoice] = useState<'yes' | 'no' | ''>('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -92,7 +94,8 @@ const ContactTherapist = () => {
           contactValue: email,
           shareReport: 'yes',
           notes: message || '',
-          patientEmail: currentUserEmail
+          patientEmail: currentUserEmail,
+          language
         })
       });
 

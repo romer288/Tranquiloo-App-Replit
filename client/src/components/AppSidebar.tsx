@@ -19,50 +19,52 @@ import {
 import { MessageCircle, Heart, BarChart3, Users, Stethoscope, Settings, HelpCircle, LayoutDashboard, LogOut, Share, History, Calendar } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/context/LanguageContext';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const navigationItems = [
   {
-    title: 'Dashboard',
+    title: 'nav.dashboard',
     url: '/dashboard',
     icon: LayoutDashboard,
   },
   {
-    title: 'Chat',
+    title: 'nav.chat',
     url: '/chat',
     icon: MessageCircle,
   },
   {
-    title: 'Chat History',
+    title: 'nav.chatHistory',
     url: '/chat-history',
     icon: History,
   },
   {
-    title: 'Analytics',
+    title: 'nav.analytics',
     url: '/analytics',
     icon: BarChart3,
   },
   {
-    title: 'My Appointments',
+    title: 'nav.appointments',
     url: '/appointments',
     icon: Calendar,
   },
   {
-    title: 'Track Outcomes/Treatment',
+    title: 'nav.treatment',
     url: '/treatment-resources',
     icon: Stethoscope,
   },
   {
-    title: 'Contact Therapist',
+    title: 'nav.contactTherapist',
     url: '/contact-therapist',
     icon: Users,
   },
   {
-    title: 'Settings',
+    title: 'nav.settings',
     url: '/settings',
     icon: Settings,
   },
   {
-    title: 'Help',
+    title: 'nav.help',
     url: '/help',
     icon: HelpCircle,
   },
@@ -72,6 +74,7 @@ export function AppSidebar() {
   const location = useLocation();
   const { signOut } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleLogout = async () => {
     await signOut();
@@ -113,7 +116,7 @@ export function AppSidebar() {
                 <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                   <Heart className="w-4 h-4 text-blue-600" />
                 </div>
-                <span className="font-semibold text-gray-900">Anxiety Companion</span>
+                <span className="font-semibold text-gray-900">{t('brand.title')}</span>
               </div>
             </div>
           </ContextMenuTrigger>
@@ -128,6 +131,10 @@ export function AppSidebar() {
             </ContextMenuItem>
           </ContextMenuContent>
         </ContextMenu>
+
+        <div className="px-4 py-3 border-b border-gray-200">
+          <LanguageSwitcher size="sm" />
+        </div>
         
         <SidebarGroup>
           <SidebarGroupContent>
@@ -150,7 +157,7 @@ export function AppSidebar() {
                     }}
                   >
                     <item.icon className="w-5 h-5" />
-                    <span className="font-medium">{item.title}</span>
+                    <span className="font-medium">{t(item.title, item.title)}</span>
                   </Link>
                 </SidebarMenuItem>
               ))}
