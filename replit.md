@@ -44,7 +44,7 @@ Authentication behavior: When therapists try to sign in without having an accoun
 - **Analytics Dashboard**: Comprehensive anxiety tracking with charts, trends, and goal progress.
 - **Goal Management**: SMART goal setting with progress tracking.
 - **Crisis Response**: AI-driven crisis intervention with immediate grounding techniques and condition-specific responses for PTSD, OCD, GAD, panic attacks, and hallucinations.
-- **Therapist Integration**: Gmail OAuth for therapist registration, license verification system for US/Canada therapists, HIPAA-compliant patient directory with explicit patient consent, and a comprehensive therapist dashboard.
+- **Therapist Integration**: Gmail OAuth for therapist registration, license verification system for US/Canada therapists, patient directory with explicit patient consent (HIPAA readiness in progress), and a comprehensive therapist dashboard.
 
 # External Dependencies
 

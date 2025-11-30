@@ -20,7 +20,7 @@ const WelcomeContent: React.FC = () => {
           <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
             <Shield className="w-4 h-4 text-green-600" />
           </div>
-          <span className="text-gray-700">HIPAA-compliant and completely private</span>
+          <span className="text-gray-700">Working toward HIPAA readiness; keep your data private</span>
         </div>
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">

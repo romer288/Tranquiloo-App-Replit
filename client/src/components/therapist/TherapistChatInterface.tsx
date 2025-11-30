@@ -34,7 +34,7 @@ const TherapistChatInterface: React.FC<TherapistChatInterfaceProps> = ({
     setMessages([
       {
         id: '1',
-        content: `Hello Doctor! I'm Vanessa, your AI assistant. I can help you with questions about your patients' treatment, progress, and therapeutic strategies—or general clinical questions you may have. All patient data is anonymized for HIPAA compliance. How can I assist you today?`,
+        content: `Hello Doctor! I'm Vanessa, your AI assistant. I can help you with questions about your patients' treatment, progress, and therapeutic strategies—or general clinical questions you may have. All patient data is anonymized; we are working toward HIPAA readiness, so please avoid sharing PHI.`,
         sender: 'vanessa',
         timestamp: new Date().toISOString()
       }
@@ -105,15 +105,15 @@ const TherapistChatInterface: React.FC<TherapistChatInterfaceProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* HIPAA Compliance Notice */}
+      {/* Privacy Notice */}
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <div className="flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-yellow-600" />
           <div>
-            <p className="font-medium text-yellow-800">HIPAA Compliance Notice</p>
+            <p className="font-medium text-yellow-800">Privacy Notice</p>
             <p className="text-sm text-yellow-700">
               All patient data is anonymized as "Patient X" when communicating with AI. 
-              No PHI is transmitted to external AI models.
+              We are working toward HIPAA readiness; please avoid sharing PHI or identifiable data.
             </p>
           </div>
         </div>

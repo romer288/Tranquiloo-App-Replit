@@ -29,23 +29,18 @@ const Privacy = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-blue-600" />
-                HIPAA Compliance & Privacy Protection
+                Privacy Protection (HIPAA readiness in progress)
               </CardTitle>
             </CardHeader>
             <CardContent className="prose max-w-none">
               <p className="text-gray-700 mb-4">
-                Tranquiloo is committed to protecting your privacy and maintaining the highest standards 
-                of data security. We are fully compliant with the Health Insurance Portability and 
-                Accountability Act (HIPAA) and all applicable state and federal privacy laws throughout 
-                the United States.
+                Tranquiloo is committed to protecting your privacy and maintaining strong data security. We are working toward HIPAA readiness, but we are not yet covered by BAAs with all vendors; please avoid sharing PHI until that is complete.
               </p>
               
               <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500 mb-6">
-                <h4 className="font-semibold text-blue-900 mb-2">🏥 HIPAA Compliance Statement</h4>
+                <h4 className="font-semibold text-blue-900 mb-2">🏥 HIPAA Readiness (In Progress)</h4>
                 <p className="text-blue-800">
-                  This application is designed and operated in full compliance with HIPAA regulations. 
-                  All Protected Health Information (PHI) is encrypted, secured, and handled according 
-                  to the strictest medical privacy standards.
+                  We are working toward HIPAA readiness and formal BAAs. Until then, do not share Protected Health Information (PHI). We still encrypt and protect data, but full HIPAA obligations will apply only after BAAs are in place.
                 </p>
               </div>
             </CardContent>
@@ -111,7 +106,7 @@ const Privacy = () => {
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-semibold text-gray-900 mb-2">🏢 Secure Infrastructure</h4>
                     <p className="text-sm text-gray-700">
-                      Our servers are hosted on HIPAA-compliant cloud infrastructure with regular security audits and monitoring.
+                      Our servers use industry-standard security; we are moving toward BAA-covered infrastructure for HIPAA workloads.
                     </p>
                   </div>
                   

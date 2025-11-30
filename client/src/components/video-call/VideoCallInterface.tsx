@@ -78,7 +78,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
     };
   }, []);
 
-  // Auto-start recording and transcription for HIPAA compliance
+  // Auto-start recording and transcription (working toward HIPAA readiness)
   useEffect(() => {
     if (isConnected && localStreamRef.current) {
       startRecording();
@@ -395,7 +395,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
       mediaRecorderRef.current.start(1000); // Collect data every second
       setIsRecording(true);
 
-      console.log('📹 Recording started for HIPAA compliance');
+      console.log('📹 Recording started (for quality; working toward HIPAA readiness)');
     } catch (error) {
       console.error('Failed to start recording:', error);
     }
@@ -694,7 +694,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
             </div>
             <div className="p-3 border-t border-gray-700 bg-gray-800">
               <p className="text-xs text-gray-400 text-center">
-                🔒 HIPAA Compliant - Automatically saved to appointment
+                🔒 Recording saved to appointment (HIPAA readiness in progress)
               </p>
             </div>
           </div>

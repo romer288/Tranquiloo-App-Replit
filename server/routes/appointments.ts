@@ -86,7 +86,7 @@ router.post('/schedule', async (req: Request, res: Response) => {
         ${notes ? `<p><strong>Notes:</strong> ${notes}</p>` : ''}
       </div>
 
-      <p><strong>This appointment will be automatically recorded and transcribed for HIPAA compliance.</strong></p>
+      <p><strong>This appointment may be recorded for quality; we are working toward HIPAA readiness. Please avoid sharing PHI until BAAs are in place.</strong></p>
 
       <p>You can join the call from your therapist dashboard when the appointment time arrives.</p>
     `;

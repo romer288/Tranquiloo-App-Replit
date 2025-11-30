@@ -129,7 +129,7 @@ const TherapistReports: React.FC<TherapistReportsProps> = ({
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h3 className="font-semibold text-blue-900">Patient Reports</h3>
         <p className="text-blue-700">Viewing reports for: {patientName}</p>
-        <p className="text-sm text-blue-600">All reports are anonymized for HIPAA compliance</p>
+        <p className="text-sm text-blue-600">Reports are anonymized; we are working toward HIPAA readiness</p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">

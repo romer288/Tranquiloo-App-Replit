@@ -106,11 +106,10 @@ const TherapistInfo = () => {
         <Card className="p-6 mb-8 border-green-200 bg-green-50">
           <div className="flex items-center gap-3 mb-4">
             <Shield className="w-6 h-6 text-green-600" />
-            <h3 className="text-lg font-semibold text-green-900">HIPAA Compliant & Secure</h3>
+            <h3 className="text-lg font-semibold text-green-900">Working Toward HIPAA Readiness</h3>
           </div>
           <p className="text-green-800 text-sm">
-            All patient data is encrypted and transmitted securely. Access is restricted to therapists 
-            explicitly connected by patients, ensuring full privacy compliance and data protection.
+            All patient data is encrypted and transmitted securely. We are working toward full HIPAA readiness and formal BAAs; please avoid sharing PHI until that is complete.
           </p>
         </Card>
 
@@ -138,7 +137,7 @@ const TherapistInfo = () => {
             </div>
             <div className="flex items-center gap-1">
               <Shield className="w-4 h-4" />
-              <span>HIPAA Secure</span>
+              <span>HIPAA readiness (in progress)</span>
             </div>
           </div>
         </Card>

@@ -7,10 +7,10 @@ class EmailService {
   constructor() {
     if (!process.env.RESEND_API_KEY) {
       console.warn('⚠️ RESEND_API_KEY not found - emails will be logged to console instead of sent');
-      console.log('To get Resend API key (HIPAA-compliant):');
+      console.log('To get Resend API key (production readiness):');
       console.log('1. Go to https://resend.com/signup');
-      console.log('2. Upgrade to Pro plan ($20/month)');
-      console.log('3. Request BAA (Business Associate Agreement) for HIPAA compliance');
+      console.log('2. Upgrade to Pro plan ($20/month) if needed');
+      console.log('3. If you require HIPAA BAAs, confirm availability with the vendor before sending PHI');
       console.log('4. Go to Settings → API Keys → Create API Key');
       console.log('5. Add RESEND_API_KEY to your .env file');
       this.resend = null;
@@ -26,7 +26,7 @@ class EmailService {
     }
 
     this.resend = new Resend(process.env.RESEND_API_KEY);
-    console.log('✅ Resend API key configured successfully (HIPAA-compliant)');
+    console.log('✅ Resend API key configured successfully (working toward HIPAA readiness)');
   }
 
   async sendEmail(email: {
@@ -71,7 +71,7 @@ class EmailService {
         return false;
       }
 
-      console.log('✅ Email sent successfully via Resend (HIPAA-compliant) to:', email.to);
+      console.log('✅ Email sent successfully via Resend to:', email.to);
       console.log('   Email ID:', data?.id);
       return true;
     } catch (error: any) {

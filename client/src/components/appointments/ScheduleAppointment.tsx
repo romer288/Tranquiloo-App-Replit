@@ -284,7 +284,7 @@ const ScheduleAppointment: React.FC<ScheduleAppointmentProps> = ({
             </p>
             <ul className="text-sm text-blue-700 space-y-1">
               <li>• Both you and your therapist need internet connection</li>
-              <li>• Sessions will be recorded for HIPAA compliance</li>
+              <li>• Sessions may be recorded for quality; we are working toward HIPAA readiness</li>
               <li>• You'll receive a reminder 1 hour before your appointment</li>
               <li>• Please join 5 minutes early to test your connection</li>
             </ul>
