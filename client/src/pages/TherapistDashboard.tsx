@@ -1362,15 +1362,6 @@ const TherapistDashboard: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Detailed Trigger Analysis Table */}
-                          <TriggerAnalysisTable
-                            triggerData={filteredTriggerData}
-                            totalEntries={filteredTriggerEntries}
-                            dateRange={triggerAnalysisRange}
-                            onDateRangeChange={setTriggerAnalysisRange}
-                            minDate={analysisBounds.min}
-                            maxDate={analysisBounds.max}
-                          />
                         </div>
                       )}
                     </div>

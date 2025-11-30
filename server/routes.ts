@@ -421,42 +421,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post('/api/therapist/chat', async (req, res) => {
-    try {
-      const { message, patientId, context } = req.body;
+    const { message, patientId, context } = req.body;
 
-      // Generate therapeutic AI response (anonymized)
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': process.env.ANTHROPIC_API_KEY || '',
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 300,
-          messages: [{
-            role: 'user',
-            content: `You are Vanessa, a therapeutic AI assistant helping a therapist with Patient X.
+    const openaiKey = process.env.OPENAI_API_KEY;
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+
+    const systemPrompt = `You are Vanessa, a therapeutic AI assistant helping a therapist with Patient X.
 
 Context: ${context}
 Patient Data: Anonymized as "Patient X" for HIPAA compliance.
 
 Therapist Question: ${message}
 
-Provide a concise, professional response with therapeutic insights and recommendations. Focus on evidence-based treatments and specific actionable strategies.`
-          }]
-        })
-      });
+Provide a concise, professional response with therapeutic insights and recommendations. Focus on evidence-based treatments and specific actionable strategies.`;
 
-      if (response.ok) {
-        const aiData = await response.json();
-        res.json({ reply: aiData.content[0].text });
-      } else {
-        res.json({ reply: "I apologize, but I'm having trouble accessing my therapeutic knowledge base right now. Please try again in a moment." });
+    try {
+      if (openaiKey) {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${openaiKey}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              { role: 'system', content: 'You are a concise, evidence-based clinical assistant for licensed therapists.' },
+              { role: 'user', content: systemPrompt }
+            ],
+            max_tokens: 500,
+            temperature: 0.4
+          })
+        });
+
+        if (response.ok) {
+          const aiData = await response.json();
+          return res.json({ reply: aiData.choices[0]?.message?.content ?? '' });
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Therapist chat OpenAI error:', errorData);
+        }
       }
+
+      if (anthropicKey) {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': anthropicKey,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: 'claude-3-5-sonnet-20241022',
+            max_tokens: 300,
+            messages: [{
+              role: 'user',
+              content: systemPrompt
+            }]
+          })
+        });
+
+        if (response.ok) {
+          const aiData = await response.json();
+          return res.json({ reply: aiData.content?.[0]?.text ?? '' });
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Therapist chat Anthropic error:', errorData);
+        }
+      }
+
+      return res.status(503).json({ reply: "AI service unavailable for therapist chat right now. Please try again shortly." });
     } catch (error) {
-      res.json({ reply: "I'm here to help with therapeutic guidance. Please rephrase your question and I'll do my best to assist." });
+      console.error('Therapist chat error:', error);
+      return res.status(500).json({ reply: "I'm here to help with therapeutic guidance. Please rephrase your question and I'll do my best to assist." });
     }
   });
 

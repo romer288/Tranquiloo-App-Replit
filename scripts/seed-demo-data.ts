@@ -219,7 +219,14 @@ async function main() {
         level: 5,
         confidence: '0.8',
       },
+      {
+        triggers: 'Late-night rumination, catastrophic thinking, sleep onset',
+        strategies: 'Scheduled worry time, thought defusion, stimulus control',
+        level: 6,
+        confidence: '0.76',
+      },
     ];
+    const offsets = [5, 18, 42, 75];
     return themes.map((t, n) => ({
       id: randomUUID(),
       user_id: userId,
@@ -230,7 +237,7 @@ async function main() {
       coping_strategies: t.strategies,
       personalized_response: `Noted pattern: ${p.anxietyFocus}. Prioritize short nervous-system resets, then exposure with safety behaviors reduced by 20%.`,
       confidence_score: t.confidence,
-      created_at: daysAgo(10 - n * 2 - idx),
+      created_at: daysAgo(offsets[n] ?? 10 + n),
     }));
   });
 
@@ -254,8 +261,8 @@ async function main() {
         frequency: 'daily',
         target_value: 7,
         unit: 'sessions/week',
-        start_date: '2025-02-01',
-        end_date: '2025-03-01',
+        start_date: '2024-12-15',
+        end_date: '2025-04-15',
         source: 'seed-script',
       },
       {
@@ -266,29 +273,29 @@ async function main() {
         frequency: '3x/week',
         target_value: 3,
         unit: 'exposures/week',
-        start_date: '2025-02-01',
-        end_date: '2025-03-15',
+        start_date: '2025-01-05',
+        end_date: '2025-04-30',
         source: 'seed-script',
       },
     ];
 
-    goalsForUser.forEach((g, idx) => {
+    goalsForUser.forEach((g, goalIdx) => {
       userGoals.push({
         ...g,
         user_id: userId,
         is_active: true,
-        created_at: now - (idx + i) * 1000,
-        updated_at: now - (idx + i) * 1000,
+        created_at: now - (goalIdx + i) * 1000,
+        updated_at: now - (goalIdx + i) * 1000,
       });
 
       goalProgressRows.push({
         id: randomUUID(),
         user_id: userId,
         goal_id: g.id,
-        score: 2 + idx + i,
+        score: 2 + goalIdx + i,
         notes: 'Logged via seed data',
-        recorded_at: new Date(daysAgo(5 + idx)).toISOString(),
-        created_at: daysAgo(5 + idx),
+        recorded_at: new Date(daysAgo(12 + goalIdx * 4 + i)).toISOString(),
+        created_at: daysAgo(12 + goalIdx * 4 + i),
       });
     });
   });
@@ -304,19 +311,24 @@ async function main() {
   if (progressError) throw progressError;
 
   // Intervention summaries
-  const interventionSummaries = patients.map((p, idx) => {
+  const interventionSummaries = patients.flatMap((p, idx) => {
     const userId = profileByEmail[p.email].id;
-    return {
+    const weeks = [
+      { start: '2024-12-09', end: '2024-12-16', type: 'cbt' },
+      { start: '2025-01-13', end: '2025-01-20', type: 'act' },
+      { start: '2025-02-10', end: '2025-02-17', type: idx % 2 === 0 ? 'cbt' : 'act' },
+    ];
+    return weeks.map((w, n) => ({
       id: randomUUID(),
       user_id: userId,
-      week_start: '2025-02-03',
-      week_end: '2025-02-10',
-      intervention_type: idx % 2 === 0 ? 'cbt' : 'act',
-      conversation_count: 4 + idx,
+      week_start: w.start,
+      week_end: w.end,
+      intervention_type: w.type,
+      conversation_count: 3 + idx + n,
       key_points: `Exposure hierarchy, grounding, values-driven actions. Focus: ${p.anxietyFocus}.`,
       created_at: now,
       updated_at: now,
-    };
+    }));
   });
 
   const { error: summariesError } = await supabase
