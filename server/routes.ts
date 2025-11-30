@@ -2028,11 +2028,11 @@ Key therapeutic themes addressed:
     const returnUrl = req.query.returnUrl || '/dashboard';
     
     // Create state parameter to pass role information
-    const state = encodeURIComponent(JSON.stringify({
+    const state = JSON.stringify({
       role: role,
       returnUrl: returnUrl,
       isSignUp: true
-    }));
+    });
     
     // Build OAuth URL
     const params = new URLSearchParams({
