@@ -359,8 +359,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Azure Speech-to-Text configuration endpoint
   app.get('/api/azure-speech-config', async (req, res) => {
     try {
-      const azureSpeechKey = process.env.AZURE_SPEECH_KEY;
-      const azureSpeechRegion = process.env.AZURE_SPEECH_REGION || 'eastus';
+      const azureSpeechKey =
+        process.env.AZURE_SPEECH_KEY ||
+        process.env.AZURE_SPEECH_TTS_KEY ||
+        process.env.VITE_AZURE_SPEECH_KEY ||
+        process.env.AZURE_TTS_KEY;
+      const azureSpeechRegion =
+        process.env.AZURE_SPEECH_REGION ||
+        process.env.VITE_AZURE_SPEECH_REGION ||
+        'eastus';
+
+      console.log('[AzureSpeech] key present:', Boolean(azureSpeechKey), 'region:', azureSpeechRegion);
 
       if (!azureSpeechKey) {
         return res.status(503).json({
