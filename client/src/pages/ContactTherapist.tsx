@@ -67,7 +67,10 @@ const ContactTherapist = () => {
 
       const therapistDisplayName = email.split('@')[0] || 'Therapist';
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
-      const apiUrl = apiBaseUrl ? `${apiBaseUrl}/api/therapist-connections` : '/api/therapist-connections';
+      const shouldUseBase =
+        apiBaseUrl &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      const apiUrl = shouldUseBase ? `${apiBaseUrl}/api/therapist-connections` : '/api/therapist-connections';
 
       console.log('ContactTherapist fetch', {
         apiBaseUrl,

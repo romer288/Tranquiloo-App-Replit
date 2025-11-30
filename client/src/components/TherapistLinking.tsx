@@ -88,7 +88,10 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
 
       // Build API URL - if no base URL, use relative path for same-origin requests
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
-      const apiUrl = apiBaseUrl ? `${apiBaseUrl}/api/therapist-connections` : '/api/therapist-connections';
+      const shouldUseBase =
+        apiBaseUrl &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      const apiUrl = shouldUseBase ? `${apiBaseUrl}/api/therapist-connections` : '/api/therapist-connections';
       
       console.log('🌐 API URL being used:', apiUrl);
       console.log('📦 Request payload:', {
