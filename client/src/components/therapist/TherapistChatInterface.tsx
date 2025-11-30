@@ -119,7 +119,7 @@ const TherapistChatInterface: React.FC<TherapistChatInterfaceProps> = ({
         </div>
       </div>
 
-      <Card className="h-[600px] flex flex-col">
+      <Card className="min-h-[600px] flex flex-col">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5" />
@@ -211,7 +211,7 @@ const TherapistChatInterface: React.FC<TherapistChatInterfaceProps> = ({
       </Card>
 
       {/* Quick Actions */}
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-3 gap-4 mt-4">
         <Button
           variant="outline"
           onClick={() => setInputMessage("What therapeutic interventions would you recommend for Patient X based on their current anxiety patterns?")}
