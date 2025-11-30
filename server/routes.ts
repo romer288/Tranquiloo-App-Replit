@@ -2134,9 +2134,10 @@ Key therapeutic themes addressed:
           return res.redirect(`${origin}/login?error=verification_required&email=${encodeURIComponent(googleUser.email)}`);
         }
 
-        // Enforce original role; do not convert
+        // Enforce stored role; if mismatch, prefer profile role but do not error
+        const normalizedRole = existingProfile.role || userState.role || 'patient';
         if (userState.role && existingProfile.role && existingProfile.role !== userState.role) {
-          return res.redirect(`${origin}/login?error=role_mismatch&expected=${existingProfile.role}`);
+          console.warn(`[OAuth] Role mismatch: state=${userState.role} profile=${existingProfile.role}. Using profile role.`);
         }
 
         // User exists - create Supabase session using admin API
@@ -2156,17 +2157,17 @@ Key therapeutic themes addressed:
           email: existingProfile.email,
           name: googleUser.name,
           picture: googleUser.picture,
-          role: existingProfile.role,
+          role: normalizedRole,
           emailVerified: existingProfile.emailVerified ?? true,
           authMethod: 'google'
         };
 
         // Check if therapist needs license verification
-        if (existingProfile.role === 'therapist' && !existingProfile.licenseNumber) {
+        if (normalizedRole === 'therapist' && !existingProfile.licenseNumber) {
           return res.redirect(`${origin}/therapist-license-verification?email=${encodeURIComponent(existingProfile.email || '')}`);
         }
 
-        const redirectPath = existingProfile.role === 'therapist' ? '/therapist-dashboard' : '/dashboard';
+        const redirectPath = normalizedRole === 'therapist' ? '/therapist-dashboard' : '/dashboard';
         const fullRedirectUrl = `${origin}${redirectPath}`;
 
         // Store user data with Supabase session and redirect
