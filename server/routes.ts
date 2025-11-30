@@ -2163,7 +2163,7 @@ Key therapeutic themes addressed:
 
         // Check if therapist needs license verification
         if (existingProfile.role === 'therapist' && !existingProfile.licenseNumber) {
-          return res.redirect(`${origin}/therapist-license-verification`);
+          return res.redirect(`${origin}/therapist-license-verification?email=${encodeURIComponent(existingProfile.email || '')}`);
         }
 
         const redirectPath = existingProfile.role === 'therapist' ? '/therapist-dashboard' : '/dashboard';
