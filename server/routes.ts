@@ -3655,7 +3655,7 @@ ${recentHistory}`;
       console.log(`🎤 Azure TTS Request: ${text.substring(0, 50)}... (${resolvedVoice})`);
 
       // Language-specific speech settings
-      const speechRate = language.startsWith('es') ? '0.9' : '1.1'; // Slower for Spanish
+      const speechRate = language.startsWith('es') ? '1.0' : '1.15'; // Slightly faster pacing
       const pitch = language.startsWith('es') ? '+5%' : '+10%'; // Slightly lower pitch for Spanish
 
       const sanitizedText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
