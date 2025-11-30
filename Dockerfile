@@ -9,6 +9,8 @@ RUN npm ci
 # Copy source and build
 COPY . .
 RUN npm run build
+# Build Cloud Run entrypoint that starts the server
+RUN npx esbuild server/serve.ts --platform=node --bundle --packages=external --format=esm --outfile=dist/serve.js
 
 # Runtime stage
 FROM node:20-slim
@@ -25,4 +27,4 @@ RUN npm ci --omit=dev
 EXPOSE 8080
 
 # Start the server
-CMD ["node", "dist/prod.js"]
+CMD ["node", "dist/serve.js"]
