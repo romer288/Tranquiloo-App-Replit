@@ -692,11 +692,8 @@ Key therapeutic themes addressed:
         notes
       });
 
-      // Check if connection already exists
-      const existingConnections = await storage.getPatientTherapistConnections(patient.id);
-      const existingConnection = existingConnections.find(
-        conn => conn.therapistEmail === contactValue
-      );
+      // Check if connection already exists (any status)
+      const existingConnection = await storage.getTherapistConnectionByPatientEmail(patient.id, contactValue);
 
       if (existingConnection) {
         console.log('⚠️ Connection already exists:', existingConnection.id);

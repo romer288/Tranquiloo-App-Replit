@@ -576,6 +576,20 @@ export class DatabaseStorage implements IStorage {
       ));
   }
 
+  // Fetch any connection between a patient and therapist regardless of acceptance status
+  async getTherapistConnectionByPatientEmail(patientId: string, therapistEmail: string): Promise<TherapistPatientConnection | undefined> {
+    const result = await db
+      .select()
+      .from(therapistPatientConnections)
+      .where(and(
+        eq(therapistPatientConnections.patientId, patientId),
+        eq(therapistPatientConnections.therapistEmail, therapistEmail)
+      ))
+      .limit(1);
+
+    return result[0];
+  }
+
   async acceptTherapistConnection(connectionId: string, therapistEmail: string): Promise<TherapistPatientConnection | undefined> {
     await db
       .update(therapistPatientConnections)

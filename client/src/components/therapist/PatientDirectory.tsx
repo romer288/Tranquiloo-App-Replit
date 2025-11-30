@@ -58,8 +58,15 @@ const PatientDirectory: React.FC<PatientDirectoryProps> = ({ therapistEmail }) =
       const response = await fetch(`/api/therapist/${encodeURIComponent(therapistEmail)}/patients`);
       if (response.ok) {
         const data = await response.json();
-        setPatients(data);
-        setFilteredPatients(data);
+        // Deduplicate by patientId (keep first)
+        const seen = new Set<string>();
+        const deduped = data.filter((p: Patient) => {
+          if (seen.has(p.patientId)) return false;
+          seen.add(p.patientId);
+          return true;
+        });
+        setPatients(deduped);
+        setFilteredPatients(deduped);
       }
     } catch (error) {
       console.error('Failed to load patients:', error);
