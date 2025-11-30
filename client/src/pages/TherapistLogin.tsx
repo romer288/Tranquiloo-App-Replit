@@ -155,8 +155,8 @@ const TherapistLogin: React.FC = () => {
                 <div className="flex items-start space-x-2">
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5" />
                   <div className="text-sm">
-                    <p className="font-medium text-emerald-800">Immediate Access</p>
-                    <p className="text-emerald-700">You can start using the therapist dashboard right away while we verify your license in the background</p>
+                    <p className="font-medium text-emerald-800">{t('therapist.immediateAccess')}</p>
+                    <p className="text-emerald-700">{t('therapist.immediateAccess.desc')}</p>
                   </div>
                 </div>
               </div>
@@ -183,7 +183,7 @@ const TherapistLogin: React.FC = () => {
                 <Separator className="w-full" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Or continue with email</span>
+                <span className="bg-background px-2 text-muted-foreground">{t('auth.orEmail')}</span>
               </div>
             </div>
 
@@ -192,14 +192,14 @@ const TherapistLogin: React.FC = () => {
                 <>
                   <div className="grid grid-cols-2 gap-2">
                     <Input
-                      placeholder="First name"
+                      placeholder={t('auth.firstName', 'First name')}
                       value={formData.firstName}
                       onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                       required
                       data-testid="input-therapist-firstname"
                     />
                     <Input
-                      placeholder="Last name"
+                      placeholder={t('auth.lastName', 'Last name')}
                       value={formData.lastName}
                       onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                       required
@@ -208,7 +208,7 @@ const TherapistLogin: React.FC = () => {
                   </div>
                   
                   <Input
-                    placeholder="License number"
+                    placeholder={t('therapist.licenseNumber')}
                     value={formData.licenseNumber}
                     onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
                     required
@@ -217,14 +217,14 @@ const TherapistLogin: React.FC = () => {
                   
                   <div className="grid grid-cols-2 gap-2">
                     <Input
-                      placeholder="Specialty"
+                      placeholder={t('therapist.specialty')}
                       value={formData.specialty}
                       onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
                       required
                       data-testid="input-specialty"
                     />
                     <Input
-                      placeholder="Years experience"
+                      placeholder={t('therapist.yearsExperience')}
                       type="number"
                       value={formData.yearsExperience}
                       onChange={(e) => setFormData({ ...formData, yearsExperience: e.target.value })}
@@ -237,7 +237,7 @@ const TherapistLogin: React.FC = () => {
               
               <Input
                 type="email"
-                placeholder="Professional email address"
+                placeholder={t('auth.email')}
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
@@ -246,7 +246,7 @@ const TherapistLogin: React.FC = () => {
               
               <Input
                 type="password"
-                placeholder="Password"
+                placeholder={t('auth.password')}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
@@ -256,7 +256,7 @@ const TherapistLogin: React.FC = () => {
               {isSignUp && (
                 <Input
                   type="password"
-                  placeholder="Confirm password"
+                  placeholder={t('auth.confirmPassword')}
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   required
@@ -270,7 +270,7 @@ const TherapistLogin: React.FC = () => {
                 disabled={isLoading}
                 data-testid="button-therapist-email-auth"
               >
-                {isLoading ? 'Processing...' : (isSignUp ? 'Create Professional Account' : 'Sign In')}
+              {isLoading ? `${t('auth.signIn')}...` : (isSignUp ? t('auth.createAccount') : t('auth.signIn'))}
               </Button>
             </form>
             
