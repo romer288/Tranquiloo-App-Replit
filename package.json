@@ -10,7 +10,7 @@
     "start": "cross-env NODE_ENV=production node dist/prod.js",
     "check": "tsc",
     "db:push": "drizzle-kit push",
-    "populate-test-data": "tsx scripts/populate-test-data.ts",
+    "populate-test-data": "tsx scripts/seed-demo-data.ts",
     "fetch-research": "tsx -r dotenv/config scripts/fetch-research-papers.ts",
     "seed-research": "tsx -r dotenv/config scripts/seed-research-quick.ts",
     "import-papers": "tsx -r dotenv/config scripts/import-from-pmid.ts",
