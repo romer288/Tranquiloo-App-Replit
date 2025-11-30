@@ -692,42 +692,6 @@ Key therapeutic themes addressed:
         notes
       });
 
-      // Check if connection already exists (any status)
-      const existingConnection = await storage.getTherapistConnectionByPatientEmail(patient.id, contactValue);
-
-      if (existingConnection) {
-        // If already accepted and active, treat as existing
-        if (existingConnection.therapistAccepted && existingConnection.isActive) {
-          console.log('⚠️ Connection already exists (active):', existingConnection.id);
-          return res.json({
-            success: true,
-            message: 'Connection already exists',
-            connection: existingConnection,
-            alreadyExists: true
-          });
-        }
-
-        // If previously declined/inactive, reopen the request and resend email
-        console.log('♻️ Reopening inactive/pending connection:', existingConnection.id);
-        await storage.updateTherapistPatientConnection(existingConnection.id, {
-          therapistAccepted: false,
-          isActive: true,
-          connectionRequestDate: Date.now(),
-          connectionAcceptedDate: null
-        } as any);
-
-        await sendConnectionEmail(existingConnection.id);
-
-        const reopened = await storage.getTherapistPatientConnection(existingConnection.id);
-
-        return res.json({
-          success: true,
-          message: 'Connection request reopened',
-          connection: reopened,
-          reopened: true
-        });
-      }
-
       const sendConnectionEmail = async (connectionId: string) => {
         const protocol = req.protocol;
         const host = req.get('host');
@@ -778,9 +742,45 @@ Key therapeutic themes addressed:
           console.error('⚠️ Failed to process email queue:', err);
         }
 
-      console.log(`📧 Connection email notification created for ${therapistName} at ${contactValue}`);
+        console.log(`📧 Connection email notification created for ${therapistName} at ${contactValue}`);
         console.log(`📊 Share report: ${shareReport === 'yes' ? 'Yes' : 'No'}`);
       };
+
+      // Check if connection already exists (any status)
+      const existingConnection = await storage.getTherapistConnectionByPatientEmail(patient.id, contactValue);
+
+      if (existingConnection) {
+        // If already accepted and active, treat as existing
+        if (existingConnection.therapistAccepted && existingConnection.isActive) {
+          console.log('⚠️ Connection already exists (active):', existingConnection.id);
+          return res.json({
+            success: true,
+            message: 'Connection already exists',
+            connection: existingConnection,
+            alreadyExists: true
+          });
+        }
+
+        // If previously declined/inactive, reopen the request and resend email
+        console.log('♻️ Reopening inactive/pending connection:', existingConnection.id);
+        await storage.updateTherapistPatientConnection(existingConnection.id, {
+          therapistAccepted: false,
+          isActive: true,
+          connectionRequestDate: Date.now(),
+          connectionAcceptedDate: null
+        } as any);
+
+        await sendConnectionEmail(existingConnection.id);
+
+        const reopened = await storage.getTherapistPatientConnection(existingConnection.id);
+
+        return res.json({
+          success: true,
+          message: 'Connection request reopened',
+          connection: reopened,
+          reopened: true
+        });
+      }
 
       // Create connection with explicit consent (HIPAA readiness in progress)
       const connection = await storage.createTherapistPatientConnection({
