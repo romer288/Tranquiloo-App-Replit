@@ -2162,12 +2162,11 @@ Key therapeutic themes addressed:
           authMethod: 'google'
         };
 
-        // Check if therapist needs license verification
-        if (normalizedRole === 'therapist' && !existingProfile.licenseNumber) {
-          return res.redirect(`${origin}/therapist-license-verification?email=${encodeURIComponent(existingProfile.email || '')}`);
-        }
-
-        const redirectPath = normalizedRole === 'therapist' ? '/therapist-dashboard' : '/dashboard';
+        // Determine where to send the user, but always write auth data first
+        const licenseRedirectPath = normalizedRole === 'therapist' && !existingProfile.licenseNumber
+          ? `/therapist-license-verification?email=${encodeURIComponent(existingProfile.email || '')}`
+          : null;
+        const redirectPath = licenseRedirectPath || (normalizedRole === 'therapist' ? '/therapist-dashboard' : '/dashboard');
         const fullRedirectUrl = `${origin}${redirectPath}`;
 
         // Store user data with Supabase session and redirect
