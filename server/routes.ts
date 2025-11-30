@@ -2226,12 +2226,54 @@ Key therapeutic themes addressed:
         ...({ id: authData.user.id } as any), // Use Supabase Auth user ID
       });
 
-      // Redirect to appropriate signup success page
-      if (userState.role === 'therapist') {
-        res.redirect(`${origin}/therapist-login?signup_success=true&email=${encodeURIComponent(googleUser.email)}`);
-      } else {
-        res.redirect(`${origin}/login?signup_success=true&email=${encodeURIComponent(googleUser.email)}`);
+      // Create a Supabase session for the new user so we can store tokens client-side
+      const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
+        type: 'magiclink',
+        email: newProfile.email!,
+      });
+
+      if (sessionError || !sessionData) {
+        console.error('Failed to generate Supabase session for new OAuth user:', sessionError);
+        return res.redirect('/login?error=session_failed');
       }
+
+      const userData = {
+        id: newProfile.id,
+        email: newProfile.email,
+        name: googleUser.name,
+        picture: googleUser.picture,
+        role: newProfile.role,
+        emailVerified: true,
+        patientCode: newProfile.patientCode,
+        authMethod: 'google'
+      };
+
+      const redirectPath = newProfile.role === 'therapist' ? '/therapist-license-verification' : '/dashboard';
+      const fullRedirectUrl = `${origin}${redirectPath}?email=${encodeURIComponent(newProfile.email!)}`;
+
+      // Store user data with Supabase session and redirect
+      const userDataScript = `
+        <script>
+          localStorage.setItem('user', ${JSON.stringify(JSON.stringify(userData))});
+          localStorage.setItem('auth_user', ${JSON.stringify(JSON.stringify(userData))});
+          // Store the Supabase session data
+          localStorage.setItem('supabase.auth.token', ${JSON.stringify(JSON.stringify({
+            currentSession: sessionData,
+            expiresAt: Date.now() + 3600000
+          }))});
+          window.location.href = '${fullRedirectUrl}';
+        </script>
+      `;
+
+      return res.send(`
+        <html>
+          <head><title>Authentication Success</title></head>
+          <body>
+            <p>Authentication successful! Redirecting...</p>
+            ${userDataScript}
+          </body>
+        </html>
+      `);
       
     } catch (error) {
       console.error('OAuth callback error:', error);
