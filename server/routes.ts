@@ -863,33 +863,40 @@ Key therapeutic themes addressed:
         return res.status(404).json({ error: 'Connection not found' });
       }
 
-      // Update connection status
-      if (action === 'accept') {
-        await storage.updateTherapistPatientConnection(connectionId, {
-          therapistAccepted: true,
-          isActive: true,
-          connectionAcceptedDate: Date.now()
-        });
+        // Update connection status
+        if (action === 'accept') {
+          await storage.updateTherapistPatientConnection(connectionId, {
+            therapistAccepted: true,
+            isActive: true,
+            connectionAcceptedDate: Date.now()
+          });
 
-        // Mark notification as processed
-        await storage.updateEmailNotificationStatus(connectionId, 'processed');
+          // Mark notification as processed
+          await storage.updateEmailNotificationStatus(connectionId, 'processed');
 
-        // Get patient details to reveal after acceptance
-        const patient = await storage.getProfile(connection.patientId);
-        const patientDetails = patient as Record<string, any> | undefined;
+          // Get patient details to reveal after acceptance
+          const patient = await storage.getProfile(connection.patientId);
+          const patientDetails = patient as Record<string, any> | undefined;
+          let patientCode = patient?.patientCode;
 
-        res.json({
-          success: true,
-          message: 'Patient connection accepted',
-          connection: { ...connection, therapistAccepted: true, isActive: true },
-          patientDetails: {
-            email: patient?.email,
-            patientCode: patient?.patientCode,
-            firstName: patient?.firstName,
-            lastName: patient?.lastName,
-            dateOfBirth: patientDetails?.dateOfBirth ?? null,
-            gender: patientDetails?.gender ?? null,
-            phoneNumber: patientDetails?.phoneNumber ?? null,
+          // Ensure patient has a code; generate if missing
+          if (patient && !patientCode) {
+            patientCode = 'PT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 4).toUpperCase();
+            await storage.updateProfile(patient.id, { patientCode });
+          }
+
+          res.json({
+            success: true,
+            message: 'Patient connection accepted',
+            connection: { ...connection, therapistAccepted: true, isActive: true },
+            patientDetails: {
+              email: patient?.email,
+              patientCode,
+              firstName: patient?.firstName,
+              lastName: patient?.lastName,
+              dateOfBirth: patientDetails?.dateOfBirth ?? null,
+              gender: patientDetails?.gender ?? null,
+              phoneNumber: patientDetails?.phoneNumber ?? null,
             shareReport: connection.shareAnalytics || connection.shareReports
           }
         });

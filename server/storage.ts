@@ -645,10 +645,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateEmailNotificationStatus(connectionId: string, status: string): Promise<void> {
-    // Update all notifications for this connection
+    // Update all notifications for this connection (Postgres JSON syntax)
     await db.update(emailQueue)
       .set({ status })
-      .where(sql`json_extract(metadata, '$.connectionId') = ${connectionId}`);
+      .where(sql`(metadata::json ->> 'connectionId') = ${connectionId}`);
   }
 
   // Email verification methods
