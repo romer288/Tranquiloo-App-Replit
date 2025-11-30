@@ -696,12 +696,33 @@ Key therapeutic themes addressed:
       const existingConnection = await storage.getTherapistConnectionByPatientEmail(patient.id, contactValue);
 
       if (existingConnection) {
-        console.log('⚠️ Connection already exists:', existingConnection.id);
+        // If already accepted and active, treat as existing
+        if (existingConnection.therapistAccepted && existingConnection.isActive) {
+          console.log('⚠️ Connection already exists (active):', existingConnection.id);
+          return res.json({
+            success: true,
+            message: 'Connection already exists',
+            connection: existingConnection,
+            alreadyExists: true
+          });
+        }
+
+        // If previously declined/inactive, reopen the request
+        console.log('♻️ Reopening inactive/pending connection:', existingConnection.id);
+        await storage.updateTherapistPatientConnection(existingConnection.id, {
+          therapistAccepted: false,
+          isActive: true,
+          connectionRequestDate: Date.now(),
+          connectionAcceptedDate: null
+        } as any);
+
+        const reopened = await storage.getTherapistPatientConnection(existingConnection.id);
+
         return res.json({
           success: true,
-          message: 'Connection already exists',
-          connection: existingConnection,
-          alreadyExists: true
+          message: 'Connection request reopened',
+          connection: reopened,
+          reopened: true
         });
       }
 
