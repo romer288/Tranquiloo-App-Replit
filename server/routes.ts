@@ -176,6 +176,16 @@ const extractAndParseJson = (provider: string, text: string): any | null => {
   return parseJsonWithRepair(provider, jsonMatch[0]);
 };
 
+const getGoogleClientId = (): string | undefined => {
+  const raw = (process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_OAUTH_CLIENT_ID) as string | undefined;
+  return raw?.trim();
+};
+
+const getGoogleClientSecret = (): string | undefined => {
+  const raw = process.env.GOOGLE_OAUTH_CLIENT_SECRET as string | undefined;
+  return raw?.trim();
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log('Registering authentication routes...');
 
@@ -2051,7 +2061,7 @@ Key therapeutic themes addressed:
       }
     });
     // Use the correct Web Client ID - prefer VITE_GOOGLE_CLIENT_ID as it has the correct value
-    const clientId = (process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_OAUTH_CLIENT_ID) as string;
+    const clientId = getGoogleClientId();
     console.log('OAuth initiation - Using Client ID:', clientId ? clientId.substring(0, 20) + '...' : 'NOT SET');
     
     // Get correct protocol/host from proxy headers or Replit environment
@@ -2116,8 +2126,8 @@ Key therapeutic themes addressed:
       }
       
       // Exchange code for tokens
-      const clientId = (process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_OAUTH_CLIENT_ID) as string;
-      const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET as string;
+      const clientId = getGoogleClientId();
+      const clientSecret = getGoogleClientSecret();
       console.log('OAuth callback - Using Client ID:', clientId ? clientId.substring(0, 20) + '...' : 'NOT SET');
       
       // Get correct protocol/host from proxy headers or Replit environment
