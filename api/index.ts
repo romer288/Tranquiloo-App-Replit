@@ -47,10 +47,15 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       // - everything else stays under /api/*
       const normalize = (raw: string) => {
         const cleaned = raw.startsWith('/') ? raw.substring(1) : raw;
-        const first = cleaned.split('/')[0];
         const isAsset = /\.[a-zA-Z0-9]+$/.test(cleaned) &&
           cleaned.match(/\.(js|css|png|jpe?g|gif|svg|webp|ico|json|map|txt|woff2?)$/i);
-        if (isAsset || first === 'auth') {
+
+        // Keep OAuth browser flows under /auth/*, but send everything else (including /auth/signin) to /api/*
+        const isOAuthFlow =
+          cleaned.startsWith('auth/google') ||
+          cleaned.startsWith('auth/facebook');
+
+        if (isAsset || isOAuthFlow) {
           return '/' + cleaned;
         }
         return '/api/' + cleaned;
