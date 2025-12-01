@@ -178,23 +178,23 @@ const TreatmentResources = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
+    <div className="min-h-screen bg-gray-50 pb-16 md:pb-0">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-8 py-6">
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-6">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="min-w-0">
               <h1 className="text-xl font-semibold text-gray-900">Track Outcomes & Treatment</h1>
               <p className="text-sm text-gray-600 mt-1">
                 Monitor your progress, track goals, and access evidence-based treatments
               </p>
             </div>
-            <div className="flex items-center gap-4">
-              <Button onClick={handleDownloadSummary} variant="outline" size="sm" disabled={allAnalyses.length === 0}>
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              <Button onClick={handleDownloadSummary} variant="outline" size="sm" disabled={allAnalyses.length === 0} className="w-full sm:w-auto">
                 <Download className="w-4 h-4 mr-2" />
                 Download Conversation Summary
               </Button>
-              <Button onClick={connectToTherapist} className="bg-blue-600 hover:bg-blue-700">
+              <Button onClick={connectToTherapist} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
                 <Users className="w-4 h-4 mr-2" />
                 Connect with Therapist
               </Button>
@@ -203,7 +203,7 @@ const TreatmentResources = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Treatment Status */}
         <Card className="p-6 mb-8">
           <div className="flex items-center gap-4">
