@@ -198,7 +198,7 @@ const AnalyticsContent = () => {
           onDownloadSummary={handleDownloadSummary}
         />
 
-        <div className="max-w-screen-lg mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-screen-md mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
             <span className="ml-2 text-gray-600">
@@ -221,7 +221,7 @@ const AnalyticsContent = () => {
           onDownloadSummary={handleDownloadSummary}
         />
 
-        <div className="max-w-screen-lg mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-screen-md mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center py-12 px-4 text-center">
             <div className="text-center">
               <p className="text-gray-600 text-lg mb-4">
@@ -247,7 +247,7 @@ const AnalyticsContent = () => {
           onShareWithTherapist={() => shareWithTherapist("error")}
           onDownloadSummary={handleDownloadSummary}
         />
-        <div className="max-w-screen-lg mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-screen-md mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12">
             <p className="text-red-600">Error loading data: {error}</p>
           </div>
@@ -265,7 +265,7 @@ const AnalyticsContent = () => {
         onDownloadSummary={handleDownloadSummary}
       />
 
-      <div className="max-w-screen-lg mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+      <div className="max-w-screen-md mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Anxiety Analytics Tracker */}
         <AnxietyAnalyticsTracker analyses={allAnalyses} />
 

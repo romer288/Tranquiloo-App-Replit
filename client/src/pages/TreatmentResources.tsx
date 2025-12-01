@@ -183,7 +183,7 @@ const TreatmentResources = () => {
     <div className="min-h-screen bg-gray-50 pb-16 md:pb-0 overflow-x-hidden">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-6">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-screen-md mx-auto w-full">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="min-w-0">
               <h1 className="text-xl font-semibold text-gray-900">{t('treatmentResources.title')}</h1>
@@ -205,9 +205,9 @@ const TreatmentResources = () => {
         </div>
       </div>
 
-      <div className="max-w-screen-lg mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <div className="max-w-screen-md mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Treatment Status */}
-        <Card className="p-6 mb-8">
+        <Card className="p-6 mb-8 w-full overflow-hidden">
           <div className="flex items-center gap-4">
             {hasActiveTreatment ? (
               <>
@@ -224,7 +224,7 @@ const TreatmentResources = () => {
                   <h3 className="text-lg font-semibold text-gray-900">{t('treatmentResources.noActiveTitle')}</h3>
                   <p className="text-gray-600">{t('treatmentResources.noActiveDesc')}</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <Button variant="outline" onClick={() => navigate('/assessment')}>
                     {t('treatmentResources.takeAssessment')}
                   </Button>
