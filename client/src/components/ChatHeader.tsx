@@ -3,6 +3,7 @@ import { Volume2, VolumeX, ChevronLeft, History } from 'lucide-react';
 import { AICompanion, Language } from '@/types/chat';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface ChatHeaderProps {
   speechSynthesisSupported: boolean;
@@ -19,25 +20,23 @@ const ChatHeader = ({
   currentLanguage,
   onToggleMobileChatHistory
 }: ChatHeaderProps) => {
+  const { t } = useLanguage();
   const getTitle = () => {
     if (aiCompanion === 'monica') {
-      return 'Apoyo Avanzado para la Ansiedad con Mónica';
+      return t('chat.header.monicaTitle');
     }
-    return 'Advanced Anxiety Support with Vanessa';
+    return t('chat.header.vanessaTitle');
   };
 
   const getSubtitle = () => {
     if (aiCompanion === 'monica') {
-      return 'Compañera IA con análisis clínico y soporte de voz';
+      return t('chat.header.monicaSubtitle');
     }
-    return 'AI companion with clinical analysis and voice support';
+    return t('chat.header.vanessaSubtitle');
   };
 
   const getWarningMessage = () => {
-    if (aiCompanion === 'monica') {
-      return 'Las funciones de voz no están disponibles en este navegador. Aún puedes chatear escribiendo.';
-    }
-    return 'Voice features not available in this browser. You can still chat by typing.';
+    return t('chat.header.warning');
   };
 
   return (
@@ -52,7 +51,7 @@ const ChatHeader = ({
               className="flex items-center gap-2 ml-auto"
             >
               <History className="w-4 h-4" />
-              History
+              {t('chat.header.mobileHistory')}
             </Button>
           )}
         </div>
@@ -65,7 +64,7 @@ const ChatHeader = ({
           {getTitle()}
           {aiCompanion === 'monica' && (
             <span className="text-sm bg-pink-100 text-pink-800 px-2 py-1 rounded-full ml-2">
-              Español
+              {t('chat.header.badge.es')}
             </span>
           )}
         </h1>

@@ -5,6 +5,7 @@ import { MessageSquare, TrendingUp } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { ensureTriggersArray } from '@/utils/analyticsDataProcessor';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Analysis {
   created_at: string;
@@ -86,7 +87,11 @@ const getPeriodKey = (date: Date, period: Period) => {
 const sortDesc = <T,>(arr: T[], getter: (item: T) => number) =>
   [...arr].sort((a, b) => getter(b) - getter(a));
 
-const buildSummaries = (analyses: Analysis[], period: Period): SummaryContent[] => {
+const buildSummaries = (
+  analyses: Analysis[],
+  period: Period,
+  t: (key: string, fallback?: string) => string
+): SummaryContent[] => {
   if (!Array.isArray(analyses) || analyses.length === 0) return [];
 
   const byPeriod = new Map<string, Analysis[]>();
@@ -116,7 +121,7 @@ const buildSummaries = (analyses: Analysis[], period: Period): SummaryContent[] 
     const max = Math.max(...anxietyValues);
 
     const previousKey = sortedKeys[index + 1];
-    let trendLabel = 'No prior period';
+    let trendLabel = t('interventions.noData', 'No prior period');
     if (previousKey) {
       const previousGroup = byPeriod.get(previousKey) ?? [];
       if (previousGroup.length > 0) {
@@ -127,7 +132,7 @@ const buildSummaries = (analyses: Analysis[], period: Period): SummaryContent[] 
         } else if (delta < 0) {
           trendLabel = `↓ ${delta} vs prior`;
         } else {
-          trendLabel = 'No change vs prior';
+          trendLabel = t('interventions.progressStable', 'No change vs prior');
         }
       }
     }
@@ -176,7 +181,11 @@ const buildSummaries = (analyses: Analysis[], period: Period): SummaryContent[] 
       ? `Patient experienced heightened anxiety around ${topTrigger}. Severity averaged ${avgSeverity}/10.`
       : `Patient reported anxiety averaging ${avgSeverity}/10 without clear trigger.`;
 
-    const progressDirection = trendLabel.startsWith('↓') ? 'Improving' : trendLabel.startsWith('↑') ? 'Needs support' : 'Stable';
+    const progressDirection = trendLabel.startsWith('↓')
+      ? t('interventions.progressImproving', 'Improving')
+      : trendLabel.startsWith('↑')
+        ? t('interventions.progressNeedsSupport', 'Needs support')
+        : t('interventions.progressStable', 'Stable');
     const progress = `${progressDirection}: Immediate response ${trendLabel.toLowerCase()}.`;
 
     const clinicalNotes = ordered
@@ -192,7 +201,7 @@ const buildSummaries = (analyses: Analysis[], period: Period): SummaryContent[] 
       )
     );
 
-    const homeworkFromTherapy = therapies[0]?.name || 'Continue agreed coping plan';
+    const homeworkFromTherapy = therapies[0]?.name || t('interventions.homeworkFallback');
     const homework = `Focus task: ${homeworkFromTherapy}. Reinforce practice 3×/day or as assigned.`;
 
     return {
@@ -210,7 +219,7 @@ const buildSummaries = (analyses: Analysis[], period: Period): SummaryContent[] 
       triggers,
       therapies,
       progress,
-      clinicalNotes: clinicalNotes.length > 0 ? clinicalNotes : ['No clinician notes documented this period.'],
+      clinicalNotes: clinicalNotes.length > 0 ? clinicalNotes : [t('interventions.noNotes')],
       codes,
       homework,
     } satisfies SummaryContent;
@@ -218,6 +227,7 @@ const buildSummaries = (analyses: Analysis[], period: Period): SummaryContent[] 
 };
 
 const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
+  const { t } = useLanguage();
   const sortedAnalyses = useMemo(
     () =>
       Array.isArray(analyses)
@@ -230,17 +240,19 @@ const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
 
   const [view, setView] = useState<'overview' | 'session' | 'week' | 'month' | 'year'>('overview');
 
-  const sessionSummaries = useMemo(() => buildSummaries(sortedAnalyses, 'session').slice(0, 5), [sortedAnalyses]);
-  const weeklySummaries = useMemo(() => buildSummaries(sortedAnalyses, 'week').slice(0, 4), [sortedAnalyses]);
-  const monthlySummaries = useMemo(() => buildSummaries(sortedAnalyses, 'month').slice(0, 4), [sortedAnalyses]);
-  const yearlySummaries = useMemo(() => buildSummaries(sortedAnalyses, 'year').slice(0, 3), [sortedAnalyses]);
+  const sessionSummaries = useMemo(() => buildSummaries(sortedAnalyses, 'session', t).slice(0, 5), [sortedAnalyses, t]);
+  const weeklySummaries = useMemo(() => buildSummaries(sortedAnalyses, 'week', t).slice(0, 4), [sortedAnalyses, t]);
+  const monthlySummaries = useMemo(() => buildSummaries(sortedAnalyses, 'month', t).slice(0, 4), [sortedAnalyses, t]);
+  const yearlySummaries = useMemo(() => buildSummaries(sortedAnalyses, 'year', t).slice(0, 3), [sortedAnalyses, t]);
 
   const renderSummary = (summary: SummaryContent) => (
     <div key={summary.id} className="border rounded-lg p-4 bg-white space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="font-semibold text-gray-900">{summary.rangeLabel}</div>
         <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Badge variant="outline">{summary.snapshot.sessions} sessions</Badge>
+          <Badge variant="outline">
+            {summary.snapshot.sessions} {t('interventions.sessions')}
+          </Badge>
           <Badge className="bg-blue-50 text-blue-700 flex items-center gap-1">
             <TrendingUp className="w-4 h-4" /> {summary.snapshot.trendLabel}
           </Badge>
@@ -249,21 +261,21 @@ const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
         <div>
-          <p className="font-medium text-gray-900">Patient snapshot</p>
+          <p className="font-medium text-gray-900">{t('interventions.snapshot')}</p>
           <p>{summary.patientProblem}</p>
           <p className="mt-1 text-gray-600">
-            Avg anxiety {summary.snapshot.average}/10 (range {summary.snapshot.min}–{summary.snapshot.max}).
+            {t('interventions.avgAnxiety')} {summary.snapshot.average}/10 (range {summary.snapshot.min}–{summary.snapshot.max}).
           </p>
         </div>
         <div>
-          <p className="font-medium text-gray-900">Progress observed</p>
+          <p className="font-medium text-gray-900">{t('interventions.progressObserved')}</p>
           <p>{summary.progress}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
         <div>
-          <p className="font-medium text-gray-900">Top triggers</p>
+          <p className="font-medium text-gray-900">{t('interventions.topTriggers')}</p>
           {summary.triggers.length > 0 ? (
             <ul className="list-disc ml-6">
               {summary.triggers.map((trigger) => (
@@ -273,27 +285,27 @@ const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
               ))}
             </ul>
           ) : (
-            <p>No specific triggers documented.</p>
+            <p>{t('interventions.noTriggers')}</p>
           )}
         </div>
         <div>
-          <p className="font-medium text-gray-900">Therapy applied</p>
+          <p className="font-medium text-gray-900">{t('interventions.therapyApplied')}</p>
           {summary.therapies.length > 0 ? (
             <ul className="list-disc ml-6">
               {summary.therapies.map((therapy) => (
                 <li key={therapy.name}>
-                  {therapy.name} ({therapy.count}×) — adherence {therapy.adherence}
+                  {therapy.name} ({therapy.count}×) — {t('interventions.adherence')} {therapy.adherence}
                 </li>
               ))}
             </ul>
           ) : (
-            <p>No interventions documented this period.</p>
+            <p>{t('interventions.noTherapies')}</p>
           )}
         </div>
       </div>
 
       <div>
-        <p className="font-medium text-gray-900">Clinical notes</p>
+        <p className="font-medium text-gray-900">{t('interventions.clinicalNotes')}</p>
         <ul className="list-disc ml-6 text-sm text-gray-700">
           {summary.clinicalNotes.map((note, idx) => (
             <li key={idx}>{note}</li>
@@ -302,14 +314,14 @@ const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
       </div>
 
       <div className="text-sm text-gray-700">
-        <p className="font-medium text-gray-900">Next steps / homework</p>
+        <p className="font-medium text-gray-900">{t('interventions.homework')}</p>
         <p>{summary.homework}</p>
       </div>
 
       {summary.codes.length > 0 && (
         <Accordion type="single" collapsible className="border rounded-md">
           <AccordionItem value="codes">
-            <AccordionTrigger className="px-4 text-sm">For clinicians</AccordionTrigger>
+            <AccordionTrigger className="px-4 text-sm">{t('interventions.forClinicians')}</AccordionTrigger>
             <AccordionContent className="px-4 pb-4 text-sm text-gray-700">
               {summary.codes.join(', ')}
             </AccordionContent>
@@ -335,18 +347,18 @@ const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
       <CardHeader className="flex items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-blue-600" />
-          Intervention Summaries
+          {t('interventions.title')}
         </CardTitle>
-        <Badge variant="secondary">Updated from session data</Badge>
+        <Badge variant="secondary">{t('interventions.badge')}</Badge>
       </CardHeader>
       <CardContent className="space-y-8">
         <div className="flex flex-wrap gap-2">
           {[
-            { label: 'Overview', value: 'overview' },
-            { label: 'Session', value: 'session' },
-            { label: 'Weekly', value: 'week' },
-            { label: 'Monthly', value: 'month' },
-            { label: 'Yearly', value: 'year' },
+            { label: t('interventions.tabs.overview'), value: 'overview' },
+            { label: t('interventions.tabs.session'), value: 'session' },
+            { label: t('interventions.tabs.week'), value: 'week' },
+            { label: t('interventions.tabs.month'), value: 'month' },
+            { label: t('interventions.tabs.year'), value: 'year' },
           ].map(({ label, value }) => (
             <Button
               key={value}
@@ -362,32 +374,32 @@ const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
         {view === 'overview' && (
           <>
             {renderSection(
-              'Recent Sessions',
+              t('interventions.recent'),
               sessionSummaries,
-              'No recent session summaries available.'
+              t('interventions.noRecent')
             )}
             {renderSection(
-              'Weekly Overview',
+              t('interventions.weeklyOverview'),
               weeklySummaries,
-              'No weekly summaries available yet.'
+              t('interventions.noWeekly')
             )}
             {renderSection(
-              'Monthly Overview',
+              t('interventions.monthlyOverview'),
               monthlySummaries,
-              'No monthly summaries available yet.'
+              t('interventions.noMonthly')
             )}
             {renderSection(
-              'Yearly Overview',
+              t('interventions.yearlyOverview'),
               yearlySummaries,
-              'No yearly summaries available yet.'
+              t('interventions.noYearly')
             )}
           </>
         )}
 
-        {view === 'session' && renderSection('Individual Sessions', sessionSummaries, 'No recent session summaries available.')}
-        {view === 'week' && renderSection('Weekly Overview', weeklySummaries, 'No weekly summaries available yet.')}
-        {view === 'month' && renderSection('Monthly Overview', monthlySummaries, 'No monthly summaries available yet.')}
-        {view === 'year' && renderSection('Yearly Overview', yearlySummaries, 'No yearly summaries available yet.')}
+        {view === 'session' && renderSection(t('interventions.tabs.session'), sessionSummaries, t('interventions.noRecent'))}
+        {view === 'week' && renderSection(t('interventions.weeklyOverview'), weeklySummaries, t('interventions.noWeekly'))}
+        {view === 'month' && renderSection(t('interventions.monthlyOverview'), monthlySummaries, t('interventions.noMonthly'))}
+        {view === 'year' && renderSection(t('interventions.yearlyOverview'), yearlySummaries, t('interventions.noYearly'))}
       </CardContent>
     </Card>
   );

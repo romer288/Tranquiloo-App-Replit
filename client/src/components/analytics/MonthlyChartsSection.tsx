@@ -390,7 +390,7 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
                   <TrendingUp className="w-5 h-5 text-secondary" />
                 </div>
                 <CardTitle className="text-xl font-bold text-gray-900">
-                  Monthly Session Activity
+                  {t('analytics.monthly.sessionActivity')}
                 </CardTitle>
               </div>
               {onDateRangeChange && (
@@ -399,7 +399,7 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
                   onChange={onDateRangeChange}
                   minDate={minDate}
                   maxDate={maxDate}
-                  label="Range"
+                  label={t('analytics.monthly.rangeLabel')}
                 />
               )}
             </div>
@@ -437,7 +437,7 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
                           <div className="bg-white border-2 border-secondary/30 rounded-lg shadow-xl p-4">
                             <p className="font-bold text-gray-900 text-lg">{label}</p>
                              <p className="text-sm text-gray-600">
-                               Sessions: <span className="font-bold text-blue-600 text-lg">{payload[0]?.value || 0}</span>
+                               {t('analytics.tracker.sessions')}: <span className="font-bold text-blue-600 text-lg">{payload[0]?.value || 0}</span>
                             </p>
                           </div>
                         );

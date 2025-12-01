@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/context/LanguageContext';
 import {
   Calendar,
   Clock,
@@ -38,6 +39,7 @@ interface AppointmentListProps {
 
 const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall }) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
@@ -46,21 +48,21 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
     switch (type) {
       case 'video':
         return {
-          label: 'Video session',
+          label: t('appointments.video'),
           icon: Video,
           accent: 'text-blue-600',
           badge: 'bg-blue-100 text-blue-800',
         };
       case 'audio':
         return {
-          label: 'Audio session',
+          label: t('appointments.audio'),
           icon: Phone,
           accent: 'text-green-600',
           badge: 'bg-green-100 text-green-800',
         };
       default:
         return {
-          label: 'In-person session',
+          label: t('appointments.inPerson'),
           icon: MapPin,
           accent: 'text-amber-600',
           badge: 'bg-amber-100 text-amber-800',
@@ -90,7 +92,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
   };
 
   const handleCancelAppointment = async (appointmentId: string) => {
-    if (!confirm('Are you sure you want to cancel this appointment?')) {
+    if (!confirm(t('appointments.cancelConfirm'))) {
       return;
     }
 
@@ -103,16 +105,16 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
 
       if (response.ok) {
         toast({
-          title: 'Appointment Cancelled',
-          description: 'Your appointment has been cancelled',
+          title: t('appointments.cancelledTitle'),
+          description: t('appointments.cancelledDesc'),
         });
         fetchAppointments();
       }
     } catch (error) {
       console.error('Failed to cancel appointment:', error);
       toast({
-        title: 'Cancellation Failed',
-        description: 'Unable to cancel appointment',
+        title: t('appointments.cancelFailedTitle'),
+        description: t('appointments.cancelFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -121,8 +123,8 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
   const handleJoinAppointment = async (appointment: Appointment) => {
     if (appointment.type === 'in_person') {
       toast({
-        title: 'In-person session',
-        description: 'This appointment is scheduled for an in-person visit. Arrive a few minutes early and bring your recording kit if required.',
+        title: t('appointments.inPerson'),
+        description: t('appointments.inPersonInfo'),
       });
       return;
     }
@@ -144,8 +146,8 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
     } catch (error) {
       console.error('Failed to join appointment:', error);
       toast({
-        title: 'Join Failed',
-        description: 'Unable to join appointment',
+        title: t('appointments.joinFailedTitle'),
+        description: t('appointments.joinFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -160,14 +162,14 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
     try {
       await navigator.clipboard.writeText(link);
       toast({
-        title: 'Link copied',
-        description: 'Meeting link copied to clipboard',
+        title: t('appointments.linkCopiedTitle'),
+        description: t('appointments.copyLink'),
       });
     } catch (error) {
       console.error('Failed to copy link:', error);
       toast({
-        title: 'Copy failed',
-        description: 'Unable to copy meeting link',
+        title: t('appointments.copyFailedTitle'),
+        description: t('appointments.copyFailed'),
         variant: 'destructive',
       });
     }
@@ -190,11 +192,11 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: any; label: string; icon: any }> = {
-      scheduled: { variant: 'outline', label: 'Scheduled', icon: Calendar },
-      confirmed: { variant: 'default', label: 'Confirmed', icon: CheckCircle },
-      in_progress: { variant: 'default', label: 'In Progress', icon: Play },
-      completed: { variant: 'secondary', label: 'Completed', icon: CheckCircle },
-      cancelled: { variant: 'destructive', label: 'Cancelled', icon: X },
+      scheduled: { variant: 'outline', label: t('appointments.status.scheduled'), icon: Calendar },
+      confirmed: { variant: 'default', label: t('appointments.status.confirmed'), icon: CheckCircle },
+      in_progress: { variant: 'default', label: t('appointments.status.inProgress'), icon: Play },
+      completed: { variant: 'secondary', label: t('appointments.status.completed'), icon: CheckCircle },
+      cancelled: { variant: 'destructive', label: t('appointments.status.cancelled'), icon: X },
     };
 
     const config = variants[status] || variants.scheduled;
@@ -222,7 +224,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
     return (
       <Card>
         <CardContent className="p-12 text-center">
-          <p className="text-gray-600">Loading appointments...</p>
+          <p className="text-gray-600">{t('appointments.loading')}</p>
         </CardContent>
       </Card>
     );
@@ -240,7 +242,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          Upcoming ({upcomingAppointments.length})
+          {t('appointments.upcomingTab')} ({upcomingAppointments.length})
         </button>
         <button
           onClick={() => setActiveTab('past')}
@@ -250,7 +252,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          Past ({pastAppointments.length})
+          {t('appointments.pastTab')} ({pastAppointments.length})
         </button>
       </div>
 
@@ -261,11 +263,12 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
             <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
             <p className="text-gray-600">
               {activeTab === 'upcoming'
-                ? 'No upcoming appointments'
-                : 'No past appointments'}
+                ? t('appointments.noUpcoming')
+                : t('appointments.noPast')}
             </p>
             <p className="text-sm text-gray-500 mt-2">
-              {activeTab === 'upcoming' && 'Schedule your first appointment above'}
+              {activeTab === 'upcoming' && t('appointments.noUpcomingDesc')}
+              {activeTab === 'past' && t('appointments.noPastDesc')}
             </p>
           </CardContent>
         </Card>
@@ -289,7 +292,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
                             {format(scheduledDate, 'EEEE, MMM d • h:mm a')}
                           </p>
                           <p className="text-xs text-gray-500">
-                            Duration: {appointment.duration} minutes
+                            {t('appointments.durationLabel')}: {appointment.duration} {t('appointments.minutesShort')}
                           </p>
                         </div>
                         <Badge className={`${typeInfo.badge} text-xs`}>{typeInfo.label}</Badge>
@@ -305,7 +308,9 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
                         {format(scheduledDate, 'h:mm a')} ({appointment.duration} minutes)
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-700">
-                        <span className="text-xs font-semibold uppercase text-gray-500">Therapist</span>
+                        <span className="text-xs font-semibold uppercase text-gray-500">
+                          {t('appointments.therapistLabel')}
+                        </span>
                         <span>{appointment.therapistEmail}</span>
                       </div>
 
@@ -321,7 +326,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
                             onClick={() => copyMeetingLink(appointment.meetingLink || '')}
                             className="flex items-center gap-1"
                           >
-                            <ClipboardIcon className="w-3 h-3" /> Copy
+                            <ClipboardIcon className="w-3 h-3" /> {t('appointments.copyButton')}
                           </Button>
                           <Button
                             variant="ghost"
@@ -329,19 +334,19 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
                             className="text-blue-600 hover:text-blue-700"
                             onClick={() => openMeetingLink(appointment)}
                           >
-                            <ExternalLink className="w-3 h-3 mr-1" /> Open
+                            <ExternalLink className="w-3 h-3 mr-1" /> {t('appointments.openLink')}
                           </Button>
                         </div>
                       ) : appointment.type === 'in_person' ? (
                         <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
                           <AlertCircle className="w-4 h-4 mt-0.5" />
                           <span>
-                            Plan for an on-site session. Bring the portable recorder so the AI summary can still be generated afterward.
+                            {t('appointments.inPersonInfo')}
                           </span>
                         </div>
                       ) : (
                         <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
-                          Your therapist will share the meeting link before the session, or you can join through Tranquiloo below.
+                          {t('appointments.noLinkYet')}
                         </div>
                       )}
 
@@ -362,7 +367,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
                           onClick={() => openMeetingLink(appointment)}
                         >
                           <ExternalLink className="w-4 h-4 mr-2" />
-                          Open link
+                          {t('appointments.openLink')}
                         </Button>
                       )}
 
@@ -373,7 +378,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
                           size="sm"
                         >
                           <Play className="w-4 h-4 mr-2" />
-                          Join via Tranquiloo
+                          {t('appointments.joinVia')}
                         </Button>
                       )}
 
@@ -385,7 +390,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
                           className="text-red-600 hover:text-red-700"
                         >
                           <X className="w-4 h-4 mr-2" />
-                          Cancel
+                          {t('appointments.cancel')}
                         </Button>
                       )}
                     </div>
@@ -395,7 +400,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ patientId, onJoinCall
                   {activeTab === 'upcoming' && !isJoinable && appointment.status !== 'cancelled' && appointment.type !== 'in_person' && (
                     <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
                       <AlertCircle className="mr-2 inline h-4 w-4" />
-                      You can join 10 minutes before your scheduled time.
+                      {t('appointments.joinWindow')}
                     </div>
                   )}
                 </CardContent>

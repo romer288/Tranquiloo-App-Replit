@@ -413,29 +413,31 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
       {/* Treatment Recommendations */}
       {(showOnly === 'outcomes' || showOnly === 'all') && (
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Treatment Insights for Therapists</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('treatment.insights.title')}</h3>
           
           <div className="space-y-4">
             {outcomes.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 bg-blue-50 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">Current Trend</h4>
+                  <h4 className="font-medium text-blue-900 mb-2">{t('treatment.insights.currentTrend')}</h4>
                   <p className="text-sm text-blue-800">
-                    Treatment is showing {outcomes[outcomes.length - 1]?.treatmentEffectiveness} results
-                    with an average anxiety level of {outcomes[outcomes.length - 1]?.averageAnxiety}/10
+                    {t('treatment.insights.decliningResults', undefined)
+                      .replace('{status}', outcomes[outcomes.length - 1]?.treatmentEffectiveness ?? '')
+                      .replace('{anxiety}', String(outcomes[outcomes.length - 1]?.averageAnxiety ?? ''))}
                   </p>
                 </div>
                 
                 <div className="p-4 bg-purple-50 rounded-lg">
-                  <h4 className="font-medium text-purple-900 mb-2">Intervention Success</h4>
+                  <h4 className="font-medium text-purple-900 mb-2">{t('treatment.insights.interventionSuccess')}</h4>
                   <p className="text-sm text-purple-800">
-                    {outcomes.filter(o => o.treatmentEffectiveness === 'improving').length} of {outcomes.length} weeks 
-                    showed improvement
+                    {t('treatment.insights.weeksImproved', undefined)
+                      .replace('{improved}', String(outcomes.filter(o => o.treatmentEffectiveness === 'improving').length))
+                      .replace('{total}', String(outcomes.length))}
                   </p>
                 </div>
               </div>
             ) : (
-              <p className="text-gray-600">Collect more data over time to see treatment effectiveness patterns.</p>
+              <p className="text-gray-600">{t('treatment.insights.noData')}</p>
             )}
           </div>
         </Card>

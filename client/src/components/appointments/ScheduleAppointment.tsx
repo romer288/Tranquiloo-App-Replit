@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/context/LanguageContext';
 import { Calendar, Clock, Video, Phone, User } from 'lucide-react';
 
 interface ScheduleAppointmentProps {
@@ -19,6 +20,7 @@ const ScheduleAppointment: React.FC<ScheduleAppointmentProps> = ({
   onScheduled,
 }) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [connectedTherapists, setConnectedTherapists] = useState<any[]>([]);
 
@@ -58,8 +60,8 @@ const ScheduleAppointment: React.FC<ScheduleAppointmentProps> = ({
 
     if (!formData.therapistEmail || !formData.appointmentDate || !formData.appointmentTime) {
       toast({
-        title: 'Missing Information',
-        description: 'Please fill in all required fields',
+        title: t('appointments.missing'),
+        description: t('appointments.missingDesc'),
         variant: 'destructive',
       });
       return;
@@ -79,8 +81,8 @@ const ScheduleAppointment: React.FC<ScheduleAppointmentProps> = ({
 
       if (response.ok) {
         toast({
-          title: 'Appointment Scheduled',
-          description: 'Your appointment has been scheduled successfully',
+          title: t('appointments.scheduledTitle'),
+          description: t('appointments.scheduledDesc'),
         });
 
         // Reset form
@@ -100,8 +102,8 @@ const ScheduleAppointment: React.FC<ScheduleAppointmentProps> = ({
     } catch (error) {
       console.error('Failed to schedule appointment:', error);
       toast({
-        title: 'Scheduling Failed',
-        description: 'Unable to schedule appointment. Please try again.',
+        title: t('appointments.failedTitle'),
+        description: t('appointments.failedDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -117,17 +119,17 @@ const ScheduleAppointment: React.FC<ScheduleAppointmentProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="w-5 h-5" />
-          Schedule Appointment
+          {t('appointments.header')}
         </CardTitle>
         <p className="text-sm text-gray-600">
-          Book a video or audio session with your therapist
+          {t('appointments.subheader')}
         </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Therapist Selection */}
           <div className="space-y-2">
-            <Label htmlFor="therapist">Therapist *</Label>
+            <Label htmlFor="therapist">{t('appointments.therapist')}</Label>
             {connectedTherapists.length > 0 ? (
               <select
                 id="therapist"
@@ -137,7 +139,7 @@ const ScheduleAppointment: React.FC<ScheduleAppointmentProps> = ({
                 required
                 disabled={!!therapistEmail}
               >
-                <option value="">Select a therapist</option>
+                <option value="">{t('appointments.selectTherapist')}</option>
                 {connectedTherapists.map((therapist) => (
                   <option key={therapist.therapistEmail} value={therapist.therapistEmail}>
                     {therapist.therapistEmail}
@@ -147,20 +149,20 @@ const ScheduleAppointment: React.FC<ScheduleAppointmentProps> = ({
             ) : (
               <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md space-y-3">
                 <p className="text-sm text-yellow-800 font-medium">
-                  ⚠️ No Connected Therapists
+                  ⚠️ {t('appointments.noConnectionsTitle')}
                 </p>
                 <p className="text-sm text-yellow-700">
-                  You need to connect with a therapist before scheduling appointments.
+                  {t('appointments.noConnectionsDesc')}
                 </p>
                 <a
                   href="/contact-therapist"
                   className="inline-block text-sm text-blue-600 hover:text-blue-700 underline font-medium"
                 >
-                  → Click here to connect with a therapist
+                  → {t('appointments.connectCta')}
                 </a>
                 <div className="mt-2 pt-2 border-t border-yellow-300">
                   <p className="text-xs text-yellow-700">
-                    <strong>How it works:</strong> Go to "Contact Therapist", submit your therapist's email, and wait for them to accept your connection request.
+                    {t('appointments.connectHow')}
                   </p>
                 </div>
               </div>
@@ -170,7 +172,7 @@ const ScheduleAppointment: React.FC<ScheduleAppointmentProps> = ({
           {/* Date and Time */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="date">Date *</Label>
+              <Label htmlFor="date">{t('appointments.date')}</Label>
               <Input
                 id="date"
                 type="date"
@@ -181,7 +183,7 @@ const ScheduleAppointment: React.FC<ScheduleAppointmentProps> = ({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="time">Time *</Label>
+              <Label htmlFor="time">{t('appointments.time')}</Label>
               <Input
                 id="time"
                 type="time"
@@ -194,23 +196,23 @@ const ScheduleAppointment: React.FC<ScheduleAppointmentProps> = ({
 
           {/* Duration */}
           <div className="space-y-2">
-            <Label htmlFor="duration">Duration</Label>
+            <Label htmlFor="duration">{t('appointments.duration')}</Label>
             <select
               id="duration"
               value={formData.duration}
               onChange={(e) => setFormData({ ...formData, duration: Number(e.target.value) })}
               className="w-full p-2 border rounded-md"
             >
-              <option value={30}>30 minutes</option>
-              <option value={45}>45 minutes</option>
-              <option value={60}>60 minutes (1 hour)</option>
-              <option value={90}>90 minutes (1.5 hours)</option>
+              <option value={30}>{t('appointments.duration.30')}</option>
+              <option value={45}>{t('appointments.duration.45')}</option>
+              <option value={60}>{t('appointments.duration.60')}</option>
+              <option value={90}>{t('appointments.duration.90')}</option>
             </select>
           </div>
 
           {/* Appointment Type */}
           <div className="space-y-2">
-            <Label>Session Type *</Label>
+            <Label>{t('appointments.sessionType')}</Label>
           <div className="grid grid-cols-2 gap-4">
             <Card
               className={`cursor-pointer transition-all ${
@@ -223,8 +225,8 @@ const ScheduleAppointment: React.FC<ScheduleAppointmentProps> = ({
                 <CardContent className="p-4 flex items-center gap-3">
                   <Video className={`w-5 h-5 ${formData.type === 'video' ? 'text-blue-600' : 'text-gray-600'}`} />
                   <div>
-                    <p className="font-medium text-sm">Video Call</p>
-                    <p className="text-xs text-gray-600">Face-to-face session</p>
+                    <p className="font-medium text-sm">{t('appointments.video')}</p>
+                    <p className="text-xs text-gray-600">{t('appointments.videoDesc')}</p>
                   </div>
                 </CardContent>
             </Card>
@@ -240,8 +242,8 @@ const ScheduleAppointment: React.FC<ScheduleAppointmentProps> = ({
                 <CardContent className="p-4 flex items-center gap-3">
                   <Phone className={`w-5 h-5 ${formData.type === 'audio' ? 'text-green-600' : 'text-gray-600'}`} />
                   <div>
-                    <p className="font-medium text-sm">Audio Call</p>
-                    <p className="text-xs text-gray-600">Voice only session</p>
+                    <p className="font-medium text-sm">{t('appointments.audio')}</p>
+                    <p className="text-xs text-gray-600">{t('appointments.audioDesc')}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -257,8 +259,8 @@ const ScheduleAppointment: React.FC<ScheduleAppointmentProps> = ({
                 <CardContent className="p-4 flex items-center gap-3">
                   <User className={`w-5 h-5 ${formData.type === 'in_person' ? 'text-amber-600' : 'text-gray-600'}`} />
                   <div>
-                    <p className="font-medium text-sm">In-Person</p>
-                    <p className="text-xs text-gray-600">Meet at the therapy location</p>
+                    <p className="font-medium text-sm">{t('appointments.inPerson')}</p>
+                    <p className="text-xs text-gray-600">{t('appointments.inPersonDesc')}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -267,10 +269,10 @@ const ScheduleAppointment: React.FC<ScheduleAppointmentProps> = ({
 
           {/* Notes */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Label htmlFor="notes">{t('appointments.notes')}</Label>
             <Textarea
               id="notes"
-              placeholder="Any specific topics or concerns you'd like to discuss..."
+              placeholder={t('appointments.notesPlaceholder')}
               rows={3}
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -280,13 +282,13 @@ const ScheduleAppointment: React.FC<ScheduleAppointmentProps> = ({
           {/* Important Note */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-800 font-medium mb-1">
-              📶 Important Information
+              📶 {t('appointments.important')}
             </p>
             <ul className="text-sm text-blue-700 space-y-1">
-              <li>• Both you and your therapist need internet connection</li>
-              <li>• Sessions may be recorded for quality; we are working toward HIPAA readiness</li>
-              <li>• You'll receive a reminder 1 hour before your appointment</li>
-              <li>• Please join 5 minutes early to test your connection</li>
+              <li>• {t('appointments.info.internet')}</li>
+              <li>• {t('appointments.info.recording')}</li>
+              <li>• {t('appointments.info.reminder')}</li>
+              <li>• {t('appointments.info.early')}</li>
             </ul>
           </div>
 
@@ -296,7 +298,7 @@ const ScheduleAppointment: React.FC<ScheduleAppointmentProps> = ({
             className="w-full"
             disabled={loading || connectedTherapists.length === 0}
           >
-            {loading ? 'Scheduling...' : 'Schedule Appointment'}
+            {loading ? t('appointments.scheduling') : t('appointments.scheduleCta')}
           </Button>
         </form>
       </CardContent>
