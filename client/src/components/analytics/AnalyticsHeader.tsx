@@ -27,19 +27,19 @@ const AnalyticsHeader: React.FC<AnalyticsHeaderProps> = ({
     navigate(ROUTES.contactTherapist);
   };
   return (
-    <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-4">
-      <div className="max-w-screen-md mx-auto w-full">
+    <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-4 overflow-x-hidden">
+      <div className="max-w-screen-sm mx-auto w-full">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-xl font-semibold text-gray-900">{t('analytics.header.title')}</h1>
+            <h1 className="text-xl font-semibold text-gray-900 break-words">{t('analytics.header.title')}</h1>
             <p className="text-sm text-gray-600">
               {analysesCount > 0 
                 ? t('analytics.header.data').replace('{count}', analysesCount.toString())
                 : t('analytics.header.empty')
-            }
-          </p>
-        </div>
-          <div className="flex flex-wrap gap-2 sm:gap-3 justify-end w-full sm:w-auto">
+              }
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
             <Button onClick={onDownloadHistory} variant="outline" size="sm" disabled={analysesCount === 0} className="w-full sm:w-auto">
               <Download className="w-4 h-4 mr-2" />
               {t('analytics.header.downloadHistory')}

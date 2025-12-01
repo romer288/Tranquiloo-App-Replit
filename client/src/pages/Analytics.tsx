@@ -265,15 +265,17 @@ const AnalyticsContent = () => {
         onDownloadSummary={handleDownloadSummary}
       />
 
-      <div className="max-w-screen-md mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <div className="max-w-screen-sm sm:max-w-screen-md mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 overflow-hidden">
         {/* Anxiety Analytics Tracker */}
-        <AnxietyAnalyticsTracker analyses={allAnalyses} />
+        <div className="w-full overflow-hidden">
+          <AnxietyAnalyticsTracker analyses={allAnalyses} />
+        </div>
 
         {!hasData ? (
           <EmptyAnalyticsState />
         ) : (
-          <div className="flex flex-col">
-            <div className="space-y-12">
+          <div className="flex flex-col min-w-0">
+            <div className="space-y-8 sm:space-y-12 w-full">
               {/* Key Metrics */}
               <AnalyticsMetrics
                 totalEntries={totalEntries}
