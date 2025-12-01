@@ -39,22 +39,40 @@ const AnalyticsHeader: React.FC<AnalyticsHeaderProps> = ({
               }
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
-            <Button onClick={onDownloadHistory} variant="outline" size="sm" disabled={analysesCount === 0} className="w-full sm:w-auto">
+          <div className="flex flex-col flex-wrap gap-2 sm:gap-3 w-full">
+            <Button
+              onClick={onDownloadHistory}
+              variant="outline"
+              size="sm"
+              disabled={analysesCount === 0}
+              className="w-full text-sm whitespace-normal"
+            >
               <Download className="w-4 h-4 mr-2" />
               {t('analytics.header.downloadHistory')}
             </Button>
-            <Button onClick={onDownloadSummary} variant="outline" size="sm" disabled={analysesCount === 0} className="w-full sm:w-auto">
+            <Button
+              onClick={onDownloadSummary}
+              variant="outline"
+              size="sm"
+              disabled={analysesCount === 0}
+              className="w-full text-sm whitespace-normal"
+            >
               <Download className="w-4 h-4 mr-2" />
               {t('analytics.header.downloadSummary')}
             </Button>
-            <Button onClick={handleShareWithTherapist} variant="outline" size="sm" disabled={analysesCount === 0} className="w-full sm:w-auto">
+            <Button
+              onClick={handleShareWithTherapist}
+              variant="outline"
+              size="sm"
+              disabled={analysesCount === 0}
+              className="w-full text-sm whitespace-normal"
+            >
               <Share className="w-4 h-4 mr-2" />
               {t('analytics.header.shareTherapist')}
             </Button>
             <Button 
               onClick={() => window.location.href = '/treatment-resources'} 
-              className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+              className="bg-blue-600 hover:bg-blue-700 w-full text-sm whitespace-normal"
               size="sm"
             >
               <Target className="w-4 h-4 mr-2" />

@@ -191,12 +191,12 @@ const TreatmentResources = () => {
                 {t('treatmentResources.subtitle')}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2 sm:gap-3">
-              <Button onClick={handleDownloadSummary} variant="outline" size="sm" disabled={allAnalyses.length === 0} className="w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
+              <Button onClick={handleDownloadSummary} variant="outline" size="sm" disabled={allAnalyses.length === 0} className="w-full text-sm whitespace-normal">
                 <Download className="w-4 h-4 mr-2" />
                 {t('treatmentResources.download')}
               </Button>
-              <Button onClick={connectToTherapist} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+              <Button onClick={connectToTherapist} className="bg-blue-600 hover:bg-blue-700 w-full text-sm whitespace-normal">
                 <Users className="w-4 h-4 mr-2" />
                 {t('treatmentResources.connect')}
               </Button>
@@ -208,11 +208,11 @@ const TreatmentResources = () => {
       <div className="max-w-screen-sm sm:max-w-screen-md mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 overflow-hidden">
         {/* Treatment Status */}
         <Card className="p-6 mb-8 w-full overflow-hidden">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full">
             {hasActiveTreatment ? (
               <>
                 <CheckCircle className="w-8 h-8 text-green-600" />
-                <div>
+                <div className="min-w-0">
                   <h3 className="text-lg font-semibold text-gray-900">{t('treatmentResources.title')}</h3>
                   <p className="text-gray-600">{t('treatmentResources.subtitle')}</p>
                 </div>
@@ -220,15 +220,15 @@ const TreatmentResources = () => {
             ) : (
               <>
                 <AlertCircle className="w-8 h-8 text-orange-600" />
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <h3 className="text-lg font-semibold text-gray-900">{t('treatmentResources.noActiveTitle')}</h3>
                   <p className="text-gray-600">{t('treatmentResources.noActiveDesc')}</p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                  <Button variant="outline" onClick={() => navigate('/assessment')}>
+                  <Button variant="outline" onClick={() => navigate('/assessment')} className="w-full sm:w-auto text-sm whitespace-normal">
                     {t('treatmentResources.takeAssessment')}
                   </Button>
-                  <Button onClick={connectToTherapist}>
+                  <Button onClick={connectToTherapist} className="w-full sm:w-auto text-sm whitespace-normal">
                     {t('treatmentResources.findTherapist')}
                   </Button>
                 </div>
