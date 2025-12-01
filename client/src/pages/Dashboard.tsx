@@ -26,12 +26,12 @@ const Dashboard = () => {
     navigate(ROUTES.settings);
   };
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
+    <div className="min-h-screen bg-gray-50 pb-16 md:pb-0">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-8 py-4">
-        <div className="flex items-center justify-between">
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-4">
+        <div className="flex flex-wrap items-center gap-4 justify-between">
           <h1 className="text-xl font-semibold text-gray-900">{t('dashboard.title')}</h1>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             <button 
               onClick={handleSettings}
               className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
@@ -58,35 +58,37 @@ const Dashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-8 py-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Hero Section */}
-        <div className="text-center mb-12">
-          <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="text-center mb-10">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <Heart className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">{t('dashboard.heroTitle')}</h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
+            {t('dashboard.heroTitle')}
+          </h1>
+          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto mb-6 sm:mb-8">
             {t('dashboard.heroSubtitle')}
           </p>
           
-          <div className="flex justify-center space-x-4">
-            <Button asChild className="bg-blue-600 hover:bg-blue-700 px-8 py-3">
+          <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+            <Button asChild className="bg-blue-600 hover:bg-blue-700 px-6 sm:px-8 py-3 w-full sm:w-auto">
               <Link to={ROUTES.chat}>
                 <Zap className="w-4 h-4 mr-2" />
                 {t('dashboard.startChatting')}
               </Link>
             </Button>
-            <Button asChild variant="outline" className="px-8 py-3">
+            <Button asChild variant="outline" className="px-6 sm:px-8 py-3 w-full sm:w-auto">
               <Link to={ROUTES.assessment}>
                 {t('dashboard.takeAssessment')}
               </Link>
             </Button>
-            <Button asChild variant="outline" className="px-8 py-3">
+            <Button asChild variant="outline" className="px-6 sm:px-8 py-3 w-full sm:w-auto">
               <Link to={ROUTES.treatmentResources}>
                 {t('dashboard.trackTreatment')}
               </Link>
             </Button>
-            <Button asChild variant="outline" className="px-8 py-3">
+            <Button asChild variant="outline" className="px-6 sm:px-8 py-3 w-full sm:w-auto">
               <Link to={ROUTES.analytics}>
                 <BarChart3 className="w-4 h-4 mr-2" />
                 {t('dashboard.analytics')}
@@ -96,7 +98,7 @@ const Dashboard = () => {
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-12">
           <Card className="p-6 text-center bg-blue-50 border-blue-100">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
               <Shield className="w-6 h-6 text-blue-600" />
@@ -128,17 +130,17 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        <div className="text-center text-sm text-gray-500 space-y-2">
-          <p>© 2025 {t('brand.title')}. {t('dashboard.footer.rights')}</p>
-          <div className="flex justify-center space-x-6">
+        <div className="text-center text-sm text-gray-500 space-y-3">
+          <p className="px-4">© 2025 {t('brand.title')}. {t('dashboard.footer.rights')}</p>
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             <a href="#" className="hover:text-gray-700">{t('dashboard.footer.privacy')}</a>
             <a href="#" className="hover:text-gray-700">{t('dashboard.footer.terms')}</a>
             <a href="#" className="hover:text-gray-700">{t('dashboard.footer.contact')}</a>
           </div>
-          <p className="max-w-3xl mx-auto leading-relaxed">
+          <p className="max-w-3xl mx-auto leading-relaxed px-4">
             {t('dashboard.footer.disclaimer')}
           </p>
-          <div className="flex justify-between items-center pt-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-2 pt-4 px-4">
             <span>{t('brand.title')}</span>
             <span>{t('dashboard.footer.version')} v1.0.0</span>
           </div>
