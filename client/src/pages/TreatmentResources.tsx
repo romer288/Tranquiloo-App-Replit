@@ -27,8 +27,10 @@ import { useGoalsData } from '@/hooks/useGoalsData';
 import { useToast } from '@/hooks/use-toast';
 import { DateRange } from 'react-day-picker';
 import { filterAnalysesByRange, getAnalysisDateBounds } from '@/utils/filterAnalysesByRange';
+import { useLanguage } from '@/context/LanguageContext';
 
 const TreatmentResources = () => {
+  const { t } = useLanguage();
   const { data, getAllAnalyses } = useAnalyticsData();
   const summariesData = useGoalsData();
   const { summaries } = summariesData;
@@ -184,19 +186,19 @@ const TreatmentResources = () => {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="min-w-0">
-              <h1 className="text-xl font-semibold text-gray-900">Track Outcomes & Treatment</h1>
+              <h1 className="text-xl font-semibold text-gray-900">{t('treatmentResources.title')}</h1>
               <p className="text-sm text-gray-600 mt-1">
-                Monitor your progress, track goals, and access evidence-based treatments
+                {t('treatmentResources.subtitle')}
               </p>
             </div>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               <Button onClick={handleDownloadSummary} variant="outline" size="sm" disabled={allAnalyses.length === 0} className="w-full sm:w-auto">
                 <Download className="w-4 h-4 mr-2" />
-                Download Conversation Summary
+                {t('treatmentResources.download')}
               </Button>
               <Button onClick={connectToTherapist} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
                 <Users className="w-4 h-4 mr-2" />
-                Connect with Therapist
+                {t('treatmentResources.connect')}
               </Button>
             </div>
           </div>
@@ -211,23 +213,23 @@ const TreatmentResources = () => {
               <>
                 <CheckCircle className="w-8 h-8 text-green-600" />
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Active Treatment Plan</h3>
-                  <p className="text-gray-600">You're currently following a CBT treatment plan</p>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('treatmentResources.title')}</h3>
+                  <p className="text-gray-600">{t('treatmentResources.subtitle')}</p>
                 </div>
               </>
             ) : (
               <>
                 <AlertCircle className="w-8 h-8 text-orange-600" />
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900">No Active Treatment</h3>
-                  <p className="text-gray-600">Based on your anxiety patterns, we recommend starting with professional therapy</p>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('treatmentResources.noActiveTitle')}</h3>
+                  <p className="text-gray-600">{t('treatmentResources.noActiveDesc')}</p>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => navigate('/assessment')}>
-                    Take Assessment
+                    {t('treatmentResources.takeAssessment')}
                   </Button>
                   <Button onClick={connectToTherapist}>
-                    Find Therapist
+                    {t('treatmentResources.findTherapist')}
                   </Button>
                 </div>
               </>
