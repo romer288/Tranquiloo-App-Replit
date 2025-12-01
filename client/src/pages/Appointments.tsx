@@ -7,11 +7,13 @@ import { ArrowLeft, Calendar } from 'lucide-react';
 import ScheduleAppointment from '@/components/appointments/ScheduleAppointment';
 import AppointmentList from '@/components/appointments/AppointmentList';
 import VideoCallInterface from '@/components/video-call/VideoCallInterface';
+import { useLanguage } from '@/context/LanguageContext';
 
 const Appointments = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [refreshKey, setRefreshKey] = useState(0);
+  const { t } = useLanguage();
 
   // Video call state
   const [isInCall, setIsInCall] = useState(false);
@@ -62,14 +64,14 @@ const Appointments = () => {
               onClick={() => navigate(ROUTES.dashboard)}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+              {t('appointments.back')}
             </Button>
             <div>
               <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                 <Calendar className="w-6 h-6" />
-                My Appointments
+                {t('appointments.title')}
               </h1>
-              <p className="text-sm text-gray-600">Schedule and manage therapy sessions</p>
+              <p className="text-sm text-gray-600">{t('appointments.subtitle')}</p>
             </div>
           </div>
         </div>

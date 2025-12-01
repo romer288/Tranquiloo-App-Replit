@@ -7,6 +7,7 @@ import { Target, Trophy, TrendingUp, Star, CheckCircle2 } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 
 import ChartDateRangePicker from '@/components/analytics/ChartDateRangePicker';
+import { useLanguage } from '@/context/LanguageContext';
 
 type EnrichedGoal = GoalWithProgress & {
   averageScoreForRange: number;
@@ -123,6 +124,7 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({
   minDate,
   maxDate,
 }) => {
+  const { t } = useLanguage();
   const displayGoals = React.useMemo<EnrichedGoal[]>(() => {
     return goals.map((goal) => {
       const history = Array.isArray(goal.progress_history) ? goal.progress_history : [];
@@ -152,9 +154,9 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({
           <div className="mx-auto w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
             <Target className="w-8 h-8 text-muted-foreground" />
           </div>
-          <CardTitle className="text-xl">No Goals Set Yet</CardTitle>
+          <CardTitle className="text-xl">{t('analytics.goals.emptyTitle')}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Start by creating some goals to track your progress and see beautiful analytics here
+            {t('analytics.goals.emptyDesc')}
           </p>
         </CardHeader>
       </Card>
@@ -196,7 +198,7 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({
               <Target className="w-5 h-5 text-primary" />
             </div>
             <CardTitle className="text-xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-              Goal Progress Overview
+              {t('analytics.goals.title')}
             </CardTitle>
           </div>
           {onDateRangeChange && (
@@ -205,7 +207,7 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({
               onChange={onDateRangeChange}
               minDate={minDate}
               maxDate={maxDate}
-              label="Range"
+              label={t('therapistDashboard.range.label')}
             />
           )}
         </div>
@@ -217,7 +219,7 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground">Total Goals</p>
+                  <p className="text-xs font-medium text-muted-foreground">{t('analytics.goals.total')}</p>
                   <p className="text-2xl font-bold text-primary">{totalGoals}</p>
                 </div>
                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
@@ -231,7 +233,7 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground">Completed</p>
+                  <p className="text-xs font-medium text-muted-foreground">{t('analytics.goals.completed')}</p>
                   <p className="text-2xl font-bold text-green-600">{completedGoals}</p>
                 </div>
                 <div className="w-10 h-10 bg-green-500/10 rounded-full flex items-center justify-center">
@@ -245,7 +247,7 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground">In Progress</p>
+                  <p className="text-xs font-medium text-muted-foreground">{t('analytics.goals.inProgress')}</p>
                   <p className="text-2xl font-bold text-orange-600">{inProgressGoals}</p>
                 </div>
                 <div className="w-10 h-10 bg-orange-500/10 rounded-full flex items-center justify-center">
@@ -259,7 +261,7 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground">Avg Score</p>
+                  <p className="text-xs font-medium text-muted-foreground">{t('analytics.goals.avgScore')}</p>
                   <p className="text-2xl font-bold text-purple-600">{(averageProgress !== null && averageProgress !== undefined && !isNaN(Number(averageProgress)) ? Number(averageProgress).toFixed(1) : '0.0')}</p>
                 </div>
                 <div className="w-10 h-10 bg-purple-500/10 rounded-full flex items-center justify-center">
@@ -290,31 +292,35 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({
                       </div>
                       <div className="flex-1">
                         <h4 className="font-semibold text-foreground text-base">{goal.title}</h4>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
-                            {goal.category.replace('_', ' ')}
-                          </Badge>
-                          <Badge 
-                            variant={completionStatus === 'completed' ? 'default' : 
-                                   completionStatus === 'good' ? 'secondary' : 'outline'}
-                            className="text-xs"
-                          >
-                            {completionStatus === 'completed' ? 'Completed' :
-                             completionStatus === 'good' ? 'Good Progress' :
-                             completionStatus === 'started' ? 'Getting Started' : 'New Goal'}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-foreground">
-                        {(goal?.averageScoreForRange !== null && goal?.averageScoreForRange !== undefined && !isNaN(Number(goal.averageScoreForRange)) ? Number(goal.averageScoreForRange).toFixed(1) : '0.0')}/10
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {(Number(goal.completionRateForRange ?? 0)).toFixed(2)}% complete
-                      </p>
-                    </div>
-                  </div>
+                     <div className="flex items-center gap-2 mt-1">
+                       <Badge variant="outline" className="text-xs">
+                         {goal.category.replace('_', ' ')}
+                       </Badge>
+                       <Badge 
+                         variant={completionStatus === 'completed' ? 'default' : 
+                                completionStatus === 'good' ? 'secondary' : 'outline'}
+                         className="text-xs"
+                       >
+                          {completionStatus === 'completed'
+                            ? t('analytics.goals.badge.completed')
+                            : completionStatus === 'good'
+                            ? t('analytics.goals.badge.good')
+                            : completionStatus === 'started'
+                            ? t('analytics.goals.badge.started')
+                            : t('analytics.goals.badge.new')}
+                       </Badge>
+                     </div>
+                   </div>
+                 </div>
+                 <div className="text-right">
+                   <p className="text-lg font-bold text-foreground">
+                     {(goal?.averageScoreForRange !== null && goal?.averageScoreForRange !== undefined && !isNaN(Number(goal.averageScoreForRange)) ? Number(goal.averageScoreForRange).toFixed(1) : '0.0')}/10
+                   </p>
+                   <p className="text-xs text-muted-foreground">
+                      {(Number(goal.completionRateForRange ?? 0)).toFixed(2)}% {t('analytics.goals.adherence')}
+                   </p>
+                 </div>
+               </div>
                   
                   <div className="space-y-2">
                     <Progress 
@@ -325,10 +331,10 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({
                         '--progress-foreground': config.color 
                       } as React.CSSProperties}
                     />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Progress: {Number(goal.completionRateForRange ?? 0).toFixed(0)}%</span>
-                      <span>Score: {(goal?.averageScoreForRange !== null && goal?.averageScoreForRange !== undefined && !isNaN(Number(goal.averageScoreForRange)) ? Number(goal.averageScoreForRange).toFixed(1) : '0.0')}/10</span>
-                    </div>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>{t('analytics.goals.progressLabel')}: {Number(goal.completionRateForRange ?? 0).toFixed(0)}%</span>
+                      <span>{t('analytics.goals.scoreLabel')}: {(goal?.averageScoreForRange !== null && goal?.averageScoreForRange !== undefined && !isNaN(Number(goal.averageScoreForRange)) ? Number(goal.averageScoreForRange).toFixed(1) : '0.0')}/10</span>
+                   </div>
                   </div>
                 </CardContent>
               </Card>

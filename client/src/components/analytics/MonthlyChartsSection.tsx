@@ -7,6 +7,7 @@ import { ClaudeAnxietyAnalysisWithDate } from '@/services/analyticsService';
 import ChartDateRangePicker from './ChartDateRangePicker';
 import { Calendar, TrendingUp } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface MonthlyChartsSectionProps {
   analyses: ClaudeAnxietyAnalysisWithDate[];
@@ -25,6 +26,7 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
   minDate,
   maxDate,
 }) => {
+  const { t } = useLanguage();
   // Helper to ensure triggers is always an array
   const ensureTriggersArray = (triggers: any): string[] => {
     if (!triggers) return [];
@@ -162,13 +164,13 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
   const monthlyData = processMonthlyData();
 
   const chartConfig = {
-    workCareer: { label: 'Work/Career', color: '#3B82F6' },
-    social: { label: 'Social', color: '#EF4444' },
-    health: { label: 'Health', color: '#F59E0B' },
-    financial: { label: 'Financial', color: '#10B981' },
-    relationships: { label: 'Relationships', color: '#8B5CF6' },
-    future: { label: 'Future/Uncertainty', color: '#F97316' },
-    family: { label: 'Family', color: '#06B6D4' }
+    workCareer: { label: t('analytics.trends.work'), color: '#3B82F6' },
+    social: { label: t('analytics.trends.social'), color: '#EF4444' },
+    health: { label: t('analytics.trends.health'), color: '#F59E0B' },
+    financial: { label: t('analytics.trends.financial'), color: '#10B981' },
+    relationships: { label: t('analytics.trends.relationships'), color: '#8B5CF6' },
+    future: { label: t('analytics.trends.future'), color: '#F97316' },
+    family: { label: t('analytics.trends.family'), color: '#06B6D4' }
   };
 
   const CustomizedAxisTick = (props: any) => {
@@ -200,9 +202,9 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
       <Card className="p-6">
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="w-5 h-5 text-blue-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Monthly Progress Overview</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('analytics.monthly.title')}</h3>
         </div>
-        <p className="text-gray-600">Start tracking your anxiety to see monthly progress trends.</p>
+        <p className="text-gray-600">{t('analytics.monthly.none')}</p>
       </Card>
     );
   }
@@ -219,7 +221,7 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
                   <Calendar className="w-5 h-5 text-primary" />
                 </div>
                 <CardTitle className="text-xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-                  Monthly Anxiety Type Trends
+                  {t('analytics.monthly.title')}
                 </CardTitle>
               </div>
               {onDateRangeChange && (
@@ -228,7 +230,7 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
                   onChange={onDateRangeChange}
                   minDate={minDate}
                   maxDate={maxDate}
-                  label="Range"
+                  label={t('therapistDashboard.range.label')}
                 />
               )}
             </div>

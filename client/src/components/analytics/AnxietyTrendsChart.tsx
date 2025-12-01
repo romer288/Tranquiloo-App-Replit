@@ -7,6 +7,7 @@ import { DateRange } from 'react-day-picker';
 
 import ChartDateRangePicker from './ChartDateRangePicker';
 import { WeeklyTrendData } from '@/utils/buildWeeklyTrendsData';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface AnxietyTrendsChartProps {
   weeklyTrends: WeeklyTrendData[];
@@ -23,6 +24,7 @@ const AnxietyTrendsChart: React.FC<AnxietyTrendsChartProps> = ({
   minDate,
   maxDate,
 }) => {
+  const { t } = useLanguage();
   console.log('📈 AnxietyTrendsChart render - weeklyTrends:', weeklyTrends);
   
   // Safety check for data
@@ -32,12 +34,12 @@ const AnxietyTrendsChart: React.FC<AnxietyTrendsChartProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Anxiety Trends Over Time
+            {t('analytics.trends.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center h-64 text-muted-foreground">
-            No trend data available yet
+            {t('analytics.trends.none')}
           </div>
         </CardContent>
       </Card>
@@ -45,13 +47,13 @@ const AnxietyTrendsChart: React.FC<AnxietyTrendsChartProps> = ({
   }
   
   const chartConfig = {
-    workCareer: { label: 'Work/Career', color: 'hsl(var(--primary))' },
-    social: { label: 'Social', color: 'hsl(var(--destructive))' },
-    health: { label: 'Health', color: 'hsl(var(--accent))' },
-    financial: { label: 'Financial', color: 'hsl(142 76% 36%)' },
-    relationships: { label: 'Relationships', color: 'hsl(262 83% 58%)' },
-    future: { label: 'Future/Uncertainty', color: 'hsl(25 95% 53%)' },
-    family: { label: 'Family', color: 'hsl(173 58% 39%)' }
+    workCareer: { label: t('analytics.trends.work'), color: 'hsl(var(--primary))' },
+    social: { label: t('analytics.trends.social'), color: 'hsl(var(--destructive))' },
+    health: { label: t('analytics.trends.health'), color: 'hsl(var(--accent))' },
+    financial: { label: t('analytics.trends.financial'), color: 'hsl(142 76% 36%)' },
+    relationships: { label: t('analytics.trends.relationships'), color: 'hsl(262 83% 58%)' },
+    future: { label: t('analytics.trends.future'), color: 'hsl(25 95% 53%)' },
+    family: { label: t('analytics.trends.family'), color: 'hsl(173 58% 39%)' }
   };
 
   const CustomizedAxisTick = (props: any) => {
@@ -116,7 +118,7 @@ const AnxietyTrendsChart: React.FC<AnxietyTrendsChartProps> = ({
               <Activity className="w-5 h-5 text-primary" />
             </div>
             <CardTitle className="text-xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-              Weekly Anxiety Type Trends
+              {t('analytics.trends.title')}
             </CardTitle>
           </div>
           {onDateRangeChange && (

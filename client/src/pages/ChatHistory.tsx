@@ -8,6 +8,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Calendar, MessageSquare, Clock, Brain, History } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/context/LanguageContext';
+import { useLanguage } from '@/context/LanguageContext';
 interface ChatSession {
   id: string;
   userId: string;
@@ -39,6 +41,8 @@ interface AnxietyAnalysis {
 
 const ChatHistory = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
+  const { t } = useLanguage();
 
   const { data: sessionsData = [], isLoading: sessionsLoading, error: sessionsError } = useQuery({
     queryKey: [`/api/users/${user?.id}/chat-sessions`],
@@ -100,10 +104,10 @@ const ChatHistory = () => {
     <div className="container mx-auto py-6 px-4 space-y-6" data-testid="chat-history-container">
       <div className="flex items-center space-x-2">
         <History className="h-6 w-6 text-primary" />
-        <h1 className="text-3xl font-bold" data-testid="text-page-title">Chat History</h1>
+        <h1 className="text-3xl font-bold" data-testid="text-page-title">{t('chatHistory.title')}</h1>
       </div>
       <p className="text-muted-foreground" data-testid="text-page-description">
-        Review your previous conversations and anxiety interventions
+        {t('chatHistory.subtitle')}
       </p>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -112,27 +116,27 @@ const ChatHistory = () => {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <MessageSquare className="h-5 w-5" />
-              <span>Recent Conversations</span>
+              <span>{t('chatHistory.recentConversations')}</span>
             </CardTitle>
             <CardDescription>
-              Your chat sessions with AI companions
+              {t('chatHistory.sessionsDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-96">
               {sessions.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground" data-testid="text-no-sessions">
-                  <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No chat sessions yet</p>
-                  <p className="text-sm">Start a conversation to see your history here</p>
-                </div>
-              ) : (
+        <div className="text-center py-8 text-muted-foreground" data-testid="text-no-sessions">
+          <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>{t('chatHistory.noSessions')}</p>
+          <p className="text-sm">{t('chatHistory.noSessionsDesc')}</p>
+        </div>
+      ) : (
                 <div className="space-y-4">
                   {sessions.map((session: ChatSession) => (
                     <div key={session.id} className="border rounded-lg p-4 space-y-2" data-testid={`card-session-${session.id}`}>
                       {/* Main title - show actual conversation title or fallback */}
                       <h3 className="font-medium text-lg" data-testid={`text-session-title-${session.id}`}>
-                        {session.title && session.title !== 'New Chat Session' ? session.title : 'Untitled Chat'}
+                        {session.title && session.title !== 'New Chat Session' ? session.title : t('chatHistory.untitled')}
                       </h3>
 
                       <div className="flex items-center justify-between">
@@ -171,7 +175,7 @@ const ChatHistory = () => {
                       
                       {session.anxietyLevel && (
                         <div className="flex items-center space-x-2">
-                          <span className="text-sm">Anxiety Level:</span>
+                          <span className="text-sm">{t('chatHistory.anxietyLevel')}:</span>
                           <Badge 
                             className={getAnxietyLevelColor(session.anxietyLevel)}
                             data-testid={`badge-anxiety-level-${session.id}`}
@@ -188,7 +192,7 @@ const ChatHistory = () => {
                         onClick={() => window.location.href = `/chat?session=${session.id}`}
                         data-testid={`button-view-session-${session.id}`}
                       >
-                        View Conversation
+                        {t('chatHistory.viewConversation')}
                       </Button>
                     </div>
                   ))}
@@ -201,23 +205,23 @@ const ChatHistory = () => {
         {/* Anxiety Analysis History */}
         <Card data-testid="card-anxiety-analyses">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Brain className="h-5 w-5" />
-              <span>Anxiety Interventions</span>
-            </CardTitle>
-            <CardDescription>
-              AI-powered anxiety analysis and coping strategies
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-96">
-              {recentAnalyses.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground" data-testid="text-no-analyses">
-                  <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No anxiety analyses yet</p>
-                  <p className="text-sm">Chat with our AI companions to receive personalized support</p>
-                </div>
-              ) : (
+              <CardTitle className="flex items-center space-x-2">
+                <Brain className="h-5 w-5" />
+                <span>{t('chatHistory.interventions')}</span>
+              </CardTitle>
+              <CardDescription>
+                {t('chatHistory.interventionsDesc')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-96">
+                {recentAnalyses.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground" data-testid="text-no-analyses">
+                    <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>{t('chatHistory.noAnalyses')}</p>
+                    <p className="text-sm">{t('chatHistory.noAnalysesDesc')}</p>
+                  </div>
+                ) : (
                 <div className="space-y-4">
                   {recentAnalyses.map((analysis: AnxietyAnalysis) => (
                     <div key={analysis.id} className="border rounded-lg p-4 space-y-3" data-testid={`card-analysis-${analysis.id}`}>

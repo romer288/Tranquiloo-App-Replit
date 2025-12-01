@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Calendar, Target, Activity } from 'lucide-react';
 import { ClaudeAnxietyAnalysis } from '@/utils/claudeAnxietyAnalysis';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface AnxietyAnalyticsTrackerProps {
   analyses: ClaudeAnxietyAnalysis[];
@@ -17,6 +18,7 @@ interface AnalyticsTrend {
 
 const AnxietyAnalyticsTracker: React.FC<AnxietyAnalyticsTrackerProps> = ({ analyses }) => {
   const [trends, setTrends] = useState<AnalyticsTrend[]>([]);
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Process analyses into trends
@@ -105,15 +107,15 @@ const AnxietyAnalyticsTracker: React.FC<AnxietyAnalyticsTrackerProps> = ({ analy
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-6 h-6 text-blue-500" />
-          <h3 className="text-lg font-semibold text-gray-900">Anxiety Analytics & Tracking</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('analytics.tracker.emptyTitle')}</h3>
         </div>
-        <p className="text-gray-600">Start chatting to see your anxiety analytics and intervention tracking.</p>
+        <p className="text-gray-600">{t('analytics.tracker.emptyDesc')}</p>
         <div className="mt-4">
           <button 
             onClick={() => window.location.href = '/chat'}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
           >
-            Start Chat Session
+            {t('analytics.tracker.startChat')}
           </button>
         </div>
       </div>
@@ -124,7 +126,7 @@ const AnxietyAnalyticsTracker: React.FC<AnxietyAnalyticsTrackerProps> = ({ analy
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
       <div className="flex items-center gap-2 mb-4">
         <TrendingUp className="w-6 h-6 text-blue-500" />
-        <h3 className="text-lg font-semibold text-gray-900">Your Anxiety Analytics & Tracking</h3>
+        <h3 className="text-lg font-semibold text-gray-900">{t('analytics.tracker.title')}</h3>
       </div>
 
       {/* Progress Overview */}
@@ -133,41 +135,41 @@ const AnxietyAnalyticsTracker: React.FC<AnxietyAnalyticsTrackerProps> = ({ analy
           <div className="text-2xl font-bold text-blue-600">
             {getAverageAnxietyLevel()}/10
           </div>
-          <div className="text-sm text-gray-600">Avg Anxiety</div>
+          <div className="text-sm text-gray-600">{t('analytics.tracker.avgAnxiety')}</div>
         </div>
         
         <div className="text-center p-3 bg-green-50 rounded-lg">
           <div className="text-2xl font-bold text-green-600">
             {getAverageGAD7()}/21
           </div>
-          <div className="text-sm text-gray-600">Avg GAD-7</div>
+          <div className="text-sm text-gray-600">{t('analytics.tracker.avgGad7')}</div>
         </div>
         
         <div className="text-center p-3 bg-purple-50 rounded-lg">
           <div className="text-lg font-bold text-purple-600">
             {analyses.length}
           </div>
-          <div className="text-sm text-gray-600">Sessions</div>
+          <div className="text-sm text-gray-600">{t('analytics.tracker.sessions')}</div>
         </div>
         
-        <div className="text-center p-3 bg-orange-50 rounded-lg">
-          <div className={`text-lg font-bold ${
-            progressTrend === 'improving' ? 'text-green-600' : 
-            progressTrend === 'worsening' ? 'text-red-600' : 
-            'text-gray-600'
-          }`}>
-            {progressTrend.toUpperCase()}
+          <div className="text-center p-3 bg-orange-50 rounded-lg">
+            <div className={`text-lg font-bold ${
+              progressTrend === 'improving' ? 'text-green-600' : 
+              progressTrend === 'worsening' ? 'text-red-600' : 
+              'text-gray-600'
+            }`}>
+              {progressTrend.toUpperCase()}
+            </div>
+            <div className="text-sm text-gray-600">{t('analytics.tracker.trend')}</div>
           </div>
-          <div className="text-sm text-gray-600">Trend</div>
         </div>
-      </div>
 
       {/* Most Effective Interventions */}
       {mostEffectiveInterventions.length > 0 && (
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
             <Target className="w-4 h-4 text-green-500" />
-            <span className="text-sm font-medium text-gray-700">Most Effective Interventions for You:</span>
+            <span className="text-sm font-medium text-gray-700">{t('analytics.tracker.mostEffective')}</span>
           </div>
           <div className="space-y-2">
             {(mostEffectiveInterventions ?? []).slice(0, 4).map((item, index) => (
@@ -175,10 +177,10 @@ const AnxietyAnalyticsTracker: React.FC<AnxietyAnalyticsTrackerProps> = ({ analy
                 <span className="text-sm text-green-800">{item.intervention}</span>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-green-600">
-                    {(item?.avgEffectiveness !== null && item?.avgEffectiveness !== undefined && !isNaN(Number(item.avgEffectiveness)) ? Number(item.avgEffectiveness).toFixed(1) : '0.0')}/10 effectiveness
+                    {(item?.avgEffectiveness !== null && item?.avgEffectiveness !== undefined && !isNaN(Number(item.avgEffectiveness)) ? Number(item.avgEffectiveness).toFixed(1) : '0.0')}/10 {t('analytics.tracker.effectiveness')}
                   </span>
                   <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full">
-                    Used {item.usageCount}x
+                    {t('analytics.tracker.used').replace('{count}', item.usageCount.toString())}
                   </span>
                 </div>
               </div>
@@ -191,15 +193,15 @@ const AnxietyAnalyticsTracker: React.FC<AnxietyAnalyticsTrackerProps> = ({ analy
       <div className="bg-gray-50 rounded-lg p-4">
         <div className="flex items-center gap-2 mb-2">
           <Activity className="w-4 h-4 text-blue-500" />
-          <span className="text-sm font-medium text-gray-700">Your Recent Progress:</span>
+          <span className="text-sm font-medium text-gray-700">{t('analytics.tracker.recentProgress')}</span>
         </div>
         <p className="text-sm text-gray-600">
           {progressTrend === 'improving' && 
-            "🎉 Great progress! Your anxiety levels have been decreasing. Keep using the interventions that work best for you."}
+            t('analytics.tracker.progressImproving')}
           {progressTrend === 'stable' && 
-            "📊 Your anxiety levels are stable. Consider trying new interventions or increasing the frequency of current ones."}
+            t('analytics.tracker.progressStable')}
           {progressTrend === 'worsening' && 
-            "🤗 Your anxiety levels have increased recently. This is normal - consider reaching out for additional support or trying crisis interventions."}
+            t('analytics.tracker.progressWorsening')}
         </p>
       </div>
     </div>

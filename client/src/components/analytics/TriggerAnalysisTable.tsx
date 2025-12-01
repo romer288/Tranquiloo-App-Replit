@@ -9,6 +9,7 @@ import { ChevronDown, ChevronRight, Brain, AlertTriangle, Target, Lightbulb } fr
 import { DateRange } from 'react-day-picker';
 
 import ChartDateRangePicker from './ChartDateRangePicker';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface TriggerData {
   trigger: string;
@@ -47,6 +48,7 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
   maxDate
 }) => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const { t } = useLanguage();
 
   if (!triggerData || triggerData.length === 0) {
     return null;
@@ -83,8 +85,8 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
             <Brain className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-gray-900">Clinical Trigger Analysis</h3>
-            <p className="text-sm text-gray-600">Deep psychological insights into anxiety patterns</p>
+            <h3 className="text-xl font-bold text-gray-900">{t('analytics.triggers.title')}</h3>
+            <p className="text-sm text-gray-600">{t('analytics.triggers.description')}</p>
           </div>
         </div>
         {onDateRangeChange && (
@@ -93,7 +95,7 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
             onChange={onDateRangeChange}
             minDate={minDate}
             maxDate={maxDate}
-            label="Range"
+            label={t('therapistDashboard.range.label')}
           />
         )}
       </div>
@@ -124,16 +126,16 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
                             <div>
                               <h4 className="font-bold text-gray-900 text-lg">{trigger.trigger}</h4>
                               <p className="text-sm text-gray-600">
-                                {trigger.patientNarrative || trigger.description}
-                              </p>
-                            </div>
-                          </div>
+                {trigger.patientNarrative || trigger.description}
+              </p>
+            </div>
+          </div>
 
                           {/* Metrics */}
                           <div className="flex items-center gap-6 ml-auto mr-4">
                             <div className="text-center">
                               <div className="text-2xl font-bold text-gray-900">{trigger.count}</div>
-                              <div className="text-xs text-gray-500">episodes</div>
+                              <div className="text-xs text-gray-500">{t('analytics.triggers.count')}</div>
                             </div>
                             
                             <div className="text-center">
@@ -143,18 +145,18 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
                               }`}>
                                 {(trigger?.avgSeverity !== null && trigger?.avgSeverity !== undefined && !isNaN(Number(trigger.avgSeverity)) ? Number(trigger.avgSeverity).toFixed(1) : '0.0')}
                               </div>
-                              <div className="text-xs text-gray-500">severity</div>
+                              <div className="text-xs text-gray-500">{t('analytics.triggers.avgSeverity')}</div>
                             </div>
                             
                             <div className="text-center">
                               <div className="text-2xl font-bold text-blue-600">
                                 {(trigger?.count !== null && trigger?.count !== undefined && totalEntries !== null && totalEntries !== undefined && totalEntries > 0 && !isNaN(Number(trigger.count))) ? ((Number(trigger.count) / Number(totalEntries)) * 100).toFixed(0) : '0'}%
                               </div>
-                              <div className="text-xs text-gray-500">frequency</div>
+                              <div className="text-xs text-gray-500">{t('analytics.triggers.total')}</div>
                             </div>
 
                             <Badge variant={riskLevel === 'high' ? 'destructive' : riskLevel === 'moderate' ? 'secondary' : 'outline'}>
-                              {riskLevel} risk
+                              {riskLevel} {t('analytics.triggers.trend')}
                             </Badge>
                           </div>
                         </div>
@@ -181,18 +183,18 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
                               <Brain className="w-4 h-4 text-blue-600" />
                             </div>
                             <div className="flex-1">
-                              <h5 className="font-semibold text-gray-900 mb-2">Clinical Evidence</h5>
+                              <h5 className="font-semibold text-gray-900 mb-2">{t('analytics.triggers.evidence')}</h5>
                               <p className="text-sm text-gray-700 leading-relaxed">
                                 {trigger.evidenceLine || `Last episode ${trigger.lastEpisodeDate || 'recently'} (${trigger.avgSeverity.toFixed(0)}/10); ${trigger.count} episodes recorded; ${trigger.trend || 'stable'} trend.`}
                               </p>
                               {trigger.trend && (
                                 <div className="mt-2 flex items-center gap-2">
-                                  <span className="text-xs text-gray-500">Trend:</span>
-                                  <span className={`text-sm font-medium ${getTrendColor(trigger.trend)}`}>
-                                    {getTrendIcon(trigger.trend)} {trigger.trend}
-                                  </span>
-                                </div>
-                              )}
+                                  <span className="text-xs text-gray-500">{t('analytics.triggers.trendLabel')}:</span>
+                          <span className={`text-sm font-medium ${getTrendColor(trigger.trend)}`}>
+                            {getTrendIcon(trigger.trend)} {t('analytics.triggers.trendLabel')}: {trigger.trend}
+                          </span>
+                        </div>
+                      )}
                             </div>
                           </div>
                         </Card>
@@ -202,7 +204,7 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
                           {/* Memory Context */}
                           {trigger.memoryContext && (
                             <Card className="p-4 bg-white">
-                              <h6 className="font-medium text-gray-900 mb-1">Recalled Context</h6>
+                              <h6 className="font-medium text-gray-900 mb-1">{t('analytics.triggers.recalledContext')}</h6>
                               <p className="text-sm text-gray-600">{trigger.memoryContext}</p>
                             </Card>
                           )}
@@ -210,7 +212,7 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
                           {/* Aggravators */}
                           {trigger.aggravators && trigger.aggravators.length > 0 && (
                             <Card className="p-4 bg-white">
-                              <h6 className="font-medium text-gray-900 mb-1">Aggravating Factors</h6>
+                              <h6 className="font-medium text-gray-900 mb-1">{t('analytics.triggers.aggravators')}</h6>
                               <p className="text-sm text-gray-600">{trigger.aggravators.join(', ')}</p>
                             </Card>
                           )}
@@ -218,7 +220,7 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
                           {/* Impact */}
                           {trigger.impact && (
                             <Card className="p-4 bg-white">
-                              <h6 className="font-medium text-gray-900 mb-1">Impact/Avoidance</h6>
+                              <h6 className="font-medium text-gray-900 mb-1">{t('analytics.triggers.impact')}</h6>
                               <p className="text-sm text-gray-600">{trigger.impact}</p>
                             </Card>
                           )}
@@ -226,7 +228,7 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
                           {/* Last Episode */}
                           {trigger.lastEpisodeDate && (
                             <Card className="p-4 bg-white">
-                              <h6 className="font-medium text-gray-900 mb-1">Last Occurrence</h6>
+                              <h6 className="font-medium text-gray-900 mb-1">{t('analytics.triggers.lastOccurrence')}</h6>
                               <p className="text-sm text-gray-600">{trigger.lastEpisodeDate}</p>
                             </Card>
                           )}
@@ -235,7 +237,7 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
                         {/* Related Triggers */}
                         {trigger.relatedTriggers && trigger.relatedTriggers.length > 0 && (
                           <Card className="p-4 bg-white">
-                            <h5 className="font-semibold text-gray-900 mb-3">Related Trigger Patterns</h5>
+                            <h5 className="font-semibold text-gray-900 mb-3">{t('analytics.triggers.relatedPatterns')}</h5>
                             <div className="space-y-3">
                               {trigger.relatedTriggers.slice(0, 6).map((related, index) => {
                                 // Generate patient-specific narrative for related trigger

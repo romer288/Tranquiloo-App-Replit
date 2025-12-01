@@ -9,6 +9,7 @@ import { DateRange } from 'react-day-picker';
 
 import ChartDateRangePicker from '@/components/analytics/ChartDateRangePicker';
 import { analyticsService, TreatmentOutcome, ClaudeAnxietyAnalysisWithDate } from '@/services/analyticsService';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface TreatmentOutcomesProps {
   analyses: ClaudeAnxietyAnalysisWithDate[];
@@ -27,6 +28,7 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
   minDate,
   maxDate,
 }) => {
+  const { t } = useLanguage();
   // Create weekly aggregated anxiety level data
   const weeklyAnxietyData = React.useMemo(() => {
     if (analyses.length === 0) return [];
@@ -128,15 +130,15 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
   };
 
   const chartConfig = {
-    anxietyLevel: { label: 'Anxiety Level', color: '#3B82F6' }
+    anxietyLevel: { label: t('analytics.outcomes.anxietyLevel'), color: '#3B82F6' }
   };
 
   if (analyses.length === 0) {
     return (
       <div className="space-y-6">
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Treatment Outcomes</h3>
-          <p className="text-gray-600">Start tracking your anxiety to see treatment outcomes and trends.</p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('analytics.outcomes.title')}</h3>
+          <p className="text-gray-600">{t('analytics.outcomes.emptyDesc')}</p>
         </Card>
       </div>
     );
@@ -154,7 +156,7 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
                   <Target className="w-5 h-5 text-primary" />
                 </div>
                 <CardTitle className="text-xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-                  Average Anxiety Level Trends
+                  {t('analytics.outcomes.trendTitle')}
                 </CardTitle>
               </div>
               {onDateRangeChange && (
@@ -163,7 +165,7 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
                   onChange={onDateRangeChange}
                   minDate={minDate}
                   maxDate={maxDate}
-                  label="Range"
+                  label={t('therapistDashboard.range.label')}
                 />
               )}
             </div>
@@ -262,9 +264,9 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
                 <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
                   <Target className="w-10 h-10" />
                 </div>
-                <p className="text-lg font-medium">No trend data available yet</p>
+                <p className="text-lg font-medium">{t('analytics.outcomes.trendEmptyTitle')}</p>
                 <p className="text-sm text-center max-w-sm mt-2">
-                  Start tracking your anxiety levels to see progress trends
+                  {t('analytics.outcomes.trendEmptyDesc')}
                 </p>
               </div>
             )}
@@ -282,7 +284,7 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
                   <Calendar className="w-5 h-5 text-secondary" />
                 </div>
                 <CardTitle className="text-xl font-bold text-gray-900">
-                  Weekly Treatment Outcomes
+                  {t('analytics.outcomes.weeklyTitle')}
                 </CardTitle>
               </div>
               {onDateRangeChange && (
@@ -291,7 +293,7 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
                   onChange={onDateRangeChange}
                   minDate={minDate}
                   maxDate={maxDate}
-                  label="Range"
+                  label={t('therapistDashboard.range.label')}
                 />
               )}
             </div>
@@ -315,7 +317,7 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Avg Anxiety:</span>
+                          <span className="text-sm text-muted-foreground">{t('analytics.outcomes.avgAnxiety')}:</span>
                           <span className="font-bold text-lg text-foreground">{outcome.averageAnxiety}/10</span>
                         </div>
                         <div className="flex items-center justify-between">
