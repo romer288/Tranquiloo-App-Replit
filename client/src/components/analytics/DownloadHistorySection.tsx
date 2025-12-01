@@ -5,6 +5,7 @@ import { Download, FileText, TrendingUp, Calendar, HardDrive, Activity, BarChart
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Area, AreaChart } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import ChartDownloader from './ChartDownloader';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface DownloadEvent {
   date: string;
@@ -19,6 +20,7 @@ interface DownloadHistorySectionProps {
 }
 
 const DownloadHistorySection: React.FC<DownloadHistorySectionProps> = ({ downloadEvents }) => {
+  const { t } = useLanguage();
   const chartData = useMemo(() => {
     // Group downloads by week for trends
     const weeklyData = downloadEvents.reduce((acc, event) => {
@@ -80,27 +82,27 @@ const DownloadHistorySection: React.FC<DownloadHistorySectionProps> = ({ downloa
 
   const chartConfig = {
     downloads: {
-      label: "Downloads",
+      label: t('therapistDashboard.downloads.total'),
       color: "hsl(var(--primary))",
     },
     totalSize: {
-      label: "Total Size (MB)",
+      label: "MB",
       color: "hsl(var(--secondary))",
     },
     analytics: {
-      label: "Analytics",
+      label: t('therapistDashboard.downloads.types.analytics'),
       color: "hsl(var(--primary))",
     },
     reports: {
-      label: "Reports", 
+      label: t('therapistDashboard.downloads.types.reports'),
       color: "hsl(var(--secondary))",
     },
     summaries: {
-      label: "Summaries",
+      label: t('therapistDashboard.downloads.types.summaries'),
       color: "hsl(var(--accent))",
     },
     exports: {
-      label: "Exports",
+      label: t('therapistDashboard.downloads.types.exports'),
       color: "hsl(var(--muted-foreground))",
     }
   };
@@ -143,10 +145,10 @@ const DownloadHistorySection: React.FC<DownloadHistorySectionProps> = ({ downloa
             <Download className="w-10 h-10 text-primary" />
           </div>
           <CardTitle className="text-xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-            No Download History Yet
+            {t('therapistDashboard.downloads.noneTitle')}
           </CardTitle>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Your download activity will appear here once you start exporting reports, charts, and analytics data. Each download will be tracked with detailed insights.
+            {t('therapistDashboard.downloads.noneDesc')}
           </p>
         </CardHeader>
       </Card>
@@ -161,7 +163,9 @@ const DownloadHistorySection: React.FC<DownloadHistorySectionProps> = ({ downloa
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-blue-600/80 uppercase tracking-wider">Total Downloads</p>
+                <p className="text-xs font-semibold text-blue-600/80 uppercase tracking-wider">
+                  {t('therapistDashboard.downloads.total')}
+                </p>
                 <p className="text-2xl font-bold text-blue-600">{downloadEvents.length}</p>
               </div>
               <div className="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center ring-2 ring-blue-500/20">
@@ -175,7 +179,9 @@ const DownloadHistorySection: React.FC<DownloadHistorySectionProps> = ({ downloa
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-green-600/80 uppercase tracking-wider">Total Data</p>
+                <p className="text-xs font-semibold text-green-600/80 uppercase tracking-wider">
+                  {t('therapistDashboard.downloads.totalData')}
+                </p>
                 <p className="text-2xl font-bold text-green-600">{(totalSize !== null && totalSize !== undefined && !isNaN(Number(totalSize)) ? Number(totalSize).toFixed(1) : '0.0')} MB</p>
               </div>
               <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center ring-2 ring-green-500/20">
@@ -189,7 +195,9 @@ const DownloadHistorySection: React.FC<DownloadHistorySectionProps> = ({ downloa
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-orange-600/80 uppercase tracking-wider">This Week</p>
+                <p className="text-xs font-semibold text-orange-600/80 uppercase tracking-wider">
+                  {t('therapistDashboard.downloads.thisWeek')}
+                </p>
                 <p className="text-2xl font-bold text-orange-600">{thisWeekDownloads}</p>
               </div>
               <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center ring-2 ring-orange-500/20">
@@ -203,7 +211,9 @@ const DownloadHistorySection: React.FC<DownloadHistorySectionProps> = ({ downloa
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-purple-600/80 uppercase tracking-wider">Avg Size</p>
+                <p className="text-xs font-semibold text-purple-600/80 uppercase tracking-wider">
+                  {t('therapistDashboard.downloads.avgSize')}
+                </p>
                 <p className="text-2xl font-bold text-purple-600">{downloadEvents.length > 0 && totalSize !== null && totalSize !== undefined && !isNaN(Number(totalSize)) ? (Number(totalSize) / downloadEvents.length).toFixed(1) : '0.0'} MB</p>
               </div>
               <div className="w-12 h-12 bg-purple-500/10 rounded-full flex items-center justify-center ring-2 ring-purple-500/20">
@@ -218,8 +228,8 @@ const DownloadHistorySection: React.FC<DownloadHistorySectionProps> = ({ downloa
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Weekly Download Trends with Area Chart */}
         <Card className="bg-gradient-to-br from-background to-muted/20 border-primary/20 shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-bold text-gray-900">Download Activity Trends</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-bold text-gray-900">{t('therapistDashboard.downloads.title')}</CardTitle>
             <ChartDownloader 
               chartData={chartData} 
               chartType="weekly-downloads" 
@@ -251,7 +261,7 @@ const DownloadHistorySection: React.FC<DownloadHistorySectionProps> = ({ downloa
                           <div className="bg-white border-2 border-gray-200 rounded-lg shadow-xl p-3">
                             <p className="font-bold text-gray-900">{new Date(label).toLocaleDateString()}</p>
                             <p className="text-sm text-gray-600">
-                              Downloads: <span className="font-bold text-blue-600">{payload[0].value}</span>
+                              {t('therapistDashboard.downloads.total')}: <span className="font-bold text-blue-600">{payload[0].value}</span>
                             </p>
                           </div>
                         );

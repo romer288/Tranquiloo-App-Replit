@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Bell, AlertTriangle, Heart, CheckCircle, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Notification {
   id: string;
@@ -16,14 +17,15 @@ interface Notification {
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Mock notifications based on anxiety and treatment levels
     const mockNotifications: Notification[] = [
       {
         id: '1',
-        title: 'Anxiety Level Alert',
-        message: 'Your anxiety levels have been elevated for the past 3 days. Consider practicing breathing exercises or talking to your therapist.',
+        title: t('notifications.type.anxiety'),
+        message: t('notifications.msg.anxiety'),
         type: 'anxiety',
         priority: 'high',
         timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
@@ -31,8 +33,8 @@ const Notifications = () => {
       },
       {
         id: '2',
-        title: 'Treatment Progress',
-        message: 'Great job! You\'ve completed 7 consecutive days of mood tracking. Keep up the good work!',
+        title: t('notifications.type.achievement'),
+        message: t('notifications.msg.achievement'),
         type: 'achievement',
         priority: 'medium',
         timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
@@ -40,8 +42,8 @@ const Notifications = () => {
       },
       {
         id: '3',
-        title: 'Therapy Session Reminder',
-        message: 'You have a therapy session scheduled for tomorrow at 2:00 PM. Don\'t forget to prepare your notes.',
+        title: t('notifications.type.reminder'),
+        message: t('notifications.msg.reminder'),
         type: 'reminder',
         priority: 'medium',
         timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000), // 2 days ago
@@ -49,8 +51,8 @@ const Notifications = () => {
       },
       {
         id: '4',
-        title: 'Weekly Check-in',
-        message: 'Time for your weekly mental health check-in. How are you feeling this week?',
+        title: t('notifications.type.treatment'),
+        message: t('notifications.msg.treatment'),
         type: 'treatment',
         priority: 'low',
         timestamp: new Date(Date.now() - 72 * 60 * 60 * 1000), // 3 days ago
@@ -112,18 +114,18 @@ const Notifications = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link to="/dashboard" className="text-blue-600 hover:text-blue-700">
-              ← Back to Dashboard
+              ← {t('notifications.back')}
             </Link>
-            <h1 className="text-xl font-semibold text-gray-900">Notifications</h1>
+            <h1 className="text-xl font-semibold text-gray-900">{t('notifications.title')}</h1>
             {unreadCount > 0 && (
               <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                {unreadCount} new
+                {unreadCount} {t('notifications.new')}
               </span>
             )}
           </div>
           {unreadCount > 0 && (
             <Button onClick={markAllAsRead} variant="outline" size="sm">
-              Mark all as read
+              {t('notifications.markAll')}
             </Button>
           )}
         </div>
@@ -134,8 +136,8 @@ const Notifications = () => {
         {notifications.length === 0 ? (
           <Card className="p-8 text-center">
             <Bell className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
-            <p className="text-gray-600">You're all caught up! Check back later for updates.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('notifications.emptyTitle')}</h3>
+            <p className="text-gray-600">{t('notifications.emptyDesc')}</p>
           </Card>
         ) : (
           <div className="space-y-4">
@@ -170,7 +172,7 @@ const Notifications = () => {
                             onClick={() => markAsRead(notification.id)}
                             className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                           >
-                            Mark as read
+                            {t('notifications.markRead')}
                           </button>
                         )}
                       </div>
@@ -185,10 +187,10 @@ const Notifications = () => {
                     {notification.type === 'anxiety' && (
                       <div className="mt-4 flex space-x-3">
                         <Button asChild size="sm" variant="outline">
-                          <Link to="/chat">Talk to AI Companion</Link>
+                          <Link to="/chat">{t('notifications.action.chat')}</Link>
                         </Button>
                         <Button asChild size="sm" variant="outline">
-                          <Link to="/track-anxiety">Track Your Mood</Link>
+                          <Link to="/track-anxiety">{t('notifications.action.track')}</Link>
                         </Button>
                       </div>
                     )}
@@ -196,7 +198,7 @@ const Notifications = () => {
                     {notification.type === 'treatment' && (
                       <div className="mt-4">
                         <Button asChild size="sm" variant="outline">
-                          <Link to="/analytics">View Progress</Link>
+                          <Link to="/analytics">{t('notifications.action.progress')}</Link>
                         </Button>
                       </div>
                     )}

@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Search, User, Mail, Phone, Calendar, Trash2 } from 'lucide-react';
+import { Search, User, Mail, Phone, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Patient {
   connectionId: string;
@@ -31,6 +32,7 @@ const PatientDirectory: React.FC<PatientDirectoryProps> = ({ therapistEmail }) =
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadPatients();
@@ -71,8 +73,8 @@ const PatientDirectory: React.FC<PatientDirectoryProps> = ({ therapistEmail }) =
     } catch (error) {
       console.error('Failed to load patients:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to load patient directory',
+        title: t('settings.emailErrorTitle'),
+        description: t('therapistDashboard.loadingPatients'),
         variant: 'destructive',
       });
     } finally {
@@ -98,7 +100,7 @@ const PatientDirectory: React.FC<PatientDirectoryProps> = ({ therapistEmail }) =
     return (
       <Card>
         <CardContent className="p-6">
-          <p className="text-center text-gray-500">Loading patient directory...</p>
+          <p className="text-center text-gray-500">{t('therapistDashboard.loadingPatients')}</p>
         </CardContent>
       </Card>
     );
@@ -110,10 +112,10 @@ const PatientDirectory: React.FC<PatientDirectoryProps> = ({ therapistEmail }) =
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="w-5 h-5" />
-            Patient Directory
+            {t('therapistDashboard.patientDirectory')}
           </CardTitle>
           <p className="text-sm text-gray-500">
-            All your accepted patients ({patients.length} total)
+            {t('therapistDashboard.patientDirectoryDesc').replace('{count}', patients.length.toString())}
           </p>
         </CardHeader>
         <CardContent>
@@ -121,7 +123,7 @@ const PatientDirectory: React.FC<PatientDirectoryProps> = ({ therapistEmail }) =
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
               type="text"
-              placeholder="Search by name, email, or patient code..."
+              placeholder={t('therapistDashboard.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -132,7 +134,7 @@ const PatientDirectory: React.FC<PatientDirectoryProps> = ({ therapistEmail }) =
             <div className="text-center py-12">
               <User className="w-12 h-12 mx-auto text-gray-300 mb-4" />
               <p className="text-gray-500">
-                {searchQuery ? 'No patients found matching your search' : 'No patients yet'}
+                {searchQuery ? t('therapistDashboard.noPatientsSearch') : t('therapistDashboard.noPatients')}
               </p>
             </div>
           ) : (
@@ -146,10 +148,10 @@ const PatientDirectory: React.FC<PatientDirectoryProps> = ({ therapistEmail }) =
                           <h3 className="text-lg font-semibold">
                             {patient.firstName} {patient.lastName}
                           </h3>
-                          <Badge variant="secondary">Active</Badge>
+                          <Badge variant="secondary">{t('therapistDashboard.active')}</Badge>
                           {patient.shareReports && (
                             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                              Sharing Reports
+                              {t('therapistDashboard.sharingReports')}
                             </Badge>
                           )}
                         </div>
@@ -157,12 +159,12 @@ const PatientDirectory: React.FC<PatientDirectoryProps> = ({ therapistEmail }) =
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                           <div className="flex items-center gap-2">
                             <Mail className="w-4 h-4 text-gray-400" />
-                            <span className="text-gray-600">Email:</span>
+                            <span className="text-gray-600">{t('therapistDashboard.email')}:</span>
                             <span className="font-medium">{patient.patientEmail}</span>
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <span className="text-gray-600">Patient Code:</span>
+                            <span className="text-gray-600">{t('therapistDashboard.patientCode')}:</span>
                             <code className="bg-gray-100 px-2 py-1 rounded font-mono text-sm">
                               {patient.patientCode}
                             </code>
@@ -171,14 +173,14 @@ const PatientDirectory: React.FC<PatientDirectoryProps> = ({ therapistEmail }) =
                           {patient.phoneNumber && (
                             <div className="flex items-center gap-2">
                               <Phone className="w-4 h-4 text-gray-400" />
-                              <span className="text-gray-600">Phone:</span>
+                              <span className="text-gray-600">{t('therapistDashboard.phone')}:</span>
                               <span className="font-medium">{patient.phoneNumber}</span>
                             </div>
                           )}
 
                           {patient.gender && (
                             <div className="flex items-center gap-2">
-                              <span className="text-gray-600">Gender:</span>
+                              <span className="text-gray-600">{t('therapistDashboard.gender')}:</span>
                               <span className="font-medium">{patient.gender}</span>
                             </div>
                           )}
@@ -186,13 +188,13 @@ const PatientDirectory: React.FC<PatientDirectoryProps> = ({ therapistEmail }) =
                           {patient.dateOfBirth && (
                             <div className="flex items-center gap-2">
                               <Calendar className="w-4 h-4 text-gray-400" />
-                              <span className="text-gray-600">Age:</span>
-                              <span className="font-medium">{calculateAge(patient.dateOfBirth)} years</span>
+                              <span className="text-gray-600">{t('therapistDashboard.age')}:</span>
+                              <span className="font-medium">{calculateAge(patient.dateOfBirth)} {t('therapistDashboard.years')}</span>
                             </div>
                           )}
 
                           <div className="flex items-center gap-2">
-                            <span className="text-gray-600">Connected:</span>
+                            <span className="text-gray-600">{t('therapistDashboard.connected')}:</span>
                             <span className="font-medium">{formatDate(patient.connectedAt)}</span>
                           </div>
                         </div>

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, AlertCircle, Target } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface TriggerData {
   trigger: string;
@@ -21,12 +22,13 @@ const AnalyticsMetrics: React.FC<AnalyticsMetricsProps> = ({
   averageAnxiety,
   mostCommonTrigger
 }) => {
+  const { t } = useLanguage();
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       <Card className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-600">Total Sessions</p>
+            <p className="text-sm font-medium text-gray-600">{t('analytics.metrics.totalSessions')}</p>
             <p className="text-2xl font-bold text-gray-900">{totalEntries}</p>
           </div>
           <div className="p-3 bg-blue-100 rounded-full">
@@ -38,7 +40,7 @@ const AnalyticsMetrics: React.FC<AnalyticsMetricsProps> = ({
       <Card className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-600">Average Anxiety</p>
+            <p className="text-sm font-medium text-gray-600">{t('analytics.metrics.averageAnxiety')}</p>
             <p className="text-2xl font-bold text-gray-900">{(averageAnxiety !== null && averageAnxiety !== undefined && !isNaN(Number(averageAnxiety)) ? Number(averageAnxiety).toFixed(1) : '0.0')}/10</p>
           </div>
           <div className="p-3 bg-orange-100 rounded-full">
@@ -50,8 +52,8 @@ const AnalyticsMetrics: React.FC<AnalyticsMetricsProps> = ({
       <Card className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-600">Most Common Trigger</p>
-            <p className="text-lg font-bold text-gray-900">{mostCommonTrigger?.trigger || 'No triggers recorded'}</p>
+            <p className="text-sm font-medium text-gray-600">{t('analytics.metrics.mostCommonTrigger')}</p>
+            <p className="text-lg font-bold text-gray-900">{mostCommonTrigger?.trigger || t('analytics.metrics.noTriggers')}</p>
           </div>
           <div className="p-3 bg-red-100 rounded-full">
             <Target className="w-6 h-6 text-red-600" />
@@ -62,8 +64,8 @@ const AnalyticsMetrics: React.FC<AnalyticsMetricsProps> = ({
       <Card className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-600">Treatment Progress</p>
-            <p className="text-lg font-bold text-green-700">Improving</p>
+            <p className="text-sm font-medium text-gray-600">{t('analytics.metrics.treatmentProgress')}</p>
+            <p className="text-lg font-bold text-green-700">{t('analytics.metrics.progressImproving')}</p>
           </div>
           <div className="p-3 bg-green-100 rounded-full">
             <TrendingDown className="w-6 h-6 text-green-600" />

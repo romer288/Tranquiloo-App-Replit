@@ -15,7 +15,7 @@ import { useLanguage } from '@/context/LanguageContext';
 const ContactTherapist = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [choice, setChoice] = useState<'yes' | 'no' | ''>('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -30,8 +30,8 @@ const ContactTherapist = () => {
       const { downloadSummaryReport } = await import('@/services/summaryReportService');
 
       toast({
-        title: 'Download Started',
-        description: 'Downloading your anxiety data and conversation summary...'
+        title: t('contact.downloadStarted'),
+        description: t('contact.downloadStartedDesc')
       });
 
       downloadSummaryReport([], [], [], {
@@ -40,8 +40,8 @@ const ContactTherapist = () => {
       });
     } catch (error) {
       toast({
-        title: 'Download Error',
-        description: 'Failed to download anxiety data',
+        title: t('contact.downloadError'),
+        description: t('contact.downloadErrorDesc'),
         variant: 'destructive'
       });
     }
@@ -50,8 +50,8 @@ const ContactTherapist = () => {
   const handleConnectToTherapist = async () => {
     if (!email.trim()) {
       toast({
-        title: 'Email required',
-        description: "Please enter your therapist's email address",
+        title: t('contact.emailRequired'),
+        description: t('contact.emailRequiredDesc'),
         variant: 'destructive'
       });
       return;
@@ -67,7 +67,7 @@ const ContactTherapist = () => {
         import.meta.env.VITE_FALLBACK_USER_EMAIL ||
         '';
 
-      const therapistDisplayName = email.split('@')[0] || 'Therapist';
+      const therapistDisplayName = email.split('@')[0] || t('auth.therapistRole');
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
       const shouldUseBase =
         apiBaseUrl &&
@@ -101,7 +101,7 @@ const ContactTherapist = () => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        let errorMessage = 'Failed to send connection request';
+        let errorMessage = t('contact.requestErrorDesc');
         try {
           const parsed = JSON.parse(errorText);
           errorMessage = parsed?.error || parsed?.message || errorMessage;
@@ -114,8 +114,8 @@ const ContactTherapist = () => {
       }
 
       toast({
-        title: 'Connection Request Sent',
-        description: 'Your therapist will receive a notification to approve the connection'
+        title: t('contact.requestSent'),
+        description: t('contact.requestSentDesc')
       });
 
       setEmail('');
@@ -123,8 +123,8 @@ const ContactTherapist = () => {
       setChoice('');
     } catch (error) {
       toast({
-        title: 'Connection Error',
-        description: error instanceof Error ? error.message : 'Failed to connect with therapist. Please try again.',
+        title: t('contact.requestError'),
+        description: error instanceof Error ? error.message : t('contact.requestErrorDesc'),
         variant: 'destructive'
       });
     } finally {
@@ -141,10 +141,10 @@ const ContactTherapist = () => {
       <div className="max-w-4xl mx-auto px-4 md:px-6">
         <div className="mb-10 text-center md:text-left">
           <h1 className="text-3xl font-bold text-slate-900 mb-2" data-testid="text-page-title">
-            Contact Therapist
+            {t('contact.title')}
           </h1>
           <p className="text-slate-600" data-testid="text-page-description">
-            Connect with your therapist or download your anxiety data for professional consultation
+            {t('contact.subtitle')}
           </p>
         </div>
 
@@ -155,9 +155,9 @@ const ContactTherapist = () => {
                 <User className="w-8 h-8 text-blue-600" />
               </div>
               <div className="space-y-3 max-w-2xl">
-                <h2 className="text-3xl font-semibold text-slate-900">Do you currently have a therapist?</h2>
+                <h2 className="text-3xl font-semibold text-slate-900">{t('contact.question')}</h2>
                 <p className="text-slate-600">
-                  If you have a therapist, we can connect your account so they can track your progress and provide better support.
+                  {t('contact.questionDesc')}
                 </p>
               </div>
               <RadioGroup
@@ -168,13 +168,13 @@ const ContactTherapist = () => {
                 {[
                   {
                     value: 'yes' as const,
-                    label: "Yes, I have a therapist I'd like to connect",
-                    description: 'Send them a secure request to review your progress.'
+                    label: t('contact.optionYes'),
+                    description: t('contact.optionYesDesc')
                   },
                   {
                     value: 'no' as const,
-                    label: "No, I don't have a therapist",
-                    description: 'Download your data or explore professional options.'
+                    label: t('contact.optionNo'),
+                    description: t('contact.optionNoDesc')
                   }
                 ].map((option) => {
                   const isSelected = choice === option.value;
@@ -210,28 +210,28 @@ const ContactTherapist = () => {
           <Card className="mb-8 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                Connect with Your Therapist
+                {t('contact.connectTitle')}
               </CardTitle>
               <p className="text-gray-600">
-                Enter your therapist's email to send them a connection request
+                {t('contact.connectDesc')}
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="therapist-email">Therapist Email</Label>
+                <Label htmlFor="therapist-email">{t('contact.emailLabel')}</Label>
                 <Input
                   id="therapist-email"
                   type="email"
-                  placeholder="therapist@example.com"
+                  placeholder={t('contact.emailPlaceholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               <div>
-                <Label htmlFor="connection-message">Message (Optional)</Label>
+                <Label htmlFor="connection-message">{t('contact.messageLabel')}</Label>
                 <Textarea
                   id="connection-message"
-                  placeholder="Let your therapist know about your current concerns..."
+                  placeholder={t('contact.messagePlaceholder')}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   rows={3}
@@ -244,10 +244,10 @@ const ContactTherapist = () => {
                   disabled={isConnecting}
                   data-testid="button-connect-therapist"
                 >
-                  {isConnecting ? 'Connecting...' : 'Send Connection Request'}
+                  {isConnecting ? t('contact.connecting') : t('contact.sendRequest')}
                 </Button>
                 <Button variant="outline" className="sm:flex-1" onClick={resetChoice}>
-                  Back
+                  {t('contact.back')}
                 </Button>
               </div>
             </CardContent>
@@ -263,9 +263,9 @@ const ContactTherapist = () => {
                     <User className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-blue-900">You're in self-guided mode</h3>
+                    <h3 className="font-semibold text-blue-900">{t('contact.selfGuidedTitle')}</h3>
                     <p className="text-blue-700 text-sm">
-                      Continue using the app for anxiety management. Consider connecting with a therapist for professional support.
+                      {t('contact.selfGuidedDesc')}
                     </p>
                   </div>
                 </div>
@@ -276,30 +276,30 @@ const ContactTherapist = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5 text-purple-600" />
-                  Download Your Anxiety Data
+                  {t('contact.downloadTitle')}
                 </CardTitle>
                 <p className="text-gray-600">
-                  Get your complete anxiety tracking data and conversation summaries to share with a mental health professional
+                  {t('contact.downloadDesc')}
                 </p>
               </CardHeader>
               <CardContent>
                 <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                  <h4 className="font-semibold mb-2">Your data package includes:</h4>
+                  <h4 className="font-semibold mb-2">{t('contact.packageTitle')}</h4>
                   <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Complete anxiety tracking history and trends</li>
-                    <li>• Conversation summaries with AI companion</li>
-                    <li>• Trigger analysis and patterns</li>
-                    <li>• Goal progress and intervention outcomes</li>
-                    <li>• Clinical assessment results</li>
+                    <li>• {t('contact.packageItem1')}</li>
+                    <li>• {t('contact.packageItem2')}</li>
+                    <li>• {t('contact.packageItem3')}</li>
+                    <li>• {t('contact.packageItem4')}</li>
+                    <li>• {t('contact.packageItem5')}</li>
                   </ul>
                 </div>
                 <Button onClick={handleDownloadAnxietyData} className="w-full" data-testid="button-download-data">
                   <Download className="w-4 h-4 mr-2" />
-                  Download My Anxiety Data
+                  {t('contact.downloadCta')}
                 </Button>
                 <div className="mt-4">
                   <Button variant="outline" onClick={resetChoice} className="w-full" data-testid="button-back-choice">
-                    Back to Options
+                    {t('contact.backOptions')}
                   </Button>
                 </div>
               </CardContent>
@@ -309,22 +309,22 @@ const ContactTherapist = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-green-600" />
-                  Ready to Find a Therapist?
+                  {t('contact.readyTitle')}
                 </CardTitle>
                 <p className="text-gray-600">
-                  Professional therapy can significantly improve your anxiety management journey
+                  {t('contact.readyDesc')}
                 </p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="bg-green-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-green-900 mb-2">Benefits of Professional Therapy:</h4>
+                    <h4 className="font-semibold text-green-900 mb-2">{t('contact.benefitsTitle')}</h4>
                     <ul className="text-sm text-green-700 space-y-1">
-                      <li>• Personalized treatment plans based on your specific needs</li>
-                      <li>• Evidence-based therapeutic approaches (CBT, DBT, etc.)</li>
-                      <li>• Professional crisis support and intervention</li>
-                      <li>• Medication management when appropriate</li>
-                      <li>• Long-term recovery and coping strategies</li>
+                      <li>• {t('contact.benefit1')}</li>
+                      <li>• {t('contact.benefit2')}</li>
+                      <li>• {t('contact.benefit3')}</li>
+                      <li>• {t('contact.benefit4')}</li>
+                      <li>• {t('contact.benefit5')}</li>
                     </ul>
                   </div>
                   <Button
@@ -333,7 +333,7 @@ const ContactTherapist = () => {
                     data-testid="button-find-therapist"
                   >
                     <MapPin className="w-4 h-4 mr-2" />
-                    Find Therapists Near Me
+                    {t('contact.findTherapist')}
                   </Button>
                 </div>
               </CardContent>
@@ -345,29 +345,29 @@ const ContactTherapist = () => {
           <CardHeader>
             <CardTitle className="text-red-900 flex items-center gap-2">
               <Phone className="w-5 h-5" />
-              Emergency Resources
+              {t('contact.emergencyTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
                 <div>
-                  <p className="font-semibold">National Suicide Prevention Lifeline</p>
-                  <p className="text-sm text-gray-600">24/7 crisis support</p>
+                  <p className="font-semibold">{t('contact.emergency1')}</p>
+                  <p className="text-sm text-gray-600">{t('contact.emergency1Desc')}</p>
                 </div>
                 <Badge variant="secondary">988</Badge>
               </div>
               <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
                 <div>
-                  <p className="font-semibold">Crisis Text Line</p>
-                  <p className="text-sm text-gray-600">Text support available 24/7</p>
+                  <p className="font-semibold">{t('contact.emergency2')}</p>
+                  <p className="text-sm text-gray-600">{t('contact.emergency2Desc')}</p>
                 </div>
                 <Badge variant="secondary">Text HOME to 741741</Badge>
               </div>
               <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
                 <div>
-                  <p className="font-semibold">SAMHSA National Helpline</p>
-                  <p className="text-sm text-gray-600">Treatment referral and information</p>
+                  <p className="font-semibold">{t('contact.emergency3')}</p>
+                  <p className="text-sm text-gray-600">{t('contact.emergency3Desc')}</p>
                 </div>
                 <Badge variant="secondary">1-800-662-4357</Badge>
               </div>

@@ -3,9 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Mail, Phone, MessageCircle, HelpCircle, Clock, Shield } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 const Support = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -17,10 +19,10 @@ const Support = () => {
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Settings
+            {t('support.backSettings')}
           </Button>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Support Center</h1>
-          <p className="text-gray-600">Get help with Tranquiloo and mental health resources</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('support.title')}</h1>
+          <p className="text-gray-600">{t('support.subtitle')}</p>
         </div>
 
         <div className="space-y-6">
@@ -28,44 +30,42 @@ const Support = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageCircle className="w-5 h-5 text-blue-600" />
-                Contact Our Support Team
+                {t('support.contactTeam')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 mb-6">
-                Our dedicated support team is here to help you with any questions, technical issues, 
-                or concerns about using Tranquiloo. We strive to provide timely, helpful responses 
-                to ensure you have the best possible experience.
+                {t('support.contactBody')}
               </p>
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-blue-50 p-6 rounded-lg border-l-4 border-blue-500">
                   <div className="flex items-center gap-3 mb-4">
                     <Mail className="w-6 h-6 text-blue-600" />
-                    <h3 className="font-semibold text-blue-900">Email Support</h3>
+                    <h3 className="font-semibold text-blue-900">{t('support.emailSupport')}</h3>
                   </div>
                   <p className="text-blue-800 mb-3">
-                    Send us a detailed message and we'll get back to you within 24 hours.
+                    {t('support.emailDesc')}
                   </p>
                   <div className="bg-white p-3 rounded">
                     <p className="font-semibold text-gray-900">support@tranquiloo-app.com</p>
-                    <p className="text-sm text-gray-600">Response time: Within 24 hours</p>
+                    <p className="text-sm text-gray-600">{t('support.emailDesc')}</p>
                   </div>
                   <Button 
                     className="mt-3 w-full" 
                     onClick={() => window.location.href = 'mailto:support@tranquiloo-app.com'}
                   >
-                    Send Email
+                    {t('support.emailCta')}
                   </Button>
                 </div>
 
                 <div className="bg-green-50 p-6 rounded-lg border-l-4 border-green-500">
                   <div className="flex items-center gap-3 mb-4">
                     <Phone className="w-6 h-6 text-green-600" />
-                    <h3 className="font-semibold text-green-900">Phone Support</h3>
+                    <h3 className="font-semibold text-green-900">{t('support.phoneSupport')}</h3>
                   </div>
                   <p className="text-green-800 mb-3">
-                    Speak directly with our support team for immediate assistance.
+                    {t('support.phoneDesc')}
                   </p>
                   <div className="bg-white p-3 rounded">
                     <p className="font-semibold text-gray-900">+1-385-867-8804</p>
@@ -75,7 +75,7 @@ const Support = () => {
                     className="mt-3 w-full bg-green-600 hover:bg-green-700" 
                     onClick={() => window.location.href = 'tel:+13858678804'}
                   >
-                    Call Now
+                    {t('support.callNow')}
                   </Button>
                 </div>
               </div>
@@ -83,13 +83,13 @@ const Support = () => {
               <div className="mt-6 bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500">
                 <div className="flex items-center gap-2 mb-2">
                   <MessageCircle className="w-5 h-5 text-purple-600" />
-                  <h4 className="font-semibold text-purple-900">Text Message Support</h4>
+                  <h4 className="font-semibold text-purple-900">{t('support.textSupport')}</h4>
                 </div>
                 <p className="text-purple-800 mb-2">
-                  Send us a text message for quick questions or non-urgent issues.
+                  {t('support.textDesc')}
                 </p>
                 <p className="font-semibold text-gray-900">+1-385-867-8804</p>
-                <p className="text-sm text-gray-600">Available 24/7 for non-emergency support</p>
+                <p className="text-sm text-gray-600">{t('support.textAvailability')}</p>
               </div>
             </CardContent>
           </Card>
@@ -98,12 +98,12 @@ const Support = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-red-600" />
-                Crisis Support & Emergency Resources
+                {t('support.crisisTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="bg-red-50 p-4 rounded-lg border-l-4 border-red-500 mb-4">
-                <h4 className="font-semibold text-red-900 mb-2">🚨 If you're in crisis or having thoughts of self-harm:</h4>
+                <h4 className="font-semibold text-red-900 mb-2">🚨 {t('support.crisisLead')}</h4>
                 <div className="text-red-800 space-y-1">
                   <p><strong>Call 911</strong> - Emergency Services</p>
                   <p><strong>Call 988</strong> - Suicide & Crisis Lifeline (24/7)</p>
@@ -113,14 +113,12 @@ const Support = () => {
               </div>
 
               <p className="text-gray-700 mb-4">
-                While Tranquiloo provides valuable mental health support, we want to ensure you have 
-                access to immediate professional help when needed. These resources are available 24/7 
-                and staffed by trained crisis counselors.
+                {t('support.contactBody')}
               </p>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-2">National Resources</h4>
+                  <h4 className="font-semibold text-gray-900 mb-2">{t('support.nationalResources')}</h4>
                   <ul className="text-sm text-gray-700 space-y-1">
                     <li>• SAMHSA National Helpline: 1-800-662-4357</li>
                     <li>• National Alliance on Mental Illness: 1-800-950-6264</li>
@@ -130,7 +128,7 @@ const Support = () => {
                 </div>
                 
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-2">Online Resources</h4>
+                  <h4 className="font-semibold text-gray-900 mb-2">{t('support.onlineResources')}</h4>
                   <ul className="text-sm text-gray-700 space-y-1">
                     <li>• suicidepreventionlifeline.org</li>
                     <li>• crisistextline.org</li>
@@ -146,58 +144,39 @@ const Support = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <HelpCircle className="w-5 h-5 text-orange-600" />
-                Frequently Asked Questions
+                {t('support.faqTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">How do I reset my password?</h4>
-                  <p className="text-gray-700">
-                    Go to the login page and click "Forgot Password". Enter your email address and 
-                    we'll send you a secure link to reset your password.
-                  </p>
+                  <h4 className="font-semibold text-gray-900 mb-2">{t('support.faq1.q')}</h4>
+                  <p className="text-gray-700">{t('support.faq1.a')}</p>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Is my data secure and private?</h4>
-                  <p className="text-gray-700">
-                    Yes, absolutely. We are HIPAA compliant and use industry-standard encryption to 
-                    protect your personal health information. See our Privacy Policy for full details.
-                  </p>
+                  <h4 className="font-semibold text-gray-900 mb-2">{t('support.faq2.q')}</h4>
+                  <p className="text-gray-700">{t('support.faq2.a')}</p>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Can I export my conversation history?</h4>
-                  <p className="text-gray-700">
-                    Yes, you can download your conversation summaries and analytics data from the 
-                    Analytics and Treatment Resources pages in the app.
-                  </p>
+                  <h4 className="font-semibold text-gray-900 mb-2">{t('support.faq3.q')}</h4>
+                  <p className="text-gray-700">{t('support.faq3.a')}</p>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">How accurate is the AI anxiety analysis?</h4>
-                  <p className="text-gray-700">
-                    Our AI is trained on clinical anxiety assessment frameworks, but it's designed to 
-                    complement, not replace, professional mental health care. Always consult with 
-                    qualified healthcare providers for clinical decisions.
-                  </p>
+                  <h4 className="font-semibold text-gray-900 mb-2">{t('support.faq4.q')}</h4>
+                  <p className="text-gray-700">{t('support.faq4.a')}</p>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Can I use Tranquiloo with my therapist?</h4>
-                  <p className="text-gray-700">
-                    Absolutely! You can share your analytics and progress reports with your therapist. 
-                    Use the "Share with Therapist" feature in the Analytics section.
-                  </p>
+                  <h4 className="font-semibold text-gray-900 mb-2">{t('support.faq5.q')}</h4>
+                  <p className="text-gray-700">{t('support.faq5.a')}</p>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">How can my therapist access my progress data?</h4>
-                  <p className="text-gray-700 mb-3">
-                    Your therapist can view your real-time analytics and receive weekly progress reports. 
-                    After connecting your therapist in the app, they can access their dedicated portal.
-                  </p>
+                  <h4 className="font-semibold text-gray-900 mb-2">{t('support.faq6.q')}</h4>
+                  <p className="text-gray-700 mb-3">{t('support.faq6.a')}</p>
                   <div className="bg-blue-50 p-4 rounded-lg mb-3">
                     <p className="font-semibold text-blue-900 mb-2">For Therapists:</p>
                     <div className="space-y-2">

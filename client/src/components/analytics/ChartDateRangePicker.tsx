@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface ChartDateRangePickerProps {
   value?: DateRange;
@@ -19,7 +20,7 @@ interface ChartDateRangePickerProps {
 
 const formatRangeLabel = (range?: DateRange) => {
   if (!range?.from && !range?.to) {
-    return 'All time';
+    return null;
   }
 
   if (range.from && !range.to) {
@@ -30,7 +31,7 @@ const formatRangeLabel = (range?: DateRange) => {
     return `${format(range.from, 'LLL d, yyyy')} – ${format(range.to, 'LLL d, yyyy')}`;
   }
 
-  return 'Select range';
+  return null;
 };
 
 const ChartDateRangePicker: React.FC<ChartDateRangePickerProps> = ({
@@ -38,14 +39,23 @@ const ChartDateRangePicker: React.FC<ChartDateRangePickerProps> = ({
   onChange,
   minDate,
   maxDate,
-  label = 'Date range',
+  label,
   className,
 }) => {
   const [open, setOpen] = React.useState(false);
+  const { t } = useLanguage();
 
   const handleSelect = (range: DateRange | undefined) => {
     onChange(range);
   };
+
+  const rangeLabel =
+    formatRangeLabel(value) ||
+    (value?.from && value?.to
+      ? `${format(value.from, 'LLL d, yyyy')} – ${format(value.to, 'LLL d, yyyy')}`
+      : value?.from
+      ? `${format(value.from, 'LLL d, yyyy')} – …`
+      : t('therapistDashboard.range.allTime'));
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -57,9 +67,9 @@ const ChartDateRangePicker: React.FC<ChartDateRangePickerProps> = ({
           className={cn('flex items-center gap-2', className)}
         >
           <CalendarRange className="h-4 w-4" />
-          <span className="hidden sm:inline">{label}:</span>
+          <span className="hidden sm:inline">{label || t('therapistDashboard.range.label')}:</span>
           <span className="text-xs sm:text-sm font-medium">
-            {formatRangeLabel(value)}
+            {rangeLabel || t('therapistDashboard.range.select')}
           </span>
         </Button>
       </PopoverTrigger>
@@ -78,10 +88,10 @@ const ChartDateRangePicker: React.FC<ChartDateRangePickerProps> = ({
         />
         <div className="flex items-center justify-between px-3 py-2 border-t">
           <Button variant="ghost" size="sm" type="button" onClick={() => handleSelect(undefined)}>
-            Clear
+            {t('therapistDashboard.range.clear')}
           </Button>
           <Button variant="default" size="sm" type="button" onClick={() => setOpen(false)}>
-            Apply
+            {t('therapistDashboard.range.apply')}
           </Button>
         </div>
       </PopoverContent>

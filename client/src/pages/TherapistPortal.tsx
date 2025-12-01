@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { User, Search, Calendar, TrendingUp, Activity, Target, MessageSquare } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 // Removed: useAnalyticsData and useGoalsData - these fetch therapist data, not patient data
 import AnalyticsHeader from '@/components/analytics/AnalyticsHeader';
 import AnalyticsMetrics from '@/components/analytics/AnalyticsMetrics';
@@ -37,6 +38,7 @@ interface PatientConnection {
 const TherapistPortal: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [therapistEmail, setTherapistEmail] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [patients, setPatients] = useState<PatientConnection[]>([]);
@@ -49,8 +51,8 @@ const TherapistPortal: React.FC = () => {
   const handleTherapistLogin = async () => {
     if (!therapistEmail.trim()) {
       toast({
-        title: "Email Required",
-        description: "Please enter your email address",
+        title: t('therapistPortal.emailRequired'),
+        description: t('therapistPortal.emailRequiredDesc'),
         variant: "destructive"
       });
       return;
@@ -61,14 +63,14 @@ const TherapistPortal: React.FC = () => {
       // For now, allow any email - role verification will be added after migration
       setIsAuthenticated(true);
       toast({
-        title: "Access Granted",
-        description: "Welcome to the therapist portal",
+        title: t('therapistPortal.accessGranted'),
+        description: t('therapistPortal.welcome'),
       });
     } catch (error) {
       console.error('Error checking therapist access:', error);
       toast({
-        title: "Error",
-        description: "Failed to verify therapist access",
+        title: t('therapistPortal.errorTitle'),
+        description: t('therapistPortal.errorDesc'),
         variant: "destructive"
       });
     } finally {
@@ -79,8 +81,8 @@ const TherapistPortal: React.FC = () => {
   const searchPatients = async () => {
     if (!searchEmail.trim() && !searchCode.trim()) {
       toast({
-        title: "Search Required",
-        description: "Please enter a patient's email or 6-digit code",
+        title: t('therapistPortal.searchRequired'),
+        description: t('therapistPortal.searchRequiredDesc'),
         variant: "destructive"
       });
       return;
@@ -116,8 +118,8 @@ const TherapistPortal: React.FC = () => {
       if (!profiles || profiles.length === 0) {
         console.log('🔍 THERAPIST SEARCH: No patients found');
         toast({
-          title: "No Patients Found",
-          description: "No patients found with the provided search criteria",
+          title: t('therapistPortal.noPatients'),
+          description: t('therapistPortal.noPatientsDesc'),
           variant: "destructive"
         });
         setPatients([]);
@@ -136,8 +138,8 @@ const TherapistPortal: React.FC = () => {
       if (patientProfiles.length === 0) {
         console.log('🔍 THERAPIST SEARCH: No patient role users found');
         toast({
-          title: "No Patients Found",
-          description: "No patients found with the provided search criteria",
+          title: t('therapistPortal.noPatients'),
+          description: t('therapistPortal.noPatientsDesc'),
           variant: "destructive"
         });
         setPatients([]);
@@ -162,14 +164,14 @@ const TherapistPortal: React.FC = () => {
 
       setPatients(formattedPatients);
       toast({
-        title: "Search Complete",
+        title: t('therapistPortal.searchComplete'),
         description: `Found ${patientProfiles.length} patient(s)`,
       });
     } catch (error) {
       console.error('🔍 THERAPIST SEARCH ERROR:', error);
       toast({
-        title: "Error",
-        description: "Failed to search for patients",
+        title: t('therapistPortal.errorTitle'),
+        description: t('therapistPortal.searchError'),
         variant: "destructive"
       });
     } finally {
@@ -186,22 +188,22 @@ const TherapistPortal: React.FC = () => {
               <User className="w-8 h-8 text-blue-600" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Therapist Portal
+              {t('therapistPortal.title')}
             </h1>
             <p className="text-gray-600">
-              Enter your email to access your patients' progress data
+              {t('therapistPortal.subtitle')}
             </p>
           </div>
 
           <div className="space-y-4">
             <div>
-              <Label htmlFor="therapist-email">Email Address</Label>
+              <Label htmlFor="therapist-email">{t('therapistPortal.emailLabel')}</Label>
               <Input
                 id="therapist-email"
                 type="email"
                 value={therapistEmail}
                 onChange={(e) => setTherapistEmail(e.target.value)}
-                placeholder="dr.smith@example.com"
+                placeholder={t('therapistPortal.emailPlaceholder')}
                 onKeyPress={(e) => e.key === 'Enter' && handleTherapistLogin()}
               />
             </div>
@@ -210,14 +212,13 @@ const TherapistPortal: React.FC = () => {
               className="w-full"
               disabled={loading}
             >
-              {loading ? 'Verifying...' : 'Access Portal'}
+              {loading ? t('therapistPortal.verifying') : t('therapistPortal.access')}
             </Button>
           </div>
 
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>Demo Note:</strong> Enter any email address that patients have used to connect with you.
-              This portal shows the same analytics and outcomes that patients see in their app.
+              <strong>{t('therapistPortal.demoNote')}</strong> {t('therapistPortal.demoBody')}
             </p>
           </div>
         </Card>

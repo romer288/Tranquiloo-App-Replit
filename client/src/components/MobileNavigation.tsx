@@ -7,16 +7,18 @@ import {
   Stethoscope, 
   Users 
 } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 const MobileNavigation = () => {
   const location = useLocation();
+  const { t } = useLanguage();
 
   const navItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Home' },
-    { path: '/chat', icon: MessageCircle, label: 'Chat' },
-    { path: '/analytics', icon: BarChart3, label: 'Analytics' },
-    { path: '/treatment-resources', icon: Stethoscope, label: 'Treatment' },
-    { path: '/find-therapist', icon: Users, label: 'Therapist' },
+    { path: '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
+    { path: '/chat', icon: MessageCircle, label: t('nav.chat') },
+    { path: '/analytics', icon: BarChart3, label: t('nav.analytics') },
+    { path: '/treatment-resources', icon: Stethoscope, label: t('nav.treatment') },
+    { path: '/find-therapist', icon: Users, label: t('mobile.title.therapist') },
   ];
 
   return (

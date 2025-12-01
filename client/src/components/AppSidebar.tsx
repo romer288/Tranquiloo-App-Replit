@@ -84,24 +84,24 @@ export function AppSidebar() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Anxiety Companion',
-          text: 'Check out this amazing mental health companion app!',
+          title: t('brand.title'),
+          text: t('share.description'),
           url: window.location.origin,
         });
       } catch (error) {
         // Fallback to clipboard
         await navigator.clipboard.writeText(window.location.origin);
         toast({
-          title: "Link copied!",
-          description: "App link has been copied to clipboard.",
+          title: t('share.copiedTitle'),
+          description: t('share.copiedDesc'),
         });
       }
     } else {
       // Fallback to clipboard
       await navigator.clipboard.writeText(window.location.origin);
       toast({
-        title: "Link copied!",
-        description: "App link has been copied to clipboard.",
+        title: t('share.copiedTitle'),
+        description: t('share.copiedDesc'),
       });
     }
   };
@@ -123,11 +123,11 @@ export function AppSidebar() {
           <ContextMenuContent>
             <ContextMenuItem onClick={handleShare} className="flex items-center space-x-2">
               <Share className="w-4 h-4" />
-              <span>Share App</span>
+              <span>{t('nav.share')}</span>
             </ContextMenuItem>
             <ContextMenuItem onClick={handleLogout} className="flex items-center space-x-2 text-red-600">
               <LogOut className="w-4 h-4" />
-              <span>Log Out</span>
+              <span>{t('nav.logout')}</span>
             </ContextMenuItem>
           </ContextMenuContent>
         </ContextMenu>

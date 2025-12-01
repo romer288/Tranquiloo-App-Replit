@@ -106,7 +106,7 @@ const PatientLogin: React.FC = () => {
       if (result.success) {
         // Check if email verification is required
         if (result.user && !result.user.emailVerified) {
-          setSignInError('Please verify your email address first. Check your inbox for the verification link.');
+          setSignInError(t('auth.verifyEmailFirst'));
         } else {
           // Store user data and redirect
           safeStorage.setItem('auth_user', JSON.stringify(result.user));
@@ -116,11 +116,11 @@ const PatientLogin: React.FC = () => {
         }
       } else {
         console.log('Sign in failed:', result.error);
-        setSignInError(result.error?.message || 'Invalid email or password');
+        setSignInError(result.error?.message || t('auth.invalidCredentials'));
       }
     } catch (error) {
       console.error('Sign in error:', error);
-      setSignInError('Network error. Please try again.');
+      setSignInError(t('auth.networkError'));
     } finally {
       setIsLoading(false);
     }
@@ -131,7 +131,7 @@ const PatientLogin: React.FC = () => {
     setIsLoading(true);
     
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      alert(t('auth.passwordMismatch'));
       setIsLoading(false);
       return;
     }
@@ -180,11 +180,11 @@ const PatientLogin: React.FC = () => {
         console.log('Authentication successful, redirecting to:', redirectUrl);
         navigate(redirectUrl, { replace: true });
       } else {
-        alert(signInResult.error?.message || 'Authentication failed');
+        alert(signInResult.error?.message || t('auth.invalidCredentials'));
       }
     } catch (error) {
       console.error('Email auth error:', error);
-      alert('Network error. Please try again.');
+      alert(t('auth.networkError'));
     } finally {
       setIsLoading(false);
     }
@@ -208,10 +208,10 @@ const PatientLogin: React.FC = () => {
       if (result.success) {
         setForgotSubmitted(true);
       } else {
-        setForgotError(result.error?.message || 'Failed to send reset email');
+        setForgotError(result.error?.message || t('auth.networkError'));
       }
     } catch (err) {
-      setForgotError('Network error. Please try again.');
+      setForgotError(t('auth.networkError'));
     } finally {
       setIsLoading(false);
     }
@@ -236,9 +236,9 @@ const PatientLogin: React.FC = () => {
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <CardTitle className="text-2xl font-bold">Check Your Email</CardTitle>
+            <CardTitle className="text-2xl font-bold">{t('auth.checkEmail')}</CardTitle>
             <CardDescription>
-              If an account exists with {forgotEmail}, we've sent password reset instructions.
+              {t('auth.resetEmailSent').replace('{email}', forgotEmail || t('auth.email'))}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -246,8 +246,7 @@ const PatientLogin: React.FC = () => {
               <Alert>
                 <Mail className="w-4 h-4" />
                 <AlertDescription>
-                  Check your email and click the reset link to create a new password. 
-                  The link expires in 1 hour.
+                  {t('auth.resetEmailBody')}
                 </AlertDescription>
               </Alert>
               
@@ -261,7 +260,7 @@ const PatientLogin: React.FC = () => {
                 }}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Sign In
+                {t('auth.backToSignIn')}
               </Button>
             </div>
           </CardContent>
@@ -278,10 +277,10 @@ const PatientLogin: React.FC = () => {
             <Heart className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Tranquiloo
+            {t('brand.appName')}
           </h1>
           <p className="text-gray-600">
-            Your mental health journey starts here
+            {t('auth.tagline')}
           </p>
         </div>
 
@@ -384,13 +383,13 @@ const PatientLogin: React.FC = () => {
           {activeView === 'signup' && (
               <CardContent className="space-y-4 pt-4">
                 <div className="text-center">
-                  <h2 className="text-lg font-semibold">Create Account</h2>
-                  <p className="text-sm text-gray-600">Join our mental health community</p>
+                  <h2 className="text-lg font-semibold">{t('auth.createAccount')}</h2>
+                  <p className="text-sm text-gray-600">{t('auth.communityTagline')}</p>
                 </div>
 
                 {/* Role Selection */}
                 <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
-                  <h3 className="text-sm font-medium text-gray-900 text-center">I am registering as:</h3>
+                  <h3 className="text-sm font-medium text-gray-900 text-center">{t('auth.roleQuestion')}</h3>
                   <div className="grid grid-cols-2 gap-3">
                     <Button
                       type="button"
@@ -400,7 +399,7 @@ const PatientLogin: React.FC = () => {
                       data-testid="button-select-patient"
                     >
                       <Heart className="w-5 h-5 mb-1" />
-                      <span className="text-sm">Patient</span>
+                      <span className="text-sm">{t('auth.patientRole')}</span>
                     </Button>
                     <Button
                       type="button"
@@ -410,7 +409,7 @@ const PatientLogin: React.FC = () => {
                       data-testid="button-select-therapist"
                     >
                       <Shield className="w-5 h-5 mb-1" />
-                      <span className="text-sm">Therapist</span>
+                      <span className="text-sm">{t('auth.therapistRole')}</span>
                     </Button>
                   </div>
                 </div>
@@ -492,7 +491,7 @@ const PatientLogin: React.FC = () => {
                     <Alert>
                       <Info className="w-4 h-4" />
                       <AlertDescription>
-                        You'll have immediate access to the therapist dashboard while we verify your license in the background.
+                        {t('therapist.immediateAccess.desc')}
                       </AlertDescription>
                     </Alert>
                   )}
@@ -521,7 +520,7 @@ const PatientLogin: React.FC = () => {
                     onClick={() => setActiveView('forgot')}
                     className="text-sm text-blue-600 hover:underline mt-2 block"
                   >
-                    Forgot your password?
+                    {t('auth.forgotPassword')}
                   </button>
                 </div>
               </CardContent>
@@ -531,8 +530,8 @@ const PatientLogin: React.FC = () => {
           {activeView === 'forgot' && (
               <CardContent className="space-y-4 pt-4">
                 <div className="text-center">
-                  <h2 className="text-lg font-semibold">Reset Password</h2>
-                  <p className="text-sm text-gray-600">We'll send you instructions to reset your password</p>
+                  <h2 className="text-lg font-semibold">{t('auth.resetPassword')}</h2>
+                  <p className="text-sm text-gray-600">{t('auth.resetSubtitle')}</p>
                 </div>
 
                 {forgotError && (
@@ -544,19 +543,19 @@ const PatientLogin: React.FC = () => {
                 <form onSubmit={handleForgotPassword} className="space-y-4">
                   <div className="space-y-2">
                     <label htmlFor="forgot-email" className="text-sm font-medium">
-                      Email Address
+                      {t('auth.emailLabel')}
                     </label>
                     <Input
                       id="forgot-email"
                       type="email"
-                      placeholder="Enter your email"
+                      placeholder={t('auth.emailPlaceholder')}
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
                       required
                       data-testid="input-forgot-email"
                     />
                     <p className="text-xs text-gray-500">
-                      Enter the email address associated with your account
+                      {t('auth.emailHint')}
                     </p>
                   </div>
 
@@ -566,18 +565,18 @@ const PatientLogin: React.FC = () => {
                     disabled={isLoading}
                     data-testid="button-send-reset"
                   >
-                    {isLoading ? 'Sending...' : 'Send Reset Link'}
+                    {isLoading ? t('auth.sending') : t('auth.sendReset')}
                   </Button>
                 </form>
 
                 <div className="text-center pt-2">
                   <p className="text-sm text-gray-600">
-                    Remember your password?{' '}
+                    {t('auth.rememberPassword')}{' '}
                     <button
                       onClick={() => setActiveView('signin')}
                       className="text-blue-600 hover:underline"
                     >
-                      Sign in
+                      {t('auth.signIn')}
                     </button>
                   </p>
                 </div>
@@ -587,7 +586,7 @@ const PatientLogin: React.FC = () => {
 
         <div className="mt-6 text-center">
           <Link to="/therapist-login" className="text-sm text-gray-600 hover:text-gray-900 underline">
-            Are you a therapist? Click here
+            {t('auth.areTherapist')}
           </Link>
         </div>
       </div>

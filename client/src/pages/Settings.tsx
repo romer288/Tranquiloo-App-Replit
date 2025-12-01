@@ -11,11 +11,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 const Settings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [newEmail, setNewEmail] = useState('');
   const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -29,8 +31,8 @@ const Settings = () => {
   const handleUpdateEmail = async () => {
     if (!newEmail || newEmail === user?.email) {
       toast({
-        title: "Error",
-        description: "Please enter a different email address",
+        title: t('settings.emailErrorTitle'),
+        description: t('settings.emailErrorDesc'),
         variant: "destructive"
       });
       return;
@@ -44,22 +46,22 @@ const Settings = () => {
 
       if (error) {
         toast({
-          title: "Error updating email", 
-          description: "Failed to update email",
+          title: t('settings.emailUpdateError'), 
+          description: t('settings.emailUpdateErrorDesc'),
           variant: "destructive"
         });
       } else {
         toast({
-          title: "Email update requested",
-          description: "Check both your old and new email addresses for confirmation links to complete the change.",
+          title: t('settings.emailRequestedTitle'),
+          description: t('settings.emailRequestedDesc'),
           duration: 8000
         });
         setNewEmail('');
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update email. Please try again.",
+        title: t('settings.emailErrorTitle'),
+        description: t('settings.emailUpdateErrorDesc'),
         variant: "destructive"
       });
     } finally {
@@ -75,21 +77,21 @@ const Settings = () => {
       
       if (error) {
         toast({
-          title: "Error logging out",
-          description: "Failed to log out",
+          title: t('settings.logoutError'),
+          description: t('settings.logoutErrorDesc'),
           variant: "destructive"
         });
       } else {
         toast({
-          title: "Logged out successfully",
-          description: "You have been signed out of your account.",
+          title: t('settings.logoutSuccess'),
+          description: t('settings.logoutSuccessDesc'),
         });
         navigate('/');
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to log out. Please try again.",
+        title: t('settings.logoutError'),
+        description: t('settings.logoutErrorDesc'),
         variant: "destructive"
       });
     } finally {
@@ -106,23 +108,23 @@ const Settings = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
-          <p className="text-gray-600">Customize your experience and manage your preferences.</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('settings.title')}</h1>
+          <p className="text-gray-600">{t('settings.subtitle')}</p>
         </div>
 
         <div className="space-y-6">
           {/* Account Section */}
           <Card>
             <CardHeader>
-              <CardTitle>Account</CardTitle>
-              <CardDescription>Manage your account information and settings.</CardDescription>
+              <CardTitle>{t('settings.account')}</CardTitle>
+              <CardDescription>{t('settings.accountDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="current-email" className="text-sm font-medium text-gray-900">Current Email</Label>
+                <Label htmlFor="current-email" className="text-sm font-medium text-gray-900">{t('settings.currentEmail')}</Label>
                 <Input
                   id="current-email"
-                  value={user?.email || 'Not signed in'}
+                  value={user?.email || t('settings.notSignedIn')}
                   disabled
                   className="bg-gray-50"
                 />
@@ -130,7 +132,7 @@ const Settings = () => {
 
               {/* Patient Code Section - Important for therapist connection */}
               <div className="space-y-2">
-                <Label htmlFor="patient-code" className="text-sm font-medium text-gray-900">Your Patient Code</Label>
+                <Label htmlFor="patient-code" className="text-sm font-medium text-gray-900">{t('settings.patientCode')}</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     id="patient-code"
@@ -144,25 +146,25 @@ const Settings = () => {
                       const code = user?.patientCode || 'PT-' + (user?.id?.slice(0, 8) || 'XXXX').toUpperCase();
                       navigator.clipboard.writeText(code);
                       toast({
-                        title: "Copied!",
-                        description: "Patient code copied to clipboard"
+                        title: t('settings.copy'),
+                        description: t('settings.codeCopied')
                       });
                     }}
                   >
-                    Copy
+                    {t('settings.copy')}
                   </Button>
                 </div>
                 <p className="text-sm text-gray-500">
-                  Share this code with your therapist along with your email address so they can access your analytics and treatment data.
+                  {t('settings.shareCodeHint')}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="new-email" className="text-sm font-medium text-gray-900">New Email Address</Label>
+                <Label htmlFor="new-email" className="text-sm font-medium text-gray-900">{t('settings.newEmail')}</Label>
                 <Input
                   id="new-email"
                   type="email"
-                  placeholder="Enter new email address"
+                  placeholder={t('settings.newEmailPlaceholder')}
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
                   disabled={!user}
@@ -174,13 +176,13 @@ const Settings = () => {
                 disabled={!user || !newEmail || isUpdatingEmail}
                 className="w-full sm:w-auto"
               >
-                {isUpdatingEmail ? 'Updating...' : 'Update Email'}
+                {isUpdatingEmail ? t('settings.updating') : t('settings.updateEmail')}
               </Button>
 
               {user && (
                 <div className="space-y-4">
                   <p className="text-sm text-gray-500">
-                    You'll receive confirmation emails at both your current and new email addresses to complete the change.
+                    {t('settings.emailRequestedDesc')}
                   </p>
                   
                   <div className="pt-4 border-t">
@@ -191,7 +193,7 @@ const Settings = () => {
                       className="w-full sm:w-auto"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
-                      {isLoggingOut ? 'Logging out...' : 'Log Out'}
+                      {isLoggingOut ? t('settings.loggingOut') : t('settings.logout')}
                     </Button>
                   </div>
                 </div>
@@ -202,15 +204,15 @@ const Settings = () => {
           {/* Voice & Language Section */}
           <Card>
             <CardHeader>
-              <CardTitle>Voice & Language</CardTitle>
-              <CardDescription>Configure how the AI speaks and responds to you.</CardDescription>
+              <CardTitle>{t('settings.voiceLanguage')}</CardTitle>
+              <CardDescription>{t('settings.voiceLanguageDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Language</label>
+                <label className="text-sm font-medium text-gray-700">{t('settings.languageLabel')}</label>
                 <Select defaultValue="english">
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select language" />
+                    <SelectValue placeholder={t('settings.languagePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="english">English (Vanessa)</SelectItem>
@@ -222,8 +224,8 @@ const Settings = () => {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900">Voice Responses</h4>
-                  <p className="text-sm text-gray-500">Enable AI to speak responses aloud</p>
+                  <h4 className="text-sm font-medium text-gray-900">{t('settings.voiceResponses')}</h4>
+                  <p className="text-sm text-gray-500">{t('settings.voiceResponsesDesc')}</p>
                 </div>
                 <Switch
                   checked={voiceResponses}
@@ -233,8 +235,8 @@ const Settings = () => {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900">Voice Interruption</h4>
-                  <p className="text-sm text-gray-500">Allow interrupting AI by speaking</p>
+                  <h4 className="text-sm font-medium text-gray-900">{t('settings.voiceInterruption')}</h4>
+                  <p className="text-sm text-gray-500">{t('settings.voiceInterruptionDesc')}</p>
                 </div>
                 <Switch
                   checked={voiceInterruption}
@@ -247,14 +249,14 @@ const Settings = () => {
           {/* Privacy & Data Section */}
           <Card>
             <CardHeader>
-              <CardTitle>Privacy & Data</CardTitle>
-              <CardDescription>Control how your data is stored and used.</CardDescription>
+              <CardTitle>{t('settings.privacy')}</CardTitle>
+              <CardDescription>{t('settings.privacyDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900">Local Storage Only</h4>
-                  <p className="text-sm text-gray-500">Keep all data on your device</p>
+                  <h4 className="text-sm font-medium text-gray-900">{t('settings.localStorage')}</h4>
+                  <p className="text-sm text-gray-500">{t('settings.localStorageDesc')}</p>
                 </div>
                 <Switch
                   checked={localStorageOnly}
@@ -264,8 +266,8 @@ const Settings = () => {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900">Analytics</h4>
-                  <p className="text-sm text-gray-500">Help improve the app with anonymous usage data</p>
+                  <h4 className="text-sm font-medium text-gray-900">{t('settings.analytics')}</h4>
+                  <p className="text-sm text-gray-500">{t('settings.analyticsDesc')}</p>
                 </div>
                 <Switch
                   checked={analytics}
@@ -297,8 +299,8 @@ const Settings = () => {
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900">Daily Check-ins</h4>
-                  <p className="text-sm text-gray-500">Gentle reminders to track your mood</p>
+                  <h4 className="text-sm font-medium text-gray-900">{t('settings.dailyCheckIns')}</h4>
+                  <p className="text-sm text-gray-500">{t('settings.dailyCheckInsDesc')}</p>
                 </div>
                 <Switch
                   checked={dailyCheckIns}
@@ -308,8 +310,8 @@ const Settings = () => {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900">Breathing Reminders</h4>
-                  <p className="text-sm text-gray-500">Periodic reminders for breathing exercises</p>
+                  <h4 className="text-sm font-medium text-gray-900">{t('settings.breathingReminders')}</h4>
+                  <p className="text-sm text-gray-500">{t('settings.breathingRemindersDesc')}</p>
                 </div>
                 <Switch
                   checked={breathingReminders}
