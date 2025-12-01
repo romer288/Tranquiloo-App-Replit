@@ -42,7 +42,6 @@ interface AnxietyAnalysis {
 const ChatHistory = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
-  const { t } = useLanguage();
 
   const { data: sessionsData = [], isLoading: sessionsLoading, error: sessionsError } = useQuery({
     queryKey: [`/api/users/${user?.id}/chat-sessions`],
