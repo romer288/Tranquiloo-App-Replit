@@ -137,8 +137,9 @@ const AnxietyTrendsChart: React.FC<AnxietyTrendsChartProps> = ({
       <CardContent className="w-full min-w-0 overflow-hidden">
         {weeklyTrends.length > 0 ? (
           <div className="space-y-4 w-full min-w-0 overflow-hidden">
-            <ChartContainer config={chartConfig} className="h-[300px] sm:h-[350px] w-full min-w-0">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full max-w-full overflow-x-hidden">
+              <ChartContainer config={chartConfig} className="h-[300px] sm:h-[350px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={weeklyTrends} margin={{ top: 20, right: 10, left: 0, bottom: 60 }}>
                   <defs>
                     {Object.entries(chartConfig).map(([key, config], index) => (
@@ -234,7 +235,8 @@ const AnxietyTrendsChart: React.FC<AnxietyTrendsChartProps> = ({
                   />
                 </LineChart>
               </ResponsiveContainer>
-            </ChartContainer>
+              </ChartContainer>
+            </div>
 
             {/* Legend */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3 w-full min-w-0">

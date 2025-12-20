@@ -105,8 +105,9 @@ const AnxietyDistributionChart: React.FC<AnxietyDistributionChartProps> = ({ sev
       <CardContent className="w-full min-w-0 overflow-hidden">
         {enhancedData.length > 0 ? (
           <div className="space-y-4 sm:space-y-6 w-full min-w-0 overflow-hidden">
-            <ChartContainer config={chartConfig} className="h-[300px] sm:h-[350px] w-full min-w-0">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full max-w-full overflow-x-hidden">
+              <ChartContainer config={chartConfig} className="h-[300px] sm:h-[350px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <defs>
                     {enhancedData.map((entry, index) => (
@@ -156,7 +157,8 @@ const AnxietyDistributionChart: React.FC<AnxietyDistributionChartProps> = ({ sev
                   <ChartTooltip content={<CustomTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
-            </ChartContainer>
+              </ChartContainer>
+            </div>
 
             {/* Colorful Legend with enhanced styling */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 w-full min-w-0">

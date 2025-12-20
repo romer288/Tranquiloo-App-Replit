@@ -174,8 +174,9 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
           </CardHeader>
           <CardContent className="w-full min-w-0 overflow-hidden">
             {weeklyAnxietyData.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[300px] sm:h-[350px] w-full min-w-0">
-                <ResponsiveContainer width="100%" height="100%">
+              <div className="w-full max-w-full overflow-x-hidden">
+                <ChartContainer config={chartConfig} className="h-[300px] sm:h-[350px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={weeklyAnxietyData} margin={{ top: 20, right: 10, left: 0, bottom: 60 }}>
                     <defs>
                       <linearGradient id="anxietyGradient" x1="0" y1="0" x2="0" y2="1">
@@ -260,7 +261,8 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
                     />
                   </AreaChart>
                 </ResponsiveContainer>
-              </ChartContainer>
+                </ChartContainer>
+              </div>
             ) : (
               <div className="h-[300px] sm:h-[350px] flex flex-col items-center justify-center text-muted-foreground px-4">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
@@ -344,8 +346,9 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
               })}
             </div>
 
-            <ChartContainer config={chartConfig} className="h-[250px] sm:h-[280px] w-full min-w-0">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full max-w-full overflow-x-hidden">
+              <ChartContainer config={chartConfig} className="h-[250px] sm:h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={outcomes} margin={{ top: 20, right: 10, left: 0, bottom: 40 }}>
                   <defs>
                     <linearGradient id="outcomesGradient" x1="0" y1="0" x2="0" y2="1">
@@ -409,7 +412,8 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
                   />
                 </BarChart>
               </ResponsiveContainer>
-            </ChartContainer>
+              </ChartContainer>
+            </div>
           </CardContent>
         </Card>
       )}
