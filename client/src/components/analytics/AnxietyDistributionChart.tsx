@@ -27,7 +27,7 @@ const AnxietyDistributionChart: React.FC<AnxietyDistributionChartProps> = ({ sev
     color: [
       'hsl(142 76% 36%)', // Green for low anxiety
       'hsl(47 96% 53%)',  // Yellow for mild
-      'hsl(25 95% 53%)',  // Orange for moderate
+      'hsl(25 95% 53%)',  // Orange for moderate  
       'hsl(0 84% 60%)',   // Red for high
       'hsl(300 76% 50%)', // Purple for severe
       'hsl(262 83% 58%)', // Violet for very high
@@ -55,11 +55,11 @@ const AnxietyDistributionChart: React.FC<AnxietyDistributionChartProps> = ({ sev
     if (percent < 0.05) return null; // Don't show labels for slices < 5%
 
     return (
-      <text
-        x={x}
-        y={y}
-        fill="white"
-        textAnchor={x > cx ? 'start' : 'end'}
+      <text 
+        x={x} 
+        y={y} 
+        fill="white" 
+        textAnchor={x > cx ? 'start' : 'end'} 
         dominantBaseline="central"
         fontSize={12}
         fontWeight="600"
@@ -74,12 +74,12 @@ const AnxietyDistributionChart: React.FC<AnxietyDistributionChartProps> = ({ sev
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg p-3 max-w-[200px]">
-          <p className="font-semibold text-foreground text-sm truncate">{data.range}</p>
-          <p className="text-xs sm:text-sm text-muted-foreground break-words">
+        <div className="bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg p-3">
+          <p className="font-semibold text-foreground">{data.range}</p>
+          <p className="text-sm text-muted-foreground">
             Sessions: <span className="font-medium text-foreground">{data.count}</span>
           </p>
-          <p className="text-xs sm:text-sm text-muted-foreground break-words">
+          <p className="text-sm text-muted-foreground">
             Percentage: <span className="font-medium text-foreground">{((data?.count !== null && data?.count !== undefined && total !== null && total !== undefined && total > 0 && !isNaN(Number(data?.count))) ? ((Number(data.count) / Number(total)) * 100).toFixed(1) : '0.0')}%</span>
           </p>
         </div>
@@ -89,25 +89,24 @@ const AnxietyDistributionChart: React.FC<AnxietyDistributionChartProps> = ({ sev
   };
 
   return (
-    <Card className="bg-gradient-to-br from-background to-muted/20 border-primary/20 shadow-lg w-full min-w-0 overflow-hidden">
+    <Card className="bg-gradient-to-br from-background to-muted/20 border-primary/20 shadow-lg">
       <CardHeader className="pb-3">
-        <div className="flex items-center min-w-0">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <div className="flex items-center">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-primary" />
             </div>
-            <CardTitle className="text-base sm:text-xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent truncate">
+            <CardTitle className="text-xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
               Anxiety Levels Distribution
             </CardTitle>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="w-full min-w-0 overflow-hidden">
+      <CardContent>
         {enhancedData.length > 0 ? (
-          <div className="space-y-4 sm:space-y-6 w-full min-w-0 overflow-hidden">
-            <div className="w-full max-w-full overflow-x-hidden">
-              <ChartContainer config={chartConfig} className="h-[300px] sm:h-[350px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+          <div className="space-y-6">
+            <ChartContainer config={chartConfig} className="h-[350px]">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <defs>
                     {enhancedData.map((entry, index) => (
@@ -119,7 +118,7 @@ const AnxietyDistributionChart: React.FC<AnxietyDistributionChartProps> = ({ sev
                         </linearGradient>
                         <filter id={`glow-${index}`} x="-50%" y="-50%" width="200%" height="200%">
                           <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                          <feMerge>
+                          <feMerge> 
                             <feMergeNode in="coloredBlur"/>
                             <feMergeNode in="SourceGraphic"/>
                           </feMerge>
@@ -133,8 +132,8 @@ const AnxietyDistributionChart: React.FC<AnxietyDistributionChartProps> = ({ sev
                     cy="50%"
                     labelLine={false}
                     label={CustomLabel}
-                    outerRadius={window.innerWidth < 640 ? 100 : 140}
-                    innerRadius={window.innerWidth < 640 ? 40 : 60}
+                    outerRadius={140}
+                    innerRadius={60}
                     fill="#8884d8"
                     dataKey="count"
                     animationBegin={0}
@@ -142,8 +141,8 @@ const AnxietyDistributionChart: React.FC<AnxietyDistributionChartProps> = ({ sev
                     paddingAngle={3}
                   >
                     {enhancedData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
+                      <Cell 
+                        key={`cell-${index}`} 
                         fill={`url(#gradient-${index})`}
                         stroke="white"
                         strokeWidth={3}
@@ -157,35 +156,34 @@ const AnxietyDistributionChart: React.FC<AnxietyDistributionChartProps> = ({ sev
                   <ChartTooltip content={<CustomTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
-              </ChartContainer>
-            </div>
-
+            </ChartContainer>
+            
             {/* Colorful Legend with enhanced styling */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 w-full min-w-0">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {enhancedData.map((item, index) => (
-                <div key={index} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-gradient-to-r from-muted/30 to-muted/10 hover:from-muted/50 hover:to-muted/30 transition-all duration-300 border border-muted/20 hover:border-muted/40 w-full min-w-0 overflow-hidden">
-                  <div
-                    className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-white shadow-lg animate-pulse flex-shrink-0"
-                    style={{
+                <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-muted/30 to-muted/10 hover:from-muted/50 hover:to-muted/30 transition-all duration-300 border border-muted/20 hover:border-muted/40">
+                  <div 
+                    className="w-5 h-5 rounded-full border-2 border-white shadow-lg animate-pulse" 
+                    style={{ 
                       backgroundColor: item.color,
                       boxShadow: `0 0 10px ${item.color}40`
                     }}
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs sm:text-sm font-semibold text-foreground truncate">{item.range}</p>
-                    <p className="text-xs text-muted-foreground font-medium break-words">{item.count} sessions</p>
+                    <p className="text-sm font-semibold text-foreground truncate">{item.range}</p>
+                    <p className="text-xs text-muted-foreground font-medium">{item.count} sessions</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
         ) : (
-          <div className="h-[300px] sm:h-[350px] flex flex-col items-center justify-center text-muted-foreground px-4">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-              <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10" />
+          <div className="h-[350px] flex flex-col items-center justify-center text-muted-foreground">
+            <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+              <TrendingUp className="w-10 h-10" />
             </div>
-            <p className="text-base sm:text-lg font-medium text-center break-words">No severity data available yet</p>
-            <p className="text-xs sm:text-sm text-center max-w-sm mt-2 break-words px-4">
+            <p className="text-lg font-medium">No severity data available yet</p>
+            <p className="text-sm text-center max-w-sm mt-2">
               Start tracking your anxiety levels to see distribution patterns
             </p>
           </div>

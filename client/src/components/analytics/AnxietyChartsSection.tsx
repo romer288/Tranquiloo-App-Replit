@@ -44,7 +44,7 @@ const AnxietyChartsSection: React.FC<AnxietyChartsSectionProps> = ({
   console.log('🚀 COMPONENT LOCATION CHECK:', new Error().stack?.split('\n')[2]);
   console.log('🚀 FIRST ANALYSIS USER_ID:', analyses[0]?.user_id);
   console.log('ALL UNIQUE USER_IDS:', [...new Set((analyses ?? []).map(a => a.user_id))]);
-
+  
   const weeklyTrends = React.useMemo(
     () => buildWeeklyTrendsData(analyses),
     [analyses]
@@ -69,16 +69,12 @@ const AnxietyChartsSection: React.FC<AnxietyChartsSectionProps> = ({
 
   // Original behavior for 'all' - show both charts
   return (
-    <div className="space-y-8 mb-8 w-full min-w-0 overflow-hidden">
+    <div className="space-y-8 mb-8">
       {/* Anxiety Type Trends Chart */}
-      <div className="w-full min-w-0 overflow-hidden">
-        <AnxietyTrendsChart weeklyTrends={weeklyTrends} />
-      </div>
+      <AnxietyTrendsChart weeklyTrends={weeklyTrends} />
 
       {/* Severity Distribution */}
-      <div className="w-full min-w-0 overflow-hidden">
-        <AnxietyDistributionChart severityDistribution={severityDistribution} />
-      </div>
+      <AnxietyDistributionChart severityDistribution={severityDistribution} />
     </div>
   );
 };

@@ -265,28 +265,26 @@ const AnalyticsContent = () => {
         onDownloadSummary={handleDownloadSummary}
       />
 
-      <div className="max-w-screen-sm sm:max-w-screen-md mx-auto w-full min-w-0 px-4 sm:px-6 lg:px-8 py-8 space-y-8 overflow-hidden">
+      <div className="max-w-screen-sm sm:max-w-screen-md mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 overflow-hidden">
         {/* Anxiety Analytics Tracker */}
-        <div className="w-full min-w-0 overflow-hidden">
+        <div className="w-full overflow-hidden">
           <AnxietyAnalyticsTracker analyses={allAnalyses} />
         </div>
 
         {!hasData ? (
           <EmptyAnalyticsState />
         ) : (
-          <div className="flex flex-col w-full min-w-0 overflow-hidden">
-            <div className="space-y-8 sm:space-y-12 w-full min-w-0">
+          <div className="flex flex-col min-w-0">
+            <div className="space-y-8 sm:space-y-12 w-full">
               {/* Key Metrics */}
-              <div className="w-full min-w-0 overflow-hidden">
-                <AnalyticsMetrics
-                  totalEntries={totalEntries}
-                  averageAnxiety={averageAnxiety}
-                  mostCommonTrigger={mostCommonTrigger}
-                />
-              </div>
+              <AnalyticsMetrics
+                totalEntries={totalEntries}
+                averageAnxiety={averageAnxiety}
+                mostCommonTrigger={mostCommonTrigger}
+              />
 
               {/* 1️⃣ Goal Progress Overview */}
-              <div className="w-full min-w-0 overflow-hidden">
+              <div className="w-full">
                 <GoalProgressSection
                   goals={goals}
                   dateRange={goalProgressRange}
@@ -297,19 +295,17 @@ const AnalyticsContent = () => {
               </div>
 
               {/* 2️⃣ Clinical Trigger Analysis */}
-              <div className="w-full min-w-0 overflow-hidden">
-                <TriggerAnalysisTable
-                  triggerData={filteredTriggerData}
-                  totalEntries={filteredTriggerEntries}
-                  dateRange={triggerAnalysisRange}
-                  onDateRangeChange={setTriggerAnalysisRange}
-                  minDate={analysisBounds.min}
-                  maxDate={analysisBounds.max}
-                />
-              </div>
+              <TriggerAnalysisTable
+                triggerData={filteredTriggerData}
+                totalEntries={filteredTriggerEntries}
+                dateRange={triggerAnalysisRange}
+                onDateRangeChange={setTriggerAnalysisRange}
+                minDate={analysisBounds.min}
+                maxDate={analysisBounds.max}
+              />
 
               {/* 3️⃣ Weekly Anxiety Type Trends */}
-              <div className="w-full min-w-0 overflow-hidden">
+              <div className="w-full">
                 <AnxietyChartsSection
                   triggerData={triggerData}
                   severityDistribution={[]}
@@ -323,7 +319,7 @@ const AnalyticsContent = () => {
               </div>
 
               {/* 4️⃣ Anxiety Levels Distribution */}
-              <div className="w-full min-w-0 overflow-hidden">
+              <div className="w-full">
                 <AnxietyChartsSection
                   triggerData={[]}
                   severityDistribution={severityDistribution}
@@ -333,7 +329,7 @@ const AnalyticsContent = () => {
               </div>
 
               {/* 5️⃣ Anxiety Level Trends */}
-              <div className="w-full min-w-0 overflow-hidden">
+              <div className="w-full">
                 <TreatmentOutcomes
                   analyses={averageAnxietyAnalyses}
                   showOnly="trends"
@@ -345,7 +341,7 @@ const AnalyticsContent = () => {
               </div>
 
               {/* 6️⃣ Monthly Anxiety Trends */}
-              <div className="w-full min-w-0 overflow-hidden">
+              <div className="w-full">
                 <MonthlyChartsSection
                   analyses={monthlyTrendAnalyses}
                   showOnly="trends"
@@ -357,7 +353,7 @@ const AnalyticsContent = () => {
               </div>
 
               {/* 7️⃣ Weekly Treatment Outcomes */}
-              <div className="w-full min-w-0 overflow-hidden">
+              <div className="w-full">
                 <TreatmentOutcomes
                   analyses={weeklyOutcomeAnalyses}
                   showOnly="outcomes"
@@ -369,7 +365,7 @@ const AnalyticsContent = () => {
               </div>
 
               {/* 8️⃣ Monthly Session Activity */}
-              <div className="w-full min-w-0 overflow-hidden">
+              <div className="w-full">
                 <MonthlyChartsSection
                   analyses={monthlyActivityAnalyses}
                   showOnly="activity"

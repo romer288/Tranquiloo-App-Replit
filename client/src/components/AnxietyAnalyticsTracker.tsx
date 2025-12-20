@@ -34,16 +34,16 @@ const AnxietyAnalyticsTracker: React.FC<AnxietyAnalyticsTrackerProps> = ({ analy
   }, [analyses]);
 
   const calculateResponseEffectiveness = (
-    current: ClaudeAnxietyAnalysis,
-    index: number,
+    current: ClaudeAnxietyAnalysis, 
+    index: number, 
     allAnalyses: ClaudeAnxietyAnalysis[]
   ): number => {
     if (index === 0) return 5; // Baseline
-
+    
     const previous = allAnalyses[index - 1];
     const anxietyImprovement = previous.anxietyLevel - current.anxietyLevel;
     const gad7Improvement = previous.gad7Score - current.gad7Score;
-
+    
     // Scale from 1-10 based on improvement
     return Math.max(1, Math.min(10, 5 + (anxietyImprovement * 2) + (gad7Improvement * 0.5)));
   };
@@ -60,7 +60,7 @@ const AnxietyAnalyticsTracker: React.FC<AnxietyAnalyticsTrackerProps> = ({ analy
 
   const getMostEffectiveInterventions = () => {
     const interventionEffectiveness: Record<string, number[]> = {};
-
+    
     (trends ?? []).forEach((trend) => {
       (trend.interventionsUsed ?? []).forEach((intervention) => {
         if (!interventionEffectiveness[intervention]) {
@@ -83,7 +83,7 @@ const AnxietyAnalyticsTracker: React.FC<AnxietyAnalyticsTrackerProps> = ({ analy
 
   const getProgressTrend = () => {
     if (trends.length < 2) return 'stable';
-
+    
     const recent = (trends ?? []).slice(-3);
     const avgRecent = recent.length
       ? recent.reduce((s, t) => s + (t.anxietyLevel ?? 0), 0) / recent.length
@@ -104,16 +104,16 @@ const AnxietyAnalyticsTracker: React.FC<AnxietyAnalyticsTrackerProps> = ({ analy
 
   if (analyses.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 w-full min-w-0 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
         <div className="flex items-center gap-2 mb-4">
-          <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 flex-shrink-0" />
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{t('analytics.tracker.emptyTitle')}</h3>
+          <TrendingUp className="w-6 h-6 text-blue-500" />
+          <h3 className="text-lg font-semibold text-gray-900">{t('analytics.tracker.emptyTitle')}</h3>
         </div>
-        <p className="text-sm sm:text-base text-gray-600 break-words">{t('analytics.tracker.emptyDesc')}</p>
+        <p className="text-gray-600">{t('analytics.tracker.emptyDesc')}</p>
         <div className="mt-4">
-          <button
+          <button 
             onClick={() => window.location.href = '/chat'}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors text-sm sm:text-base w-full sm:w-auto"
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
           >
             {t('analytics.tracker.startChat')}
           </button>
@@ -123,63 +123,63 @@ const AnxietyAnalyticsTracker: React.FC<AnxietyAnalyticsTrackerProps> = ({ analy
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 w-full min-w-0 overflow-hidden">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-4 min-w-0">
-        <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 flex-shrink-0" />
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 break-words">{t('analytics.tracker.title')}</h3>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
+      <div className="flex items-center gap-2 mb-4">
+        <TrendingUp className="w-6 h-6 text-blue-500" />
+        <h3 className="text-lg font-semibold text-gray-900">{t('analytics.tracker.title')}</h3>
       </div>
 
       {/* Progress Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6 w-full min-w-0">
-        <div className="text-center p-2 sm:p-3 bg-blue-50 rounded-lg w-full min-w-0 overflow-hidden">
-          <div className="text-xl sm:text-2xl font-bold text-blue-600">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="text-center p-3 bg-blue-50 rounded-lg">
+          <div className="text-2xl font-bold text-blue-600">
             {getAverageAnxietyLevel()}/10
           </div>
-          <div className="text-xs sm:text-sm text-gray-600 truncate">{t('analytics.tracker.avgAnxiety')}</div>
+          <div className="text-sm text-gray-600">{t('analytics.tracker.avgAnxiety')}</div>
         </div>
-
-        <div className="text-center p-2 sm:p-3 bg-green-50 rounded-lg w-full min-w-0 overflow-hidden">
-          <div className="text-xl sm:text-2xl font-bold text-green-600">
+        
+        <div className="text-center p-3 bg-green-50 rounded-lg">
+          <div className="text-2xl font-bold text-green-600">
             {getAverageGAD7()}/21
           </div>
-          <div className="text-xs sm:text-sm text-gray-600 truncate">{t('analytics.tracker.avgGad7')}</div>
+          <div className="text-sm text-gray-600">{t('analytics.tracker.avgGad7')}</div>
         </div>
-
-        <div className="text-center p-2 sm:p-3 bg-purple-50 rounded-lg w-full min-w-0 overflow-hidden">
-          <div className="text-base sm:text-lg font-bold text-purple-600">
+        
+        <div className="text-center p-3 bg-purple-50 rounded-lg">
+          <div className="text-lg font-bold text-purple-600">
             {analyses.length}
           </div>
-          <div className="text-xs sm:text-sm text-gray-600 truncate">{t('analytics.tracker.sessions')}</div>
+          <div className="text-sm text-gray-600">{t('analytics.tracker.sessions')}</div>
         </div>
-
-        <div className="text-center p-2 sm:p-3 bg-orange-50 rounded-lg w-full min-w-0 overflow-hidden">
-          <div className={`text-sm sm:text-lg font-bold ${
-            progressTrend === 'improving' ? 'text-green-600' :
-            progressTrend === 'worsening' ? 'text-red-600' :
-            'text-gray-600'
-          }`}>
-            {progressTrend.toUpperCase()}
+        
+          <div className="text-center p-3 bg-orange-50 rounded-lg">
+            <div className={`text-lg font-bold ${
+              progressTrend === 'improving' ? 'text-green-600' : 
+              progressTrend === 'worsening' ? 'text-red-600' : 
+              'text-gray-600'
+            }`}>
+              {progressTrend.toUpperCase()}
+            </div>
+            <div className="text-sm text-gray-600">{t('analytics.tracker.trend')}</div>
           </div>
-          <div className="text-xs sm:text-sm text-gray-600 truncate">{t('analytics.tracker.trend')}</div>
         </div>
-      </div>
 
       {/* Most Effective Interventions */}
       {mostEffectiveInterventions.length > 0 && (
-        <div className="mb-4 w-full min-w-0 overflow-hidden">
-          <div className="flex items-center gap-2 mb-2 min-w-0">
-            <Target className="w-4 h-4 text-green-500 flex-shrink-0" />
-            <span className="text-xs sm:text-sm font-medium text-gray-700 truncate">{t('analytics.tracker.mostEffective')}</span>
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Target className="w-4 h-4 text-green-500" />
+            <span className="text-sm font-medium text-gray-700">{t('analytics.tracker.mostEffective')}</span>
           </div>
-          <div className="space-y-2 w-full min-w-0">
+          <div className="space-y-2">
             {(mostEffectiveInterventions ?? []).slice(0, 4).map((item, index) => (
-              <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-green-50 px-3 py-2 rounded w-full min-w-0 overflow-hidden">
-                <span className="text-xs sm:text-sm text-green-800 break-words flex-1 min-w-0">{item.intervention}</span>
-                <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
-                  <span className="text-xs text-green-600 whitespace-nowrap">
+              <div key={index} className="flex items-center justify-between bg-green-50 px-3 py-2 rounded">
+                <span className="text-sm text-green-800">{item.intervention}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-green-600">
                     {(item?.avgEffectiveness !== null && item?.avgEffectiveness !== undefined && !isNaN(Number(item.avgEffectiveness)) ? Number(item.avgEffectiveness).toFixed(1) : '0.0')}/10 {t('analytics.tracker.effectiveness')}
                   </span>
-                  <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full whitespace-nowrap">
+                  <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full">
                     {t('analytics.tracker.used').replace('{count}', item.usageCount.toString())}
                   </span>
                 </div>
@@ -190,17 +190,17 @@ const AnxietyAnalyticsTracker: React.FC<AnxietyAnalyticsTrackerProps> = ({ analy
       )}
 
       {/* Recent Progress */}
-      <div className="bg-gray-50 rounded-lg p-3 sm:p-4 w-full min-w-0 overflow-hidden">
-        <div className="flex items-center gap-2 mb-2 min-w-0">
-          <Activity className="w-4 h-4 text-blue-500 flex-shrink-0" />
-          <span className="text-xs sm:text-sm font-medium text-gray-700 truncate">{t('analytics.tracker.recentProgress')}</span>
+      <div className="bg-gray-50 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Activity className="w-4 h-4 text-blue-500" />
+          <span className="text-sm font-medium text-gray-700">{t('analytics.tracker.recentProgress')}</span>
         </div>
-        <p className="text-xs sm:text-sm text-gray-600 break-words">
-          {progressTrend === 'improving' &&
+        <p className="text-sm text-gray-600">
+          {progressTrend === 'improving' && 
             t('analytics.tracker.progressImproving')}
-          {progressTrend === 'stable' &&
+          {progressTrend === 'stable' && 
             t('analytics.tracker.progressStable')}
-          {progressTrend === 'worsening' &&
+          {progressTrend === 'worsening' && 
             t('analytics.tracker.progressWorsening')}
         </p>
       </div>

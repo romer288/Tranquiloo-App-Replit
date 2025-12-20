@@ -45,15 +45,15 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
 
   const processMonthlyData = () => {
     console.log('📅 MonthlyChartsSection - Processing monthly data with analyses:', analyses.length);
-
+    
     // Create sample data to ensure proper chart rendering
     const sampleData = [
       { date: 'June 2025', sessionCount: 45 },
       { date: 'July 2025', sessionCount: 50 }
     ];
-
+    
     if (analyses.length === 0) return sampleData;
-
+    
     const monthlyData: Record<string, {
       date: string;
       workCareer: { total: number; count: number };
@@ -86,11 +86,11 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
       }
 
       monthlyData[monthKey].sessionCount++;
-
+      
       // Map triggers to anxiety types like in weekly chart
       const triggers = ensureTriggersArray(analysis.triggers);
       const anxietyLevel = analysis.anxietyLevel || 0;
-
+      
       if (triggers.length === 0) {
         monthlyData[monthKey].social.total += anxietyLevel;
         monthlyData[monthKey].social.count += 1;
@@ -131,13 +131,13 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
       .sort()
       .map(key => {
         const data = monthlyData[key];
-
+        
         const calculateAverage = (total: number, count: number) => {
           if (!count || count === 0 || total === null || total === undefined) return 0;
           const result = total / count;
           return (isNaN(result) || result === null || result === undefined) ? 0 : Number(result.toFixed(1));
         };
-
+        
         return {
           date: data.date,
           workCareer: calculateAverage(data.workCareer.total, data.workCareer.count),
@@ -150,14 +150,14 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
           sessionCount: data.sessionCount || 0
         };
       });
-
+    
     console.log('📅 Processed monthly data:', processedData);
-
+    
     // Ensure we have at least 2 data points for proper bar chart rendering
     if (processedData.length < 2) {
       return sampleData;
     }
-
+    
     return processedData;
   };
 
@@ -177,17 +177,17 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
     const { x, y, payload } = props;
     const dataIndex = payload.index;
     const item = monthlyData[dataIndex];
-
+    
     if (!item) return null;
-
+    
     return (
       <g transform={`translate(${x},${y})`}>
-        <text
-          x={0}
-          y={0}
-          dy={16}
-          textAnchor="middle"
-          fontSize={10}
+        <text 
+          x={0} 
+          y={0} 
+          dy={16} 
+          textAnchor="middle" 
+          fontSize={10} 
           fill="currentColor"
           transform="rotate(-15)"
         >
@@ -199,49 +199,46 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
 
   if (analyses.length === 0) {
     return (
-      <Card className="p-4 sm:p-6 w-full min-w-0 overflow-hidden">
-        <div className="flex items-center gap-2 mb-4 min-w-0">
-          <Calendar className="w-5 h-5 text-blue-600 flex-shrink-0" />
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{t('analytics.monthly.title')}</h3>
+      <Card className="p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Calendar className="w-5 h-5 text-blue-600" />
+          <h3 className="text-lg font-semibold text-gray-900">{t('analytics.monthly.title')}</h3>
         </div>
-        <p className="text-sm sm:text-base text-gray-600 break-words">{t('analytics.monthly.none')}</p>
+        <p className="text-gray-600">{t('analytics.monthly.none')}</p>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-6 w-full min-w-0 overflow-hidden">
+    <div className="space-y-6">
       {/* Monthly Anxiety Trends */}
       {(showOnly === 'trends' || showOnly === 'all') && (
-        <Card className="bg-gradient-to-br from-background to-muted/20 border-primary/20 shadow-lg w-full min-w-0 overflow-hidden">
+        <Card className="bg-gradient-to-br from-background to-muted/20 border-primary/20 shadow-lg">
           <CardHeader className="pb-3">
-            <div className="flex flex-wrap items-center justify-between gap-3 min-w-0">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <Calendar className="w-5 h-5 text-primary" />
                 </div>
-                <CardTitle className="text-base sm:text-xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent truncate">
+                <CardTitle className="text-xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
                   {t('analytics.monthly.title')}
                 </CardTitle>
               </div>
               {onDateRangeChange && (
-                <div className="flex-shrink-0">
-                  <ChartDateRangePicker
-                    value={dateRange}
-                    onChange={onDateRangeChange}
-                    minDate={minDate}
-                    maxDate={maxDate}
-                    label={t('therapistDashboard.range.label')}
-                  />
-                </div>
+                <ChartDateRangePicker
+                  value={dateRange}
+                  onChange={onDateRangeChange}
+                  minDate={minDate}
+                  maxDate={maxDate}
+                  label={t('therapistDashboard.range.label')}
+                />
               )}
             </div>
           </CardHeader>
-          <CardContent className="w-full min-w-0 overflow-hidden">
-            <div className="w-full max-w-full overflow-x-hidden">
-              <ChartContainer config={chartConfig} className="h-[300px] sm:h-[350px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyData} margin={{ top: 20, right: 10, left: 0, bottom: 60 }}>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-[350px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                   <defs>
                     {Object.entries(chartConfig).map(([key, config]) => (
                       <linearGradient key={key} id={`monthly-gradient-${key}`} x1="0" y1="0" x2="0" y2="1">
@@ -250,8 +247,8 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
                       </linearGradient>
                     ))}
                   </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
+                  <CartesianGrid 
+                    strokeDasharray="3 3" 
                     className="stroke-muted/50"
                     vertical={false}
                   />
@@ -264,17 +261,17 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
                     tickLine={false}
                     className="text-xs text-muted-foreground"
                   />
-                  <YAxis
+                  <YAxis 
                     axisLine={false}
                     tickLine={false}
                     className="text-xs text-muted-foreground"
                   />
-                  <ChartTooltip
+                  <ChartTooltip 
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
                         return (
-                          <div className="bg-background/95 backdrop-blur-sm border rounded-lg shadow-xl p-3 sm:p-4 min-w-[180px] sm:min-w-[200px] max-w-[280px]">
-                            <p className="font-semibold text-foreground mb-2 text-sm sm:text-base truncate">{label}</p>
+                          <div className="bg-background/95 backdrop-blur-sm border rounded-lg shadow-xl p-4 min-w-[200px]">
+                            <p className="font-semibold text-foreground mb-2">{label}</p>
                             <div className="space-y-1">
                               {payload
                                 .filter((entry: any) => entry.value > 0)
@@ -282,21 +279,21 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
                                 .map((entry: any, index: number) => {
                                   console.log('🔍 TOOLTIP DEBUG - Entry:', entry, 'Value:', entry.value, 'Type:', typeof entry.value);
                                   const safeValue = entry?.value;
-                                  const displayValue = (safeValue !== null && safeValue !== undefined && !isNaN(Number(safeValue)))
-                                    ? Number(safeValue).toFixed(1)
+                                  const displayValue = (safeValue !== null && safeValue !== undefined && !isNaN(Number(safeValue))) 
+                                    ? Number(safeValue).toFixed(1) 
                                     : '0.0';
                                   console.log('🔍 TOOLTIP DEBUG - Safe value:', displayValue);
-
+                                  
                                   return (
-                                    <div key={index} className="flex items-center justify-between gap-2 sm:gap-3 min-w-0">
-                                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                                        <div
-                                          className="w-3 h-3 rounded-full flex-shrink-0"
+                                    <div key={index} className="flex items-center justify-between gap-3">
+                                      <div className="flex items-center gap-2">
+                                        <div 
+                                          className="w-3 h-3 rounded-full" 
                                           style={{ backgroundColor: entry.color }}
                                         />
-                                        <span className="text-xs sm:text-sm text-muted-foreground truncate">{chartConfig[entry.dataKey as keyof typeof chartConfig]?.label}</span>
+                                        <span className="text-sm text-muted-foreground">{chartConfig[entry.dataKey as keyof typeof chartConfig]?.label}</span>
                                       </div>
-                                      <span className="font-medium text-foreground text-xs sm:text-sm flex-shrink-0">{displayValue}</span>
+                                      <span className="font-medium text-foreground">{displayValue}</span>
                                     </div>
                                   );
                                 })}
@@ -307,57 +304,57 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
                       return null;
                     }}
                   />
-                   <Line
-                     type="monotone"
-                     dataKey="workCareer"
+                   <Line 
+                     type="monotone" 
+                     dataKey="workCareer" 
                      stroke={chartConfig.workCareer.color}
                      strokeWidth={3}
                      dot={{ fill: chartConfig.workCareer.color, strokeWidth: 2, r: 6 }}
                      activeDot={{ r: 8, stroke: chartConfig.workCareer.color, strokeWidth: 2, fill: "white" }}
                    />
-                   <Line
-                     type="monotone"
-                     dataKey="social"
+                   <Line 
+                     type="monotone" 
+                     dataKey="social" 
                      stroke={chartConfig.social.color}
                      strokeWidth={3}
                      dot={{ fill: chartConfig.social.color, strokeWidth: 2, r: 6 }}
                      activeDot={{ r: 8, stroke: chartConfig.social.color, strokeWidth: 2, fill: "white" }}
                    />
-                   <Line
-                     type="monotone"
-                     dataKey="health"
+                   <Line 
+                     type="monotone" 
+                     dataKey="health" 
                      stroke={chartConfig.health.color}
                      strokeWidth={3}
                      dot={{ fill: chartConfig.health.color, strokeWidth: 2, r: 6 }}
                      activeDot={{ r: 8, stroke: chartConfig.health.color, strokeWidth: 2, fill: "white" }}
                    />
-                   <Line
-                     type="monotone"
-                     dataKey="financial"
+                   <Line 
+                     type="monotone" 
+                     dataKey="financial" 
                      stroke={chartConfig.financial.color}
                      strokeWidth={3}
                      dot={{ fill: chartConfig.financial.color, strokeWidth: 2, r: 6 }}
                      activeDot={{ r: 8, stroke: chartConfig.financial.color, strokeWidth: 2, fill: "white" }}
                    />
-                   <Line
-                     type="monotone"
-                     dataKey="relationships"
+                   <Line 
+                     type="monotone" 
+                     dataKey="relationships" 
                      stroke={chartConfig.relationships.color}
                      strokeWidth={3}
                      dot={{ fill: chartConfig.relationships.color, strokeWidth: 2, r: 6 }}
                      activeDot={{ r: 8, stroke: chartConfig.relationships.color, strokeWidth: 2, fill: "white" }}
                    />
-                   <Line
-                     type="monotone"
-                     dataKey="future"
+                   <Line 
+                     type="monotone" 
+                     dataKey="future" 
                      stroke={chartConfig.future.color}
                      strokeWidth={3}
                      dot={{ fill: chartConfig.future.color, strokeWidth: 2, r: 6 }}
                      activeDot={{ r: 8, stroke: chartConfig.future.color, strokeWidth: 2, fill: "white" }}
                    />
-                   <Line
-                     type="monotone"
-                     dataKey="family"
+                   <Line 
+                     type="monotone" 
+                     dataKey="family" 
                      stroke={chartConfig.family.color}
                      strokeWidth={3}
                      dot={{ fill: chartConfig.family.color, strokeWidth: 2, r: 6 }}
@@ -365,15 +362,14 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
                    />
                 </LineChart>
               </ResponsiveContainer>
-              </ChartContainer>
-            </div>
-
+            </ChartContainer>
+            
             {/* Legend */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3 mt-4 w-full min-w-0">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 mt-4">
               {Object.entries(chartConfig).map(([key, config]) => (
-                <div key={key} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors w-full min-w-0 overflow-hidden">
-                  <div
-                    className="w-3 h-3 rounded-full border border-white shadow-sm flex-shrink-0"
+                <div key={key} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <div 
+                    className="w-3 h-3 rounded-full border border-white shadow-sm" 
                     style={{ backgroundColor: config.color }}
                   />
                   <span className="text-xs font-medium text-foreground truncate">{config.label}</span>
@@ -386,65 +382,62 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
 
       {/* Monthly Session Activity */}
       {(showOnly === 'activity' || showOnly === 'all') && (
-        <Card className="bg-gradient-to-br from-background to-muted/20 border-secondary/20 shadow-lg w-full min-w-0 overflow-hidden">
+        <Card className="bg-gradient-to-br from-background to-muted/20 border-secondary/20 shadow-lg">
           <CardHeader className="pb-3">
-            <div className="flex flex-wrap items-center justify-between gap-3 min-w-0">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center flex-shrink-0">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center">
                   <TrendingUp className="w-5 h-5 text-secondary" />
                 </div>
-                <CardTitle className="text-base sm:text-xl font-bold text-gray-900 truncate">
+                <CardTitle className="text-xl font-bold text-gray-900">
                   {t('analytics.monthly.sessionActivity')}
                 </CardTitle>
               </div>
               {onDateRangeChange && (
-                <div className="flex-shrink-0">
-                  <ChartDateRangePicker
-                    value={dateRange}
-                    onChange={onDateRangeChange}
-                    minDate={minDate}
-                    maxDate={maxDate}
-                    label={t('analytics.monthly.rangeLabel')}
-                  />
-                </div>
+                <ChartDateRangePicker
+                  value={dateRange}
+                  onChange={onDateRangeChange}
+                  minDate={minDate}
+                  maxDate={maxDate}
+                  label={t('analytics.monthly.rangeLabel')}
+                />
               )}
             </div>
           </CardHeader>
-          <CardContent className="w-full min-w-0 overflow-hidden">
-            <div className="w-full max-w-full overflow-x-hidden">
-              <ChartContainer config={chartConfig} className="h-[300px] sm:h-[350px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                 <BarChart
-                   data={monthlyData}
-                   margin={{ top: 20, right: 10, left: 0, bottom: 40 }}
+          <CardContent>
+             <ChartContainer config={chartConfig} className="h-[350px]">
+               <ResponsiveContainer width="100%" height="100%">
+                 <BarChart 
+                   data={monthlyData} 
+                   margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
                    barCategoryGap="20%"
                  >
-                   <CartesianGrid
-                     strokeDasharray="3 3"
+                   <CartesianGrid 
+                     strokeDasharray="3 3" 
                      className="stroke-muted/30"
                      vertical={false}
                    />
-                   <XAxis
-                     dataKey="date"
+                   <XAxis 
+                     dataKey="date" 
                      axisLine={false}
                      tickLine={false}
                      className="text-xs text-muted-foreground"
                      interval={0}
                    />
-                   <YAxis
+                   <YAxis 
                      axisLine={false}
                      tickLine={false}
                      className="text-xs text-muted-foreground"
                      domain={[0, 'dataMax + 10']}
                    />
-                  <ChartTooltip
+                  <ChartTooltip 
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
                         return (
-                          <div className="bg-white border-2 border-secondary/30 rounded-lg shadow-xl p-3 sm:p-4 max-w-[200px]">
-                            <p className="font-bold text-gray-900 text-base sm:text-lg truncate">{label}</p>
-                             <p className="text-xs sm:text-sm text-gray-600 break-words">
-                               {t('analytics.tracker.sessions')}: <span className="font-bold text-blue-600 text-base sm:text-lg">{payload[0]?.value || 0}</span>
+                          <div className="bg-white border-2 border-secondary/30 rounded-lg shadow-xl p-4">
+                            <p className="font-bold text-gray-900 text-lg">{label}</p>
+                             <p className="text-sm text-gray-600">
+                               {t('analytics.tracker.sessions')}: <span className="font-bold text-blue-600 text-lg">{payload[0]?.value || 0}</span>
                             </p>
                           </div>
                         );
@@ -452,17 +445,16 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
                       return null;
                     }}
                   />
-                  <Bar
-                    dataKey="sessionCount"
+                  <Bar 
+                    dataKey="sessionCount" 
                     fill="hsl(220 91% 42%)"
-                    name="Sessions"
+                    name="Sessions" 
                     radius={[6, 6, 0, 0]}
                     className="hover:opacity-80 transition-all duration-300"
                   />
                 </BarChart>
               </ResponsiveContainer>
-              </ChartContainer>
-            </div>
+            </ChartContainer>
           </CardContent>
         </Card>
       )}
