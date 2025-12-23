@@ -29,6 +29,7 @@ interface TherapistData {
   acceptingPatients?: boolean;
 }
 import { useToast } from '@/components/ui/use-toast';
+import { useLanguage } from '@/context/LanguageContext';
 
 // Using TherapistData from service instead of local interface
 
@@ -62,8 +63,8 @@ const FindTherapist = () => {
   const handleSearch = async () => {
     if (!zipCode.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter a ZIP code",
+        title: t('therapist.toast.error'),
+        description: t('therapist.toast.pleaseEnterZipCode'),
         variant: "destructive",
       });
       return;
@@ -87,35 +88,35 @@ const FindTherapist = () => {
         setTherapists(result.data);
         setStep('results');
         toast({
-          title: "Success",
-          description: `Found ${result.data.length} therapists in your area`,
+          title: t('therapist.toast.success'),
+          description: t('therapist.toast.foundTherapists', `Found ${result.data.length} therapists in your area`).replace('{count}', result.data.length.toString()),
         });
       } else {
         toast({
-          title: "Error",
-          description: result.error || "Failed to find therapists",
+          title: t('therapist.toast.error'),
+          description: result.error || t('therapist.toast.failedToFindTherapists'),
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error('Error searching therapists:', error);
       toast({
-        title: "Error",
-        description: "Failed to search for therapists. Please try again.",
+        title: t('therapist.toast.error'),
+        description: t('therapist.toast.failedToSearch'),
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
-
+  const { t } = useLanguage();
   // Therapists are already filtered by the search service
 
   if (step === 'therapist-check') {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white border-b border-gray-200 px-8 py-4">
-          <h1 className="text-xl font-semibold text-gray-900">Connect Your Therapist</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('therapist.connectTherapist')}</h1>
         </div>
         <div className="max-w-4xl mx-auto px-8 py-12">
           <TherapistLinking onComplete={handleTherapistLinking} />
@@ -128,7 +129,7 @@ const FindTherapist = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white border-b border-gray-200 px-8 py-4">
-          <h1 className="text-xl font-semibold text-gray-900">Contact Therapist</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('therapist.contactTherapist')}</h1>
         </div>
         <div className="max-w-4xl mx-auto px-8 py-12">
           <Card className="max-w-2xl mx-auto p-8">
@@ -137,10 +138,10 @@ const FindTherapist = () => {
                 <User className="w-8 h-8 text-blue-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Download Your Information
+                {t('therapist.downloadInformation')}
               </h2>
               <p className="text-gray-600 mb-6">
-                Since you don't have a therapist yet, would you like to download your anxiety tracking data and progress reports to share with a future therapist?
+                {t('therapist.downloadInformationDesc')}
               </p>
             </div>
 
@@ -152,7 +153,7 @@ const FindTherapist = () => {
                 }} 
                 className="w-full bg-blue-600 hover:bg-blue-700"
               >
-                Download My Anxiety Data
+                {t('therapist.downloadMyAnxietyData', 'Download My Anxiety Data')}
               </Button>
               
               <Button 
@@ -160,7 +161,7 @@ const FindTherapist = () => {
                 onClick={() => window.location.href = '/dashboard'}
                 className="w-full"
               >
-                Return to Dashboard
+                {t('therapist.returnToDashboard', 'Return to Dashboard')}
               </Button>
             </div>
           </Card>
@@ -173,7 +174,7 @@ const FindTherapist = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white border-b border-gray-200 px-8 py-4">
-          <h1 className="text-xl font-semibold text-gray-900">Contact Therapist</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('therapist.contactTherapist', 'Contact Therapist')}</h1>
         </div>
         <div className="max-w-4xl mx-auto px-8 py-12">
           <Card className="max-w-2xl mx-auto p-8">
@@ -182,10 +183,10 @@ const FindTherapist = () => {
                 <Shield className="w-8 h-8 text-blue-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Do you have health insurance?
+                {t('therapist.doYouHaveHealthInsurance')}
               </h2>
               <p className="text-gray-600">
-                This helps us find therapists that match your coverage and budget.
+                {t('therapist.doYouHaveHealthInsuranceDesc')}
               </p>
             </div>
 
@@ -193,13 +194,13 @@ const FindTherapist = () => {
               <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
                 <RadioGroupItem value="yes" id="yes-insurance" />
                 <Label htmlFor="yes-insurance" className="text-gray-900 cursor-pointer font-medium">
-                  Yes, I have health insurance
+                  {t('therapist.yesIHaveHealthInsurance')}
                 </Label>
               </div>
               <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
                 <RadioGroupItem value="no" id="no-insurance" />
                 <Label htmlFor="no-insurance" className="text-gray-900 cursor-pointer font-medium">
-                  No, I don't have insurance (show self-pay options)
+                  {t('therapist.noIDontHaveInsurance')}
                 </Label>
               </div>
             </RadioGroup>
@@ -213,24 +214,24 @@ const FindTherapist = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white border-b border-gray-200 px-8 py-4">
-          <h1 className="text-xl font-semibold text-gray-900">Contact Therapist</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('therapist.contactTherapist', 'Contact Therapist')}</h1>
         </div>
         <div className="max-w-4xl mx-auto px-8 py-8">
           <Card className="p-6 mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Find a Therapist</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('therapist.findTherapist')}</h2>
             <p className="text-gray-600 mb-6">
               {hasInsurance === 'yes' 
-                ? 'Connect with licensed therapists that accept your insurance.'
-                : 'Find therapists offering affordable self-pay options for anxiety management.'
+                ? t('therapist.findTherapistDescYes') 
+                : t('therapist.findTherapistDescNo')
               }
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div>
-                <Label htmlFor="zipcode">Your ZIP Code</Label>
+                <Label htmlFor="zipcode">{t('therapist.yourZIPCode')}</Label>
                 <Input
                   id="zipcode"
-                  placeholder="Enter ZIP code"
+                  placeholder={t('therapist.enterZIPCode')}
                   value={zipCode}
                   onChange={(e) => setZipCode(e.target.value)}
                 />
@@ -238,10 +239,10 @@ const FindTherapist = () => {
               
               {hasInsurance === 'yes' && (
                 <div>
-                  <Label htmlFor="insurance">Insurance Provider</Label>
+                  <Label htmlFor="insurance">{t('therapist.insuranceProvider')}</Label>
                   <Select value={insuranceType} onValueChange={setInsuranceType}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select your insurance" />
+                      <SelectValue placeholder={t('therapist.selectYourInsurance')} />
                     </SelectTrigger>
                     <SelectContent>
                       {therapistDataService.getCommonInsuranceTypes().map((insurance) => (
@@ -255,10 +256,10 @@ const FindTherapist = () => {
               )}
               
               <div>
-                <Label htmlFor="specialty">Specialty</Label>
+                <Label htmlFor="specialty">{t('therapist.specialtys')}</Label>
                 <Select value={specialty} onValueChange={setSpecialty}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select specialty" />
+                    <SelectValue placeholder={t('therapist.selectSpecialty')} />
                   </SelectTrigger>
                     <SelectContent>
                       {therapistDataService.getAnxietySpecialties().map((spec) => (
@@ -279,10 +280,10 @@ const FindTherapist = () => {
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Searching...
+                  {t('therapist.searching')}
                 </>
               ) : (
-                'Search Therapists'
+                t('therapist.searchTherapists')
               )}
             </Button>
           </Card>
@@ -294,32 +295,32 @@ const FindTherapist = () => {
     return (
       <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
         <div className="bg-white border-b border-gray-200 px-8 py-4">
-          <h1 className="text-xl font-semibold text-gray-900">Contact Therapist</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('therapist.contactTherapist')}</h1>
         </div>
 
         <div className="max-w-4xl mx-auto px-8 py-8">
           <div className="mb-6 flex justify-between items-center">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                {hasInsurance === 'yes' ? 'Therapists accepting your insurance' : 'Therapists with self-pay options'}
+                {hasInsurance === 'yes' ? t('therapist.therapistsAcceptingYourInsurance') : t('therapist.therapistsWithSelfPayOptions')}
               </h3>
               <p className="text-gray-600">
-                {therapists.length} therapist{therapists.length !== 1 ? 's' : ''} found
+                {therapists.length} {therapists.length !== 1 ? t('therapist.therapists', 'therapists') : t('therapist.therapist', 'therapist')} {t('therapist.found', 'found')}
               </p>
             </div>
             <Button variant="outline" onClick={() => setStep('search')}>
-              Modify Search
+              {t('therapist.modifySearch')}
             </Button>
           </div>
 
         {therapists.length === 0 ? (
           <Card className="p-8 text-center">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No therapists found</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('therapist.noTherapistsFound')}</h3>
             <p className="text-gray-600 mb-4">
-              Try adjusting your search criteria or expanding your location radius.
+              {t('therapist.noTherapistsFoundDesc')}
             </p>
             <Button onClick={() => setStep('search')} variant="outline">
-              Modify Search
+              {t('therapist.modifySearch')}
             </Button>
           </Card>
         ) : (
@@ -384,23 +385,23 @@ const FindTherapist = () => {
                           ))
                         ) : (
                           <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded">
-                            Contact for insurance verification
+                            {t('therapist.contactForInsuranceVerification', 'Contact for insurance verification')}  
                           </span>
                         )
                       ) : (
                         therapist.acceptsUninsured ? (
                           <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
-                            Self-pay accepted
+                            {t('therapist.selfPayAccepted', 'Self-pay accepted')}
                           </span>
                         ) : (
                           <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">
-                            Insurance required
+                            {t('therapist.insuranceRequired', 'Insurance required')}          
                           </span>
                         )
                       )}
                       {therapist.yearsOfExperience && (
                         <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">
-                          {therapist.yearsOfExperience} years experience
+                          {therapist.yearsOfExperience} {t('therapist.yearsExperiences', 'years experience')}
                         </span>
                       )}
                     </div>
@@ -408,14 +409,14 @@ const FindTherapist = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <span className={`text-sm ${therapist.acceptingPatients ? 'text-green-600' : 'text-red-600'}`}>
-                          {therapist.acceptingPatients ? 'Accepting new patients' : 'Not accepting new patients'}
+                          {therapist.acceptingPatients ? t('therapist.acceptingNewPatients', 'Accepting new patients') : t('therapist.notAcceptingNewPatients', 'Not accepting new patients') + t('therapist.therapist', '')}
                         </span>
                       </div>
                       <div className="flex space-x-2">
                         {therapist.website && (
                           <Button variant="outline" size="sm" asChild>
                             <a href={therapist.website} target="_blank" rel="noopener noreferrer">
-                              Website
+                              {t('therapist.website', 'Website')}
                             </a>
                           </Button>
                         )}
@@ -424,7 +425,7 @@ const FindTherapist = () => {
                           className="bg-blue-600 hover:bg-blue-700"
                           disabled={!therapist.acceptingPatients}
                         >
-                          Contact
+                          {t('therapist.contact', 'Contact')}
                         </Button>
                       </div>
                     </div>
