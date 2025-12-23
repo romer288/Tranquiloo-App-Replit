@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Calendar, MessageSquare, Clock, Brain, History } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/context/LanguageContext';
-import { useLanguage } from '@/context/LanguageContext';
 interface ChatSession {
   id: string;
   userId: string;

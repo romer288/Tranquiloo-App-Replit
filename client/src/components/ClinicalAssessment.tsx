@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { Brain, CheckCircle, AlertTriangle } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface ClinicalAssessmentProps {
   onComplete: (results: ClinicalAssessmentResult) => void;
@@ -28,275 +29,300 @@ interface ClinicalAssessmentResult {
 }
 
 const ClinicalAssessment: React.FC<ClinicalAssessmentProps> = ({ onComplete }) => {
+  const { t, language } = useLanguage();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const { toast } = useToast();
 
+  // Helper function to translate option labels
+  const translateOption = useMemo(() => (label: string): string => {
+    const optionMap: Record<string, string> = {
+      'Not at all': t('assessment.option.notAtAll', 'Not at all'),
+      'Several days': t('assessment.option.severalDays', 'Several days'),
+      'More than half the days': t('assessment.option.moreThanHalf', 'More than half the days'),
+      'Nearly every day': t('assessment.option.nearlyEveryDay', 'Nearly every day'),
+      'A little bit': t('assessment.option.aLittleBit', 'A little bit'),
+      'Moderately': t('assessment.option.moderately', 'Moderately'),
+      'Quite a bit': t('assessment.option.quiteABit', 'Quite a bit'),
+      'Extremely': t('assessment.option.extremely', 'Extremely'),
+      'Never': t('assessment.option.never', 'Never'),
+      '1-2 times': t('assessment.option.oneToTwoTimes', '1-2 times'),
+      '3-5 times': t('assessment.option.threeToFiveTimes', '3-5 times'),
+      'More than 5 times': t('assessment.option.moreThanFiveTimes', 'More than 5 times'),
+      'Mild fear/avoidance': t('assessment.option.mildFearAvoidance', 'Mild fear/avoidance'),
+      'Moderate fear/avoidance': t('assessment.option.moderateFearAvoidance', 'Moderate fear/avoidance'),
+      'Severe fear/avoidance': t('assessment.option.severeFearAvoidance', 'Severe fear/avoidance'),
+      'Somewhat': t('assessment.option.somewhat', 'Somewhat'),
+      'Very much': t('assessment.option.veryMuch', 'Very much'),
+    };
+    return optionMap[label] || label;
+  }, [t, language]);
+
   // Research-based clinical assessment combining GAD-7, PHQ-9, PCL-5, and other validated tools
-  const questions: Question[] = [
+  const questions: Question[] = useMemo(() => [
     // GAD-7 (Generalized Anxiety Disorder - 7 item scale)
     {
       id: 'gad7_1',
       category: 'anxiety',
-      question: 'Over the last 2 weeks, how often have you been bothered by feeling nervous, anxious, or on edge?',
+      question: t('assessment.gad7.q1', 'Over the last 2 weeks, how often have you been bothered by feeling nervous, anxious, or on edge?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Several days') },
+        { value: 2, label: translateOption('More than half the days') },
+        { value: 3, label: translateOption('Nearly every day') }
       ]
     },
     {
       id: 'gad7_2',
       category: 'anxiety',
-      question: 'Over the last 2 weeks, how often have you been bothered by not being able to stop or control worrying?',
+      question: t('assessment.gad7.q2', 'Over the last 2 weeks, how often have you been bothered by not being able to stop or control worrying?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Several days') },
+        { value: 2, label: translateOption('More than half the days') },
+        { value: 3, label: translateOption('Nearly every day') }
       ]
     },
     {
       id: 'gad7_3',
       category: 'anxiety',
-      question: 'Over the last 2 weeks, how often have you been bothered by worrying too much about different things?',
+      question: t('assessment.gad7.q3', 'Over the last 2 weeks, how often have you been bothered by worrying too much about different things?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Several days') },
+        { value: 2, label: translateOption('More than half the days') },
+        { value: 3, label: translateOption('Nearly every day') }
       ]
     },
     {
       id: 'gad7_4',
       category: 'anxiety',
-      question: 'Over the last 2 weeks, how often have you been bothered by trouble relaxing?',
+      question: t('assessment.gad7.q4', 'Over the last 2 weeks, how often have you been bothered by trouble relaxing?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Several days') },
+        { value: 2, label: translateOption('More than half the days') },
+        { value: 3, label: translateOption('Nearly every day') }
       ]
     },
     {
       id: 'gad7_5',
       category: 'anxiety',
-      question: 'Over the last 2 weeks, how often have you been bothered by being so restless that it\'s hard to sit still?',
+      question: t('assessment.gad7.q5', 'Over the last 2 weeks, how often have you been bothered by being so restless that it\'s hard to sit still?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Several days') },
+        { value: 2, label: translateOption('More than half the days') },
+        { value: 3, label: translateOption('Nearly every day') }
       ]
     },
     {
       id: 'gad7_6',
       category: 'anxiety',
-      question: 'Over the last 2 weeks, how often have you been bothered by becoming easily annoyed or irritable?',
+      question: t('assessment.gad7.q6', 'Over the last 2 weeks, how often have you been bothered by becoming easily annoyed or irritable?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Several days') },
+        { value: 2, label: translateOption('More than half the days') },
+        { value: 3, label: translateOption('Nearly every day') }
       ]
     },
     {
       id: 'gad7_7',
       category: 'anxiety',
-      question: 'Over the last 2 weeks, how often have you been bothered by feeling afraid as if something awful might happen?',
+      question: t('assessment.gad7.q7', 'Over the last 2 weeks, how often have you been bothered by feeling afraid as if something awful might happen?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Several days') },
+        { value: 2, label: translateOption('More than half the days') },
+        { value: 3, label: translateOption('Nearly every day') }
       ]
     },
     // PHQ-9 (Patient Health Questionnaire - Depression screening)
     {
       id: 'phq9_1',
       category: 'depression',
-      question: 'Over the last 2 weeks, how often have you been bothered by little interest or pleasure in doing things?',
+      question: t('assessment.phq9.q1', 'Over the last 2 weeks, how often have you been bothered by little interest or pleasure in doing things?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Several days') },
+        { value: 2, label: translateOption('More than half the days') },
+        { value: 3, label: translateOption('Nearly every day') }
       ]
     },
     {
       id: 'phq9_2',
       category: 'depression',
-      question: 'Over the last 2 weeks, how often have you been bothered by feeling down, depressed, or hopeless?',
+      question: t('assessment.phq9.q2', 'Over the last 2 weeks, how often have you been bothered by feeling down, depressed, or hopeless?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Several days') },
+        { value: 2, label: translateOption('More than half the days') },
+        { value: 3, label: translateOption('Nearly every day') }
       ]
     },
     {
       id: 'phq9_3',
       category: 'depression',
-      question: 'Over the last 2 weeks, how often have you been bothered by trouble falling or staying asleep, or sleeping too much?',
+      question: t('assessment.phq9.q3', 'Over the last 2 weeks, how often have you been bothered by trouble falling or staying asleep, or sleeping too much?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Several days') },
+        { value: 2, label: translateOption('More than half the days') },
+        { value: 3, label: translateOption('Nearly every day') }
       ]
     },
     {
       id: 'phq9_4',
       category: 'depression',
-      question: 'Over the last 2 weeks, how often have you been bothered by feeling tired or having little energy?',
+      question: t('assessment.phq9.q4', 'Over the last 2 weeks, how often have you been bothered by feeling tired or having little energy?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Several days') },
+        { value: 2, label: translateOption('More than half the days') },
+        { value: 3, label: translateOption('Nearly every day') }
       ]
     },
     {
       id: 'phq9_5',
       category: 'depression',
-      question: 'Over the last 2 weeks, how often have you been bothered by poor appetite or overeating?',
+      question: t('assessment.phq9.q5', 'Over the last 2 weeks, how often have you been bothered by poor appetite or overeating?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Several days') },
+        { value: 2, label: translateOption('More than half the days') },
+        { value: 3, label: translateOption('Nearly every day') }
       ]
     },
     {
       id: 'phq9_6',
       category: 'depression',
-      question: 'Over the last 2 weeks, how often have you been bothered by feeling bad about yourself or that you are a failure or have let yourself or your family down?',
+      question: t('assessment.phq9.q6', 'Over the last 2 weeks, how often have you been bothered by feeling bad about yourself or that you are a failure or have let yourself or your family down?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Several days') },
+        { value: 2, label: translateOption('More than half the days') },
+        { value: 3, label: translateOption('Nearly every day') }
       ]
     },
     {
       id: 'phq9_7',
       category: 'depression',
-      question: 'Over the last 2 weeks, how often have you been bothered by trouble concentrating on things, such as reading the newspaper or watching television?',
+      question: t('assessment.phq9.q7', 'Over the last 2 weeks, how often have you been bothered by trouble concentrating on things, such as reading the newspaper or watching television?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Several days') },
+        { value: 2, label: translateOption('More than half the days') },
+        { value: 3, label: translateOption('Nearly every day') }
       ]
     },
     {
       id: 'phq9_8',
       category: 'depression',
-      question: 'Over the last 2 weeks, how often have you been bothered by moving or speaking so slowly that other people could have noticed? Or the opposite — being so fidgety or restless that you have been moving around a lot more than usual?',
+      question: t('assessment.phq9.q8', 'Over the last 2 weeks, how often have you been bothered by moving or speaking so slowly that other people could have noticed? Or the opposite — being so fidgety or restless that you have been moving around a lot more than usual?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Several days') },
+        { value: 2, label: translateOption('More than half the days') },
+        { value: 3, label: translateOption('Nearly every day') }
       ]
     },
     {
       id: 'phq9_9',
       category: 'depression',
-      question: 'Over the last 2 weeks, how often have you been bothered by thoughts that you would be better off dead, or of hurting yourself?',
+      question: t('assessment.phq9.q9', 'Over the last 2 weeks, how often have you been bothered by thoughts that you would be better off dead, or of hurting yourself?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Several days') },
+        { value: 2, label: translateOption('More than half the days') },
+        { value: 3, label: translateOption('Nearly every day') }
       ]
     },
     // PCL-5 (PTSD Checklist - shortened version for trauma screening)
     {
       id: 'pcl5_1',
       category: 'trauma',
-      question: 'In the past month, how much were you bothered by repeated, disturbing, and unwanted memories of a stressful experience?',
+      question: t('assessment.pcl5.q1', 'In the past month, how much were you bothered by repeated, disturbing, and unwanted memories of a stressful experience?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'A little bit' },
-        { value: 2, label: 'Moderately' },
-        { value: 3, label: 'Quite a bit' },
-        { value: 4, label: 'Extremely' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('A little bit') },
+        { value: 2, label: translateOption('Moderately') },
+        { value: 3, label: translateOption('Quite a bit') },
+        { value: 4, label: translateOption('Extremely') }
       ]
     },
     {
       id: 'pcl5_2',
       category: 'trauma',
-      question: 'In the past month, how much were you bothered by repeated, disturbing dreams of a stressful experience?',
+      question: t('assessment.pcl5.q2', 'In the past month, how much were you bothered by repeated, disturbing dreams of a stressful experience?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'A little bit' },
-        { value: 2, label: 'Moderately' },
-        { value: 3, label: 'Quite a bit' },
-        { value: 4, label: 'Extremely' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('A little bit') },
+        { value: 2, label: translateOption('Moderately') },
+        { value: 3, label: translateOption('Quite a bit') },
+        { value: 4, label: translateOption('Extremely') }
       ]
     },
     {
       id: 'pcl5_3',
       category: 'trauma',
-      question: 'In the past month, how much were you bothered by suddenly feeling or acting as if a stressful experience were happening again?',
+      question: t('assessment.pcl5.q3', 'In the past month, how much were you bothered by suddenly feeling or acting as if a stressful experience were happening again?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'A little bit' },
-        { value: 2, label: 'Moderately' },
-        { value: 3, label: 'Quite a bit' },
-        { value: 4, label: 'Extremely' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('A little bit') },
+        { value: 2, label: translateOption('Moderately') },
+        { value: 3, label: translateOption('Quite a bit') },
+        { value: 4, label: translateOption('Extremely') }
       ]
     },
     {
       id: 'pcl5_4',
       category: 'trauma',
-      question: 'In the past month, how much were you bothered by feeling very upset when something reminded you of a stressful experience?',
+      question: t('assessment.pcl5.q4', 'In the past month, how much were you bothered by feeling very upset when something reminded you of a stressful experience?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'A little bit' },
-        { value: 2, label: 'Moderately' },
-        { value: 3, label: 'Quite a bit' },
-        { value: 4, label: 'Extremely' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('A little bit') },
+        { value: 2, label: translateOption('Moderately') },
+        { value: 3, label: translateOption('Quite a bit') },
+        { value: 4, label: translateOption('Extremely') }
       ]
     },
     // Social Anxiety and Panic Disorder screening
     {
       id: 'social_anxiety',
       category: 'social_anxiety',
-      question: 'How much do you fear or avoid social situations where you might be judged, embarrassed, or humiliated?',
+      question: t('assessment.socialAnxiety', 'How much do you fear or avoid social situations where you might be judged, embarrassed, or humiliated?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Mild fear/avoidance' },
-        { value: 2, label: 'Moderate fear/avoidance' },
-        { value: 3, label: 'Severe fear/avoidance' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Mild fear/avoidance') },
+        { value: 2, label: translateOption('Moderate fear/avoidance') },
+        { value: 3, label: translateOption('Severe fear/avoidance') }
       ]
     },
     {
       id: 'panic_attacks',
       category: 'panic',
-      question: 'In the past month, have you experienced sudden periods of intense fear or discomfort that reached a peak within minutes?',
+      question: t('assessment.panicAttacks', 'In the past month, have you experienced sudden periods of intense fear or discomfort that reached a peak within minutes?'),
       options: [
-        { value: 0, label: 'Never' },
-        { value: 1, label: '1-2 times' },
-        { value: 2, label: '3-5 times' },
-        { value: 3, label: 'More than 5 times' }
+        { value: 0, label: translateOption('Never') },
+        { value: 1, label: translateOption('1-2 times') },
+        { value: 2, label: translateOption('3-5 times') },
+        { value: 3, label: translateOption('More than 5 times') }
       ]
     },
     // Functional impairment assessment
     {
       id: 'functional_impairment',
       category: 'functional',
-      question: 'How much do these problems interfere with your work, school, social activities, or family relationships?',
+      question: t('assessment.functionalImpairment', 'How much do these problems interfere with your work, school, social activities, or family relationships?'),
       options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Somewhat' },
-        { value: 2, label: 'Very much' },
-        { value: 3, label: 'Extremely' }
+        { value: 0, label: translateOption('Not at all') },
+        { value: 1, label: translateOption('Somewhat') },
+        { value: 2, label: translateOption('Very much') },
+        { value: 3, label: translateOption('Extremely') }
       ]
     }
-  ];
+  ], [t, language]);
 
   const handleAnswer = (value: number) => {
     setAnswers({ ...answers, [questions[currentQuestion].id]: value });
@@ -458,34 +484,34 @@ const ClinicalAssessment: React.FC<ClinicalAssessmentProps> = ({ onComplete }) =
   const currentQ = questions[currentQuestion];
 
   return (
-    <Card className="max-w-2xl mx-auto p-8">
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-            <Brain className="w-6 h-6 text-blue-600" />
+    <Card className="max-w-2xl mx-auto p-4 sm:p-6 md:p-8">
+      <div className="mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Clinical Assessment</h2>
-            <p className="text-gray-600">Question {currentQuestion + 1} of {questions.length}</p>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{t('assessment.title', 'Clinical Assessment')}t</h2>
+            <p className="text-sm sm:text-base text-gray-600">{t('assessment.questionOf', 'Question {current} of {total}').replace('{current}', String(currentQuestion + 1)).replace('{total}', String(questions.length))}</p>
           </div>
         </div>
         <Progress value={progress} className="w-full" />
       </div>
 
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <div className="mb-6 sm:mb-8">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
           {currentQ.question}
         </h3>
         
         <RadioGroup 
           value={answers[currentQ.id]?.toString() || ''} 
           onValueChange={(value) => handleAnswer(parseInt(value))}
-          className="space-y-3"
+          className="space-y-2 sm:space-y-3"
         >
           {currentQ.options.map((option) => (
-            <div key={option.value} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
-              <RadioGroupItem value={option.value.toString()} id={option.value.toString()} />
-              <Label htmlFor={option.value.toString()} className="text-gray-900 cursor-pointer flex-1">
+            <div key={option.value} className="flex items-center space-x-2 sm:space-x-3 p-2.5 sm:p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+              <RadioGroupItem value={option.value.toString()} id={option.value.toString()} className="flex-shrink-0" />
+              <Label htmlFor={option.value.toString()} className="text-sm sm:text-base text-gray-900 cursor-pointer flex-1 min-w-0">
                 {option.label}
               </Label>
             </div>
@@ -493,30 +519,31 @@ const ClinicalAssessment: React.FC<ClinicalAssessmentProps> = ({ onComplete }) =
         </RadioGroup>
       </div>
 
-      <div className="flex justify-between">
+      <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
         <Button 
           variant="outline" 
           onClick={handlePrevious}
           disabled={currentQuestion === 0}
+          className="w-full sm:w-auto order-2 sm:order-1"
         >
-          Previous
+           {t('assessment.previous', 'Previous')}
         </Button>
         
         <Button 
           onClick={handleNext}
           disabled={answers[currentQ.id] === undefined}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto order-1 sm:order-2"
         >
-          {currentQuestion === questions.length - 1 ? 'Complete Assessment' : 'Next'}
+           {currentQuestion === questions.length - 1 ? t('assessment.complete', 'Complete Assessment') : t('assessment.next', 'Next')}
         </Button>
       </div>
 
-      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <div className="flex items-start gap-2">
-          <AlertTriangle className="w-5 h-5 text-blue-600 mt-0.5" />
-          <div className="text-sm text-blue-800">
-            <p className="font-medium mb-1">Clinical Assessment Disclaimer</p>
-            <p>This assessment uses validated clinical screening tools (GAD-7, PHQ-9, PCL-5) for informational purposes only. It does not constitute medical diagnosis or treatment. Results should be discussed with a qualified mental health professional for proper clinical interpretation and care planning.</p>
+          <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+          <div className="text-xs sm:text-sm text-blue-800 min-w-0">
+             <p className="font-medium mb-1">{t('assessment.disclaimer.title', 'Clinical Assessment Disclaimer')}</p>
+            <p>{t('assessment.disclaimer.text', 'This assessment uses validated clinical screening tools (GAD-7, PHQ-9, PCL-5) for informational purposes only. It does not constitute medical diagnosis or treatment. Results should be discussed with a qualified mental health professional for proper clinical interpretation and care planning.')}</p>
           </div>
         </div>
       </div>

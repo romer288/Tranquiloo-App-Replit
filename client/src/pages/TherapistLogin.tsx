@@ -37,7 +37,7 @@ const TherapistLogin: React.FC = () => {
     }
   };
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
+const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -281,9 +281,9 @@ const TherapistLogin: React.FC = () => {
                 className="text-emerald-600 hover:text-emerald-700 font-medium"
                 data-testid="button-toggle-signup"
               >
-                {isSignUp 
-                  ? 'Already have a professional account? Sign in'
-                  : 'Don\'t have a professional account? Apply now'
+               {isSignUp
+                  ? t('therapist.alreadyHaveAccount', 'Already have a professional account? Sign in')
+                  : t('therapist.applyNow')
                 }
               </button>
             </div>
@@ -295,7 +295,7 @@ const TherapistLogin: React.FC = () => {
                 data-testid="link-patient-login"
               >
                 <span>👤</span>
-                <span>Looking for patient support? Sign in here</span>
+                 <span>{t('main.LookingForPatientSupport','Looking for patient support? Sign in here')}</span>
               </Link>
             </div>
           </CardContent>

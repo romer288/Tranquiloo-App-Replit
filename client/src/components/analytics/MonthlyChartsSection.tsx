@@ -48,8 +48,8 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
     
     // Create sample data to ensure proper chart rendering
     const sampleData = [
-      { date: 'June 2025', sessionCount: 45 },
-      { date: 'July 2025', sessionCount: 50 }
+      { date: t('analytics.monthly.sampleData.june', 'June 2025'), sessionCount: 45 },
+      { date: t('analytics.monthly.sampleData.july', 'July 2025'), sessionCount: 50 }
     ];
     
     if (analyses.length === 0) return sampleData;
@@ -236,7 +236,7 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
             </div>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="h-[350px]">
+            <ChartContainer config={chartConfig} className="h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                   <defs>
@@ -405,7 +405,7 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
             </div>
           </CardHeader>
           <CardContent>
-             <ChartContainer config={chartConfig} className="h-[350px]">
+             <ChartContainer config={chartConfig} className="h-[350px] w-full">
                <ResponsiveContainer width="100%" height="100%">
                  <BarChart 
                    data={monthlyData} 

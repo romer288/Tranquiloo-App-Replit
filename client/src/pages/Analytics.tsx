@@ -265,7 +265,7 @@ const AnalyticsContent = () => {
         onDownloadSummary={handleDownloadSummary}
       />
 
-      <div className="max-w-screen-sm sm:max-w-screen-md mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 overflow-hidden">
+      <div className="max-w-[390px] sm:max-w-screen-md mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 overflow-hidden">
         {/* Anxiety Analytics Tracker */}
         <div className="w-full overflow-hidden">
           <AnxietyAnalyticsTracker analyses={allAnalyses} />

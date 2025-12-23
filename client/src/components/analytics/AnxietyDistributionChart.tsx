@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 import { TrendingUp } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface SeverityData {
   range: string;
@@ -15,34 +16,57 @@ interface AnxietyDistributionChartProps {
 }
 
 const AnxietyDistributionChart: React.FC<AnxietyDistributionChartProps> = ({ severityDistribution }) => {
-  const chartConfig = {
+  const { t, language } = useLanguage();
+  
+  const chartConfig = useMemo(() => ({
     count: {
-      label: "Sessions",
+      label: t('analytics.distribution.tooltip.sessions', 'Sessions'),
     },
+  }), [t, language]);
+
+  // Helper function to translate range labels
+  const translateRange = (range: string): string => {
+    if (range.includes('1-3 (Low)')) {
+      return t('analytics.distribution.range.low', '1-3 (Low)');
+    }
+    if (range.includes('4-6 (Moderate)')) {
+      return t('analytics.distribution.range.moderate', '4-6 (Moderate)');
+    }
+    if (range.includes('7-8 (High)')) {
+      return t('analytics.distribution.range.high', '7-8 (High)');
+    }
+    if (range.includes('9-10 (Severe)')) {
+      return t('analytics.distribution.range.severe', '9-10 (Severe)');
+    }
+    return range;
   };
 
   // Enhanced color palette with vibrant gradients - add safety check
-  const enhancedData = (severityDistribution || []).filter(d => d.count > 0).map((item, index) => ({
-    ...item,
-    color: [
-      'hsl(142 76% 36%)', // Green for low anxiety
-      'hsl(47 96% 53%)',  // Yellow for mild
-      'hsl(25 95% 53%)',  // Orange for moderate  
-      'hsl(0 84% 60%)',   // Red for high
-      'hsl(300 76% 50%)', // Purple for severe
-      'hsl(262 83% 58%)', // Violet for very high
-      'hsl(348 83% 47%)'  // Deep red for extreme
-    ][index % 7],
-    gradientColor: [
-      'linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 50%))',
-      'linear-gradient(135deg, hsl(47 96% 53%), hsl(47 96% 65%))',
-      'linear-gradient(135deg, hsl(25 95% 53%), hsl(25 95% 65%))',
-      'linear-gradient(135deg, hsl(0 84% 60%), hsl(0 84% 70%))',
-      'linear-gradient(135deg, hsl(300 76% 50%), hsl(300 76% 65%))',
-      'linear-gradient(135deg, hsl(262 83% 58%), hsl(262 83% 70%))',
-      'linear-gradient(135deg, hsl(348 83% 47%), hsl(348 83% 60%))'
-    ][index % 7]
-  }));
+  // Memoized to update when language changes
+  const enhancedData = useMemo(() => {
+    return (severityDistribution || []).filter(d => d.count > 0).map((item, index) => ({
+      ...item,
+      range: translateRange(item.range), // Translate the range label
+      color: [
+        'hsl(142 76% 36%)', // Green for low anxiety
+        'hsl(47 96% 53%)',  // Yellow for mild
+        'hsl(25 95% 53%)',  // Orange for moderate  
+        'hsl(0 84% 60%)',   // Red for high
+        'hsl(300 76% 50%)', // Purple for severe
+        'hsl(262 83% 58%)', // Violet for very high
+        'hsl(348 83% 47%)'  // Deep red for extreme
+      ][index % 7],
+      gradientColor: [
+        'linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 50%))',
+        'linear-gradient(135deg, hsl(47 96% 53%), hsl(47 96% 65%))',
+        'linear-gradient(135deg, hsl(25 95% 53%), hsl(25 95% 65%))',
+        'linear-gradient(135deg, hsl(0 84% 60%), hsl(0 84% 70%))',
+        'linear-gradient(135deg, hsl(300 76% 50%), hsl(300 76% 65%))',
+        'linear-gradient(135deg, hsl(262 83% 58%), hsl(262 83% 70%))',
+        'linear-gradient(135deg, hsl(348 83% 47%), hsl(348 83% 60%))'
+      ][index % 7]
+    }));
+  }, [severityDistribution, language, t]);
 
   const total = (enhancedData ?? []).reduce((sum, item) => sum + (item.count ?? 0), 0);
 
@@ -70,17 +94,17 @@ const AnxietyDistributionChart: React.FC<AnxietyDistributionChartProps> = ({ sev
     );
   };
 
-  const CustomTooltip = ({ active, payload }: any) => {
+    const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
         <div className="bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg p-3">
           <p className="font-semibold text-foreground">{data.range}</p>
           <p className="text-sm text-muted-foreground">
-            Sessions: <span className="font-medium text-foreground">{data.count}</span>
+            {t('analytics.distribution.tooltip.sessions', 'Sessions')}: <span className="font-medium text-foreground">{data.count}</span>
           </p>
           <p className="text-sm text-muted-foreground">
-            Percentage: <span className="font-medium text-foreground">{((data?.count !== null && data?.count !== undefined && total !== null && total !== undefined && total > 0 && !isNaN(Number(data?.count))) ? ((Number(data.count) / Number(total)) * 100).toFixed(1) : '0.0')}%</span>
+            {t('analytics.distribution.tooltip.percentage', 'Percentage')}: <span className="font-medium text-foreground">{((data?.count !== null && data?.count !== undefined && total !== null && total !== undefined && total > 0 && !isNaN(Number(data?.count))) ? ((Number(data.count) / Number(total)) * 100).toFixed(1) : '0.0')}%</span>
           </p>
         </div>
       );
@@ -97,7 +121,7 @@ const AnxietyDistributionChart: React.FC<AnxietyDistributionChartProps> = ({ sev
               <TrendingUp className="w-5 h-5 text-primary" />
             </div>
             <CardTitle className="text-xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-              Anxiety Levels Distribution
+              {t('analytics.distribution.title', 'Anxiety Levels Distribution')}
             </CardTitle>
           </div>
         </div>
@@ -105,7 +129,7 @@ const AnxietyDistributionChart: React.FC<AnxietyDistributionChartProps> = ({ sev
       <CardContent>
         {enhancedData.length > 0 ? (
           <div className="space-y-6">
-            <ChartContainer config={chartConfig} className="h-[350px]">
+            <ChartContainer config={chartConfig} className="h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <defs>
@@ -171,7 +195,7 @@ const AnxietyDistributionChart: React.FC<AnxietyDistributionChartProps> = ({ sev
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">{item.range}</p>
-                    <p className="text-xs text-muted-foreground font-medium">{item.count} sessions</p>
+                    <p className="text-xs text-muted-foreground font-medium">{item.count} {t('analytics.distribution.tooltip.sessions', 'sessions')}</p>
                   </div>
                 </div>
               ))}

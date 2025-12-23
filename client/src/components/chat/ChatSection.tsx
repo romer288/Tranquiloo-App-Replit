@@ -62,26 +62,30 @@ const ChatSection: React.FC<ChatSectionProps> = ({
   onLanguageChange
 }) => {
   return (
-    <div className="flex-1 flex flex-col relative">
+    <div className="flex-1 flex flex-col relative min-h-0 w-full overflow-hidden">
       {/* Only show Advanced Anxiety Analysis */}
       {latestAnalysis && (
-        <AdvancedAnxietyTracker 
-          currentAnalysis={latestAnalysis as ClaudeAnxietyAnalysis}
-          recentAnalyses={allAnalyses.slice(-5) as ClaudeAnxietyAnalysis[]}
-        />
+        <div className="flex-shrink-0 px-2 sm:px-4 pt-2 sm:pt-4">
+          <AdvancedAnxietyTracker 
+            currentAnalysis={latestAnalysis as ClaudeAnxietyAnalysis}
+            recentAnalyses={allAnalyses.slice(-5) as ClaudeAnxietyAnalysis[]}
+          />
+        </div>
       )}
 
-      <ChatMessages
-        messages={messages}
-        isTyping={isTyping}
-        isAnalyzing={isAnalyzing}
-        scrollRef={scrollRef}
-        aiCompanion={aiCompanion}
-        onEditMessage={onEditMessage}
-        currentLanguage={currentLanguage}
-      />
+      <div className="flex-1 min-h-0 overflow-hidden px-2 sm:px-4">
+        <ChatMessages
+          messages={messages}
+          isTyping={isTyping}
+          isAnalyzing={isAnalyzing}
+          scrollRef={scrollRef}
+          aiCompanion={aiCompanion}
+          onEditMessage={onEditMessage}
+          currentLanguage={currentLanguage}
+        />
+      </div>
 
-      <div className="sticky bottom-0 bg-gray-50 pt-2 pb-20">
+      <div className="sticky bottom-0 left-0 right-0 bg-gray-50 dark:bg-gray-900 pt-2 pb-4 sm:pb-6 md:pb-20 px-2 sm:px-4 z-10 border-t border-gray-200 dark:border-gray-700">
         <ChatInput
           inputText={inputText}
           setInputText={setInputText}

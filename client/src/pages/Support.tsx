@@ -219,30 +219,31 @@ const Support = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="w-5 h-5 text-green-600" />
-                Support Hours & Response Times
+                {t('support.supportHoursAndResponseTimes' ,'Support Hours & Response Times')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Business Hours</h4>
+                  <h4 className="font-semibold text-gray-900 mb-3">{t('support.businessHours' ,'Business Hours')}</h4>
                   <div className="space-y-2 text-gray-700">
-                    <p><strong>Monday - Friday:</strong> 9:00 AM - 6:00 PM MST</p>
-                    <p><strong>Saturday:</strong> 10:00 AM - 4:00 PM MST</p>
-                    <p><strong>Sunday:</strong> Closed</p>
+                    <p><strong>{t('support.mondayToFriday' ,'Monday - Friday:')}</strong> 9:00 AM - 6:00 PM MST</p>
+                    <p><strong>{t('support.saturday' ,'Saturday:')}</strong> 10:00 AM - 4:00 PM MST</p>
+                    <p><strong>{t('support.sunday' ,'Sunday:')}</strong> Closed</p>
                     <p className="text-sm text-gray-600 mt-2">
-                      *Emergency resources are available 24/7 through the crisis hotlines listed above
+                      {t('support.emergencyResources' ,'*Emergency resources are available 24/7 through the crisis hotlines listed above')}
+                      {/* *Emergency resources are available 24/7 through the crisis hotlines listed above */}
                     </p>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Response Times</h4>
+                  <h4 className="font-semibold text-gray-900 mb-3">{t('support.responseTimes' ,'Response Times')} </h4>
                   <div className="space-y-2 text-gray-700">
-                    <p><strong>Phone:</strong> Immediate during business hours</p>
-                    <p><strong>Email:</strong> Within 24 hours</p>
-                    <p><strong>Text:</strong> Within 4 hours</p>
-                    <p><strong>Critical Issues:</strong> Within 2 hours</p>
+                    <p><strong>{t('support.phone' ,'Phone:')}</strong> {t('support.immediateDuringBusinessHours' ,'Immediate during business hours')}</p>
+                    <p><strong>{t('support.email' ,'Email:')}</strong> {t('support.within24Hours' ,'Within 24 hours')}</p>
+                    <p><strong>{t('support.text' ,'Text:')}</strong> {t('support.within4Hours' ,'Within 4 hours')}</p>
+                    <p><strong>{t('support.criticalIssues' ,'Critical Issues:')}</strong> {t('support.within2Hours' ,'Within 2 hours')}</p>
                   </div>
                 </div>
               </div>
@@ -251,22 +252,22 @@ const Support = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Feedback & Suggestions</CardTitle>
+              <CardTitle>{t('support.feedbackAndSuggestions' ,'Feedback & Suggestions')}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 mb-4">
-                We're constantly working to improve Tranquiloo based on user feedback. If you have 
-                suggestions for new features, improvements, or general feedback about your experience, 
-                we'd love to hear from you.
+                {t('support.feedbackAndSuggestionsDescription' ,'We\'re constantly working to improve Tranquiloo based on user feedback. If you have suggestions for new features, improvements, or general feedback about your experience, we\'d love to hear from you.')}
+                {/* We're constantly working to improve Tranquiloo based on user feedback. If you have suggestions for new features, improvements, or general feedback about your experience, we'd love to hear from you. */}
               </p>
               
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-blue-900 mb-2">Share Your Ideas</h4>
+                <h4 className="font-semibold text-blue-900 mb-2">{t('support.shareYourIdeas' ,'Share Your Ideas')}</h4>
                 <p className="text-blue-800 mb-3">
-                  Send your feedback to: <strong>feedback@tranquiloo-app.com</strong>
+                  {t('support.sendYourFeedback' ,'Send your feedback to:')} <strong>feedback@tranquiloo-app.com</strong>
                 </p>
                 <p className="text-sm text-blue-700">
-                  We review all feedback and prioritize features based on user needs and clinical value.
+                  {t('support.reviewAllFeedback' ,'We review all feedback and prioritize features based on user needs and clinical value.')}
+                  {/* We review all feedback and prioritize features based on user needs and clinical value. */}
                 </p>
               </div>
             </CardContent>

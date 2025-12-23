@@ -1,16 +1,24 @@
 
 import { FallbackAnxietyAnalysis } from './types';
 
-export const generateRecommendedInterventions = (crisisRiskLevel: string): string[] => {
+export const generateRecommendedInterventions = (
+  crisisRiskLevel: string,
+  translate?: (key: string, defaultValue: string) => string
+): string[] => {
+  const t = translate || ((key: string, defaultValue: string) => defaultValue);
+  
   const interventions = [
-    'Practice deep breathing exercises',
-    'Try progressive muscle relaxation',
-    'Use grounding techniques (5-4-3-2-1 method)',
-    'Consider journaling your thoughts'
+    t('anxietyAnalysis.interventions.deepBreathing', 'Practice deep breathing exercises'),
+    t('anxietyAnalysis.interventions.progressiveMuscle', 'Try progressive muscle relaxation'),
+    t('anxietyAnalysis.interventions.grounding', 'Use grounding techniques (5-4-3-2-1 method)'),
+    t('anxietyAnalysis.interventions.journaling', 'Consider journaling your thoughts')
   ];
   
   if (crisisRiskLevel === 'critical') {
-    interventions.unshift('Contact crisis hotline immediately', 'Reach out to emergency services if needed');
+    interventions.unshift(
+      t('anxietyAnalysis.interventions.crisisHotline', 'Contact crisis hotline immediately'),
+      t('anxietyAnalysis.interventions.emergencyServices', 'Reach out to emergency services if needed')
+    );
   }
   
   return interventions;

@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { goalsService } from '@/services/goalsService';
 import { interventionSummaryService } from '@/services/interventionSummaryService';
 import { GoalWithProgress, InterventionSummary } from '@/types/goals';
+import { useLanguage } from '@/context/LanguageContext';
 
 export const useGoalsData = () => {
   const [goals, setGoals] = useState<GoalWithProgress[]>([]);
   const [summaries, setSummaries] = useState<InterventionSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { language } = useLanguage();
 
   const loadData = async () => {
     try {
@@ -39,7 +41,7 @@ export const useGoalsData = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [language]); // Re-fetch when language changes
 
   return {
     goals,

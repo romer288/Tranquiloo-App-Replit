@@ -9,6 +9,7 @@ import { GoalWithProgress } from '@/types/goals';
 import { GoalForm } from './GoalForm';
 import { GoalProgressForm } from './GoalProgressForm';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/context/LanguageContext';
 
 export const GoalTracker: React.FC = () => {
   const [goals, setGoals] = useState<GoalWithProgress[]>([]);
@@ -17,10 +18,11 @@ export const GoalTracker: React.FC = () => {
   const [editingGoal, setEditingGoal] = useState<GoalWithProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     loadGoals();
-  }, []);
+  }, [language]); // Re-load when language changes
 
   const loadGoals = async () => {
     try {
@@ -135,6 +137,43 @@ export const GoalTracker: React.FC = () => {
     return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
+  const translateCategory = (category: string): string => {
+    const categoryKey = `goals.category.${category}`;
+    const translated = t(categoryKey, category);
+    // If translation key doesn't exist, return formatted category name
+    if (translated === categoryKey) {
+      return category.replace('_', ' ');
+    }
+    return translated;
+  };
+
+  const translateFrequency = (frequency: string): string => {
+    const frequencyKey = `goals.frequency.${frequency}`;
+    return t(frequencyKey, frequency);
+  };
+
+  const translateUnit = (unit: string): string => {
+    const unitKey = `goals.unit.${unit}`;
+    return t(unitKey, unit);
+  };
+
+  const translateNote = (goalId: string, progressId: string, note: string): string => {
+    // Map progress IDs to translation keys for mock data
+    if (goalId === 'goal_1') {
+      if (progressId === 'progress_1') {
+        return t('goals.goal1.notes.progress1', note);
+      } else if (progressId === 'progress_2') {
+        return t('goals.goal1.notes.progress2', note);
+      }
+    } else if (goalId === 'goal_2') {
+      if (progressId === 'progress_3') {
+        return t('goals.goal2.notes.progress3', note);
+      }
+    }
+    // If no translation key exists, return original note
+    return note;
+  };
+
   if (loading) {
     return <div className="p-6">Loading goals...</div>;
   }
@@ -168,17 +207,30 @@ export const GoalTracker: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Your Goals</h2>
-          <p className="text-sm text-gray-600">Track your progress toward better mental health</p>
+          <h2 className="text-xl font-semibold text-gray-900">{t('goals.tracker.title', 'Your Goals')}</h2>
+          <p className="text-sm text-gray-600">{t('goals.tracker.description', 'Track your progress toward better mental health')}</p>
         </div>
         <Button onClick={() => setShowCreateForm(true)}>
           <Plus className="w-4 h-4 mr-2" />
-          Add Goal
+          {t('goals.tracker.addGoal', 'Add Goal')}
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {goals.map((goal, index) => (
+        {goals.map((goal, index) => {
+          // Translate goal titles and descriptions for mock goals
+          let translatedTitle = goal.title;
+          let translatedDescription = goal.description;
+          
+          if (goal.id === 'goal_1') {
+            translatedTitle = t('goals.goal1.title', goal.title);
+            translatedDescription = goal.description ? t('goals.goal1.description', goal.description) : goal.description;
+          } else if (goal.id === 'goal_2') {
+            translatedTitle = t('goals.goal2.title', goal.title);
+            translatedDescription = goal.description ? t('goals.goal2.description', goal.description) : goal.description;
+          }
+          
+          return (
           <Card key={goal.id ?? `${goal.title}-${index}`} className="p-6">
             {goal.source === 'treatment-plan' && (
               <div className="mb-2 flex items-center justify-end">
@@ -189,17 +241,17 @@ export const GoalTracker: React.FC = () => {
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <Target className="w-5 h-5 text-blue-600" />
-                  <h3 className="font-semibold text-gray-900">{goal.title}</h3>
+                  <h3 className="font-semibold text-gray-900">{translatedTitle}</h3>
                 </div>
-                {goal.description && (
-                  <p className="text-sm text-gray-600 mb-2">{goal.description}</p>
+                {translatedDescription && (
+                  <p className="text-sm text-gray-600 mb-2">{translatedDescription}</p>
                 )}
                 <div className="flex items-center gap-2">
                   <Badge className={getCategoryColor(goal.category)}>
-                    {goal.category.replace('_', ' ')}
+                    {translateCategory(goal.category)}
                   </Badge>
                   <Badge variant="outline" className="text-xs">
-                    {goal.frequency}
+                    {translateFrequency(goal.frequency)}
                   </Badge>
                 </div>
               </div>
@@ -208,15 +260,15 @@ export const GoalTracker: React.FC = () => {
             {goal.target_value && (
               <div className="mb-4">
                 <div className="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>Target: {goal.target_value} {goal.unit}</span>
-                  <span>{goal.frequency}</span>
+                  <span>Target: {goal.target_value} {goal.unit ? translateUnit(goal.unit) : ''}</span>
+                  <span>{goal.frequency ? translateFrequency(goal.frequency) : ''}</span>
                 </div>
               </div>
             )}
 
             <div className="mb-4">
               <div className="flex justify-between text-sm text-gray-600 mb-2">
-                <span>Average Score</span>
+                <span>{t('goals.tracker.averageScore', 'Average Score')}</span>
                 <span>{(goal?.average_score !== null && goal?.average_score !== undefined && !isNaN(Number(goal.average_score)) ? Number(goal.average_score).toFixed(1) : '0.0')}/10</span>
               </div>
               <Progress 
@@ -227,7 +279,7 @@ export const GoalTracker: React.FC = () => {
 
             <div className="mb-4">
               <div className="flex justify-between text-sm text-gray-600 mb-2">
-                <span>Completion Rate</span>
+                <span>{t('goals.tracker.completionRate', 'Completion Rate')}</span>
                 <span>{(goal?.completion_rate !== null && goal?.completion_rate !== undefined && !isNaN(Number(goal.completion_rate)) ? Number(goal.completion_rate).toFixed(0) : '0')}%</span>
               </div>
               <Progress 
@@ -240,7 +292,7 @@ export const GoalTracker: React.FC = () => {
               <div className="mb-4 p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
                   <TrendingUp className="w-4 h-4 text-green-600" />
-                  <span className="text-sm font-medium">Latest Progress</span>
+                  <span className="text-sm font-medium">{t('goals.tracker.latestProgress', 'Latest Progress')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className={`w-3 h-3 rounded-full ${getProgressColor(goal.latest_progress.score)}`} />
@@ -252,7 +304,9 @@ export const GoalTracker: React.FC = () => {
                   </span>
                 </div>
                 {goal.latest_progress.notes && (
-                  <p className="text-xs text-gray-600 mt-1">{goal.latest_progress.notes}</p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    {translateNote(goal.id ?? '', goal.latest_progress.id ?? '', goal.latest_progress.notes)}
+                  </p>
                 )}
               </div>
             )}
@@ -264,7 +318,7 @@ export const GoalTracker: React.FC = () => {
                 className="flex-1"
               >
                 <Calendar className="w-4 h-4 mr-2" />
-                Record Progress
+                {t('goals.tracker.recordProgress', 'Record Progress')}
               </Button>
               {goal.source !== 'treatment-plan' && (
                 <>
@@ -287,7 +341,8 @@ export const GoalTracker: React.FC = () => {
               )}
             </div>
           </Card>
-        ))}
+          );
+        })}
       </div>
 
       {showCreateForm && (

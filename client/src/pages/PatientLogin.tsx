@@ -78,7 +78,7 @@ const PatientLogin: React.FC = () => {
     window.location.href = `/auth/google?role=${role}&returnUrl=${encodeURIComponent(returnUrl)}`;
   };
 
-  const handleSignIn = async (e: React.FormEvent) => {
+const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setSignInError('');

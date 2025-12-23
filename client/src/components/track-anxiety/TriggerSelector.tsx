@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface TriggerSelectorProps {
   trigger: string;
@@ -11,6 +12,8 @@ const TriggerSelector: React.FC<TriggerSelectorProps> = ({
   trigger,
   onTriggerChange
 }) => {
+  const { t } = useLanguage();
+  
   return (
     <div>
       <label className="text-lg font-semibold text-gray-900 mb-3 block">
@@ -23,7 +26,7 @@ const TriggerSelector: React.FC<TriggerSelectorProps> = ({
         <SelectContent>
           <SelectItem value="work">Work/Career</SelectItem>
           <SelectItem value="social">Social Situations</SelectItem>
-          <SelectItem value="health">Health Concerns</SelectItem>
+          <SelectItem value="health">{t('analytics.triggers.category.healthConcerns', 'Health Concerns')}</SelectItem>
           <SelectItem value="financial">Financial Stress</SelectItem>
           <SelectItem value="relationships">Relationships</SelectItem>
           <SelectItem value="future">Future/Uncertainty</SelectItem>

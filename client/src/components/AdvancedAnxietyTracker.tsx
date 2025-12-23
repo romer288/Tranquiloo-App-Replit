@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Brain, AlertTriangle, Heart, Activity, Target, Shield } from 'lucide-react';
-import { ClaudeAnxietyAnalysis, getGAD7Description, getCrisisRiskColor, getTherapyApproachDescription } from '@/utils/claudeAnxietyAnalysis';
+import { ClaudeAnxietyAnalysis, getCrisisRiskColor } from '@/utils/claudeAnxietyAnalysis';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface AdvancedAnxietyTrackerProps {
   currentAnalysis: ClaudeAnxietyAnalysis;
@@ -12,6 +13,34 @@ const AdvancedAnxietyTracker: React.FC<AdvancedAnxietyTrackerProps> = ({
   currentAnalysis, 
   recentAnalyses 
 }) => {
+  const { t } = useLanguage();
+  
+  const getGAD7Description = (score: number): string => {
+    if (score >= 15) return t('anxietyAnalysis.gad7.severe', 'Severe');
+    if (score >= 10) return t('anxietyAnalysis.gad7.moderate', 'Moderate');
+    if (score >= 5) return t('anxietyAnalysis.gad7.mild', 'Mild');
+    return t('anxietyAnalysis.gad7.minimal', 'Minimal');
+  };
+
+  const getTherapyApproachDescription = (approach: string): string => {
+    switch (approach) {
+      case 'CBT': return t('anxietyAnalysis.therapy.cbt', 'Cognitive Behavioral Therapy focuses on identifying and changing negative thought patterns');
+      case 'DBT': return t('anxietyAnalysis.therapy.dbt', 'Dialectical Behavior Therapy helps with emotional regulation and distress tolerance');
+      case 'Mindfulness': return t('anxietyAnalysis.therapy.mindfulness', 'Mindfulness-based approaches focus on present-moment awareness');
+      case 'Trauma-Informed': return t('anxietyAnalysis.therapy.traumaInformed', 'Trauma-informed care addresses the impact of traumatic experiences');
+      default: return t('anxietyAnalysis.therapy.supportive', 'Supportive therapy provides emotional support and validation');
+    }
+  };
+
+  const translateCrisisRisk = (level: string): string => {
+    switch (level.toLowerCase()) {
+      case 'critical': return t('anxietyAnalysis.crisis.critical', 'CRITICAL');
+      case 'high': return t('anxietyAnalysis.crisis.high', 'HIGH');
+      case 'moderate': return t('anxietyAnalysis.crisis.moderate', 'MODERATE');
+      default: return t('anxietyAnalysis.crisis.low', 'LOW');
+    }
+  };
+
   const averageGAD7 = Math.round(((recentAnalyses ?? [])
     .reduce((sum, a) => sum + (a.gad7Score ?? 0), 0)) /
     Math.max((recentAnalyses ?? []).length, 1));
@@ -30,7 +59,7 @@ const AdvancedAnxietyTracker: React.FC<AdvancedAnxietyTrackerProps> = ({
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
       <div className="flex items-center gap-2 mb-4">
         <Brain className="w-6 h-6 text-purple-500" />
-        <h3 className="text-lg font-semibold text-gray-900">Advanced Anxiety Analysis</h3>
+        <h3 className="text-lg font-semibold text-gray-900">{t('anxietyAnalysis.title', 'Advanced Anxiety Analysis')}</h3>
       </div>
       
       {/* Crisis Risk Alert */}
@@ -39,11 +68,13 @@ const AdvancedAnxietyTracker: React.FC<AdvancedAnxietyTrackerProps> = ({
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-red-600" />
             <span className="font-medium text-red-800">
-              {currentAnalysis.crisisRiskLevel === 'critical' ? 'Critical Risk Detected' : 'High Risk Detected'}
+              {currentAnalysis.crisisRiskLevel === 'critical' 
+                ? t('anxietyAnalysis.crisis.criticalDetected', 'Critical Risk Detected')
+                : t('anxietyAnalysis.crisis.highDetected', 'High Risk Detected')}
             </span>
           </div>
           <p className="text-sm text-red-700 mt-1">
-            Please consider reaching out to a mental health professional or crisis hotline immediately.
+            {t('anxietyAnalysis.crisis.warning', 'Please consider reaching out to a mental health professional or crisis hotline immediately.')}
           </p>
         </div>
       )}
@@ -54,14 +85,14 @@ const AdvancedAnxietyTracker: React.FC<AdvancedAnxietyTrackerProps> = ({
           <div className="text-2xl font-bold text-blue-600">
             {currentAnalysis.anxietyLevel}/10
           </div>
-          <div className="text-sm text-gray-600">Anxiety Level</div>
+          <div className="text-sm text-gray-600">{t('anxietyAnalysis.anxietyLevel', 'Anxiety Level')}</div>
         </div>
         
         <div className="text-center p-3 bg-green-50 rounded-lg">
           <div className="text-2xl font-bold text-green-600">
             {currentAnalysis.gad7Score}/21
           </div>
-          <div className="text-sm text-gray-600">GAD-7 Score</div>
+          <div className="text-sm text-gray-600">{t('anxietyAnalysis.gad7Score', 'GAD-7 Score')}</div>
           <div className="text-xs text-green-700 font-medium">
             {getGAD7Description(currentAnalysis.gad7Score)}
           </div>
@@ -69,16 +100,16 @@ const AdvancedAnxietyTracker: React.FC<AdvancedAnxietyTrackerProps> = ({
         
         <div className="text-center p-3 bg-orange-50 rounded-lg">
           <div className={`text-lg font-bold ${getCrisisRiskColor(currentAnalysis.crisisRiskLevel)}`}>
-            {currentAnalysis.crisisRiskLevel.toUpperCase()}
+            {translateCrisisRisk(currentAnalysis.crisisRiskLevel)}
           </div>
-          <div className="text-sm text-gray-600">Crisis Risk</div>
+          <div className="text-sm text-gray-600">{t('anxietyAnalysis.crisisRisk', 'Crisis Risk')}</div>
         </div>
         
         <div className="text-center p-3 bg-purple-50 rounded-lg">
           <div className="text-sm font-bold text-purple-600">
             {currentAnalysis.therapyApproach}
           </div>
-          <div className="text-sm text-gray-600">Recommended</div>
+          <div className="text-sm text-gray-600">{t('anxietyAnalysis.recommended', 'Recommended')}</div>
         </div>
       </div>
 
@@ -89,7 +120,7 @@ const AdvancedAnxietyTracker: React.FC<AdvancedAnxietyTrackerProps> = ({
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Activity className="w-4 h-4 text-blue-500" />
-              <span className="text-sm font-medium text-gray-700">DSM-5 Indicators:</span>
+              <span className="text-sm font-medium text-gray-700">{t('anxietyAnalysis.dsm5Indicators', 'DSM-5 Indicators:')}</span>
             </div>
             <div className="space-y-1">
               {(currentAnalysis?.dsm5Indicators ?? []).map((indicator, index) => (
@@ -106,7 +137,7 @@ const AdvancedAnxietyTracker: React.FC<AdvancedAnxietyTrackerProps> = ({
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Heart className="w-4 h-4 text-red-500" />
-              <span className="text-sm font-medium text-gray-700">Beck Categories:</span>
+              <span className="text-sm font-medium text-gray-700">{t('anxietyAnalysis.beckCategories', 'Beck Categories:')}</span>
             </div>
             <div className="space-y-1">
               {(currentAnalysis?.beckAnxietyCategories ?? []).map((category, index) => (
@@ -124,7 +155,7 @@ const AdvancedAnxietyTracker: React.FC<AdvancedAnxietyTrackerProps> = ({
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
             <Target className="w-4 h-4 text-orange-500" />
-            <span className="text-sm font-medium text-gray-700">Cognitive Patterns Detected:</span>
+            <span className="text-sm font-medium text-gray-700">{t('anxietyAnalysis.cognitivePatterns', 'Cognitive Patterns Detected:')}</span>
           </div>
           <div className="flex flex-wrap gap-1">
             {(currentAnalysis?.cognitiveDistortions ?? []).map((distortion, index) => (
@@ -141,7 +172,7 @@ const AdvancedAnxietyTracker: React.FC<AdvancedAnxietyTrackerProps> = ({
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle className="w-4 h-4 text-amber-500" />
-            <span className="text-sm font-medium text-gray-700">Current Triggers:</span>
+            <span className="text-sm font-medium text-gray-700">{t('anxietyAnalysis.currentTriggers', 'Current Triggers:')}</span>
           </div>
           <div className="flex flex-wrap gap-1">
             {(currentAnalysis?.triggers ?? []).map((trigger, index) => (
@@ -157,21 +188,38 @@ const AdvancedAnxietyTracker: React.FC<AdvancedAnxietyTrackerProps> = ({
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-2">
           <Shield className="w-4 h-4 text-green-500" />
-          <span className="text-sm font-medium text-gray-700">Recommended Interventions:</span>
+          <span className="text-sm font-medium text-gray-700">{t('anxietyAnalysis.recommendedInterventions', 'Recommended Interventions:')}</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          {(currentAnalysis?.recommendedInterventions ?? []).map((intervention, index) => (
-            <div key={index} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-              • {intervention}
-            </div>
-          ))}
+          {(currentAnalysis?.recommendedInterventions ?? []).map((intervention, index) => {
+            // Translate common interventions
+            let translatedIntervention = intervention;
+            if (intervention === 'Practice deep breathing exercises') {
+              translatedIntervention = t('anxietyAnalysis.interventions.deepBreathing', intervention);
+            } else if (intervention === 'Try progressive muscle relaxation') {
+              translatedIntervention = t('anxietyAnalysis.interventions.progressiveMuscle', intervention);
+            } else if (intervention === 'Use grounding techniques (5-4-3-2-1 method)') {
+              translatedIntervention = t('anxietyAnalysis.interventions.grounding', intervention);
+            } else if (intervention === 'Consider journaling your thoughts') {
+              translatedIntervention = t('anxietyAnalysis.interventions.journaling', intervention);
+            } else if (intervention === 'Contact crisis hotline immediately') {
+              translatedIntervention = t('anxietyAnalysis.interventions.crisisHotline', intervention);
+            } else if (intervention === 'Reach out to emergency services if needed') {
+              translatedIntervention = t('anxietyAnalysis.interventions.emergencyServices', intervention);
+            }
+            return (
+              <div key={index} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                • {translatedIntervention}
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {/* Therapy Approach Info */}
       <div className="bg-purple-50 rounded-lg p-3">
         <div className="text-sm font-medium text-purple-800 mb-1">
-          Recommended Therapeutic Approach: {currentAnalysis.therapyApproach}
+          {t('anxietyAnalysis.therapyApproach', 'Recommended Therapeutic Approach:')} {currentAnalysis.therapyApproach}
         </div>
         <div className="text-xs text-purple-700">
           {getTherapyApproachDescription(currentAnalysis.therapyApproach)}
@@ -184,11 +232,11 @@ const AdvancedAnxietyTracker: React.FC<AdvancedAnxietyTrackerProps> = ({
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-orange-600" />
             <span className="text-sm font-medium text-orange-800">
-              Anxiety Escalation Detected
+              {t('anxietyAnalysis.escalation.title', 'Anxiety Escalation Detected')}
             </span>
           </div>
           <p className="text-xs text-orange-700 mt-1">
-            Your anxiety levels appear to be increasing. Consider using grounding techniques or reaching out for support.
+            {t('anxietyAnalysis.escalation.message', 'Your anxiety levels appear to be increasing. Consider using grounding techniques or reaching out for support.')}
           </p>
         </div>
       )}

@@ -57,7 +57,7 @@ const Appointments = () => {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-8 py-4">
         <div className="flex items-center justify-between max-w-6xl mx-auto">
-          <div className="flex items-center gap-4">
+          <div className="flex items-start sm:items-center gap-4 flex-col sm:flex-row">
             <Button
               variant="ghost"
               size="sm"

@@ -109,30 +109,30 @@ const Notifications = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-8 py-4">
-        <div className="flex items-center justify-between">
+      {/* Header - Responsive */}
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center space-x-4">
-            <Link to="/dashboard" className="text-blue-600 hover:text-blue-700">
+            <Link to="/dashboard" className="text-blue-600 hover:text-blue-700 text-md md:text-lg">
               ← {t('notifications.back')}
             </Link>
             <h1 className="text-xl font-semibold text-gray-900">{t('notifications.title')}</h1>
             {unreadCount > 0 && (
-              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+              <span className="bg-red-500 text-white text-xs text-center px-2 py-1 rounded-full">
                 {unreadCount} {t('notifications.new')}
               </span>
             )}
           </div>
           {unreadCount > 0 && (
-            <Button onClick={markAllAsRead} variant="outline" size="sm">
+            <Button onClick={markAllAsRead} variant="outline" size="sm" className="w-full sm:w-auto">
               {t('notifications.markAll')}
             </Button>
           )}
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-8 py-8">
+      {/* Content - Responsive Container */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {notifications.length === 0 ? (
           <Card className="p-8 text-center">
             <Bell className="w-12 h-12 text-gray-300 mx-auto mb-4" />
@@ -144,23 +144,23 @@ const Notifications = () => {
             {notifications.map((notification) => (
               <Card 
                 key={notification.id}
-                className={`p-6 border-l-4 ${getPriorityColor(notification.priority)} ${
+                className={`p-4 sm:p-6 border-l-4 ${getPriorityColor(notification.priority)} ${
                   !notification.read ? 'bg-blue-50' : 'bg-white'
-                }`}
+                } transition-shadow hover:shadow-md`}
               >
                 <div className="flex items-start space-x-4">
                   <div className="flex-shrink-0 mt-1">
                     {getNotificationIcon(notification.type)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <h3 className={`text-lg font-medium ${
                         !notification.read ? 'text-gray-900' : 'text-gray-700'
                       }`}>
                         {notification.title}
                       </h3>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-500">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-500">
+                        <span>
                           {notification.timestamp.toLocaleDateString()} at{' '}
                           {notification.timestamp.toLocaleTimeString([], { 
                             hour: '2-digit', 
@@ -170,26 +170,26 @@ const Notifications = () => {
                         {!notification.read && (
                           <button
                             onClick={() => markAsRead(notification.id)}
-                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                            className="text-blue-600 hover:text-blue-700 font-medium mt-2 sm:mt-0"
                           >
                             {t('notifications.markRead')}
                           </button>
                         )}
                       </div>
                     </div>
-                    <p className={`mt-2 ${
+                    <p className={`mt-3 text-base ${
                       !notification.read ? 'text-gray-900' : 'text-gray-600'
                     }`}>
                       {notification.message}
                     </p>
                     
-                    {/* Action buttons based on notification type */}
+                    {/* Action buttons based on notification type - Responsive */}
                     {notification.type === 'anxiety' && (
-                      <div className="mt-4 flex space-x-3">
-                        <Button asChild size="sm" variant="outline">
+                      <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                        <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
                           <Link to="/chat">{t('notifications.action.chat')}</Link>
                         </Button>
-                        <Button asChild size="sm" variant="outline">
+                        <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
                           <Link to="/track-anxiety">{t('notifications.action.track')}</Link>
                         </Button>
                       </div>
@@ -197,7 +197,7 @@ const Notifications = () => {
                     
                     {notification.type === 'treatment' && (
                       <div className="mt-4">
-                        <Button asChild size="sm" variant="outline">
+                        <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
                           <Link to="/analytics">{t('notifications.action.progress')}</Link>
                         </Button>
                       </div>
@@ -205,7 +205,7 @@ const Notifications = () => {
                     
                     {notification.type === 'reminder' && (
                       <div className="mt-4">
-                        <Button asChild size="sm" variant="outline">
+                        <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
                           <Link to="/find-therapist">View Therapist Info</Link>
                         </Button>
                       </div>

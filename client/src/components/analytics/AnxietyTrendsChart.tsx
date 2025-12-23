@@ -135,7 +135,7 @@ const AnxietyTrendsChart: React.FC<AnxietyTrendsChartProps> = ({
       <CardContent>
         {weeklyTrends.length > 0 ? (
           <div className="space-y-4">
-            <ChartContainer config={chartConfig} className="h-[350px]">
+            <ChartContainer config={chartConfig} className="h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={weeklyTrends} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                   <defs>

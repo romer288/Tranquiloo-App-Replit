@@ -30,7 +30,7 @@ import { filterAnalysesByRange, getAnalysisDateBounds } from '@/utils/filterAnal
 import { useLanguage } from '@/context/LanguageContext';
 
 const TreatmentResources = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data, getAllAnalyses } = useAnalyticsData();
   const summariesData = useGoalsData();
   const { summaries } = summariesData;
@@ -70,48 +70,48 @@ const TreatmentResources = () => {
     generateSummariesOnLoad();
   }, [allAnalyses.length, summariesGenerated, summariesData]);
 
-  const treatmentOptions = [
+  const treatmentOptions = useMemo(() => [
     {
       id: 'cbt',
-      title: 'Cognitive Behavioral Therapy (CBT)',
-      description: 'Evidence-based therapy focusing on changing thought patterns and behaviors',
+      title: t('treatmentResources.treatment.cbt.title', 'Cognitive Behavioral Therapy (CBT)'),
+      description: t('treatmentResources.treatment.cbt.description', 'Evidence-based therapy focusing on changing thought patterns and behaviors'),
       category: 'therapy',
       effectiveness: 'high',
-      duration: '12-20 sessions',
+      duration: t('treatmentResources.treatment.cbt.duration', '12-20 sessions'),
       icon: Brain,
       recommended: true
     },
     {
       id: 'dbt',
-      title: 'Dialectical Behavior Therapy (DBT)',
-      description: 'Skills-based therapy for emotional regulation and distress tolerance',
+      title: t('treatmentResources.treatment.dbt.title', 'Dialectical Behavior Therapy (DBT)'),
+      description: t('treatmentResources.treatment.dbt.description', 'Skills-based therapy for emotional regulation and distress tolerance'),
       category: 'therapy',
       effectiveness: 'high',
-      duration: '6 months - 1 year',
+      duration: t('treatmentResources.treatment.dbt.duration', '6 months - 1 year'),
       icon: Heart,
       recommended: false
     },
     {
       id: 'mindfulness',
-      title: 'Mindfulness-Based Stress Reduction',
-      description: 'Meditation and mindfulness practices to reduce anxiety and stress',
+      title: t('treatmentResources.treatment.mindfulness.title', 'Mindfulness-Based Stress Reduction'),
+      description: t('treatmentResources.treatment.mindfulness.description', 'Meditation and mindfulness practices to reduce anxiety and stress'),
       category: 'self-help',
       effectiveness: 'moderate',
-      duration: '8-12 weeks',
+      duration: t('treatmentResources.treatment.mindfulness.duration', '8-12 weeks'),
       icon: Target,
       recommended: true
     },
     {
       id: 'support-group',
-      title: 'Anxiety Support Groups',
-      description: 'Peer support and shared experiences with anxiety management',
+      title: t('treatmentResources.treatment.supportGroup.title', 'Anxiety Support Groups'),
+      description: t('treatmentResources.treatment.supportGroup.description', 'Peer support and shared experiences with anxiety management'),
       category: 'support',
       effectiveness: 'moderate',
-      duration: 'Ongoing',
+      duration: t('treatmentResources.treatment.supportGroup.duration', 'Ongoing'),
       icon: Users,
       recommended: false
     }
-  ];
+  ], [t, language]);
 
   const resources = [
     {
@@ -134,12 +134,12 @@ const TreatmentResources = () => {
     }
   ];
 
-  const categories = [
-    { id: 'all', label: 'All Resources' },
-    { id: 'therapy', label: 'Professional Therapy' },
-    { id: 'self-help', label: 'Self-Help' },
-    { id: 'support', label: 'Support Groups' }
-  ];
+  const categories = useMemo(() => [
+    { id: 'all', label: t('treatmentResources.category.all', 'All Resources') },
+    { id: 'therapy', label: t('treatmentResources.category.therapy', 'Professional Therapy') },
+    { id: 'self-help', label: t('treatmentResources.category.selfHelp', 'Self-Help') },
+    { id: 'support', label: t('treatmentResources.category.support', 'Support Groups') }
+  ], [t, language]);
 
   const filteredTreatments = selectedCategory === 'all' 
     ? treatmentOptions 
@@ -166,14 +166,14 @@ const TreatmentResources = () => {
       });
       
       toast({
-        title: "Success",
-        description: "Conversation summary downloaded successfully",
+        title: t('treatmentResources.toast.success', 'Success'),
+        description: t('treatmentResources.toast.downloadSuccess', 'Conversation summary downloaded successfully'),
       });
     } catch (error) {
       console.error('Error downloading summary:', error);
       toast({
-        title: "Error", 
-        description: "Failed to download conversation summary",
+        title: t('treatmentResources.toast.error', 'Error'), 
+        description: t('treatmentResources.toast.downloadError', 'Failed to download conversation summary'),
         variant: "destructive",
       });
     }
@@ -205,7 +205,7 @@ const TreatmentResources = () => {
         </div>
       </div>
 
-      <div className="max-w-screen-sm sm:max-w-screen-md mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 overflow-hidden">
+      <div className="max-w-[390px] sm:max-w-screen-md mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 overflow-hidden">
         {/* Treatment Status */}
         <Card className="p-6 mb-8 w-full overflow-hidden">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full">
@@ -238,7 +238,7 @@ const TreatmentResources = () => {
         </Card>
 
         {/* Goal Tracker - Track Outcome Measures */}
-        <div className="mb-8">
+        <div className="mb-8 ">
           <GoalTracker />
         </div>
 
@@ -254,19 +254,19 @@ const TreatmentResources = () => {
         </div>
 
         {/* Weekly Intervention Summaries Section */}
-        <div className="mb-8 w-full">
+        <div className="mb-8 w-full border">
           <InterventionSummariesSection summaries={summaries} analyses={allAnalyses} />
         </div>
 
         {/* Treatment Options */}
         <Card className="p-6 mb-8">
-          <div className="flex items-center gap-2 mb-6">
+           <div className="flex items-center gap-2 mb-6">
             <BookOpen className="w-5 h-5 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Recommended Treatment Options</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('treatmentResources.recommendedOptions', 'Recommended Treatment Options')}</h3>
           </div>
 
           {/* Category Filter */}
-          <div className="flex gap-2 mb-6">
+          <div className="flex flex-wrap gap-2 mb-6">
             {categories.map(category => (
               <Button
                 key={category.id}
@@ -293,16 +293,18 @@ const TreatmentResources = () => {
                       <div className="flex items-center gap-2 mb-2">
                         <h4 className="font-semibold text-gray-900">{treatment.title}</h4>
                         {treatment.recommended && (
-                          <Badge variant="secondary" className="text-xs">Recommended</Badge>
+                           <Badge variant="secondary" className="text-xs">{t('treatmentResources.recommended', 'Recommended')}</Badge>
                         )}
                       </div>
                       <p className="text-sm text-gray-600 mb-3">{treatment.description}</p>
                       <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>Duration: {treatment.duration}</span>
-                        <span className={`px-2 py-1 rounded-full ${
+                         <span>{t('treatmentResources.duration', 'Duration')}: {treatment.duration}</span>
+                        <span className={`px-2 py-1 text-center rounded-full ${
                           treatment.effectiveness === 'high' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                         }`}>
-                          {treatment.effectiveness} effectiveness
+                                                   {treatment.effectiveness === 'high' 
+                            ? t('treatmentResources.effectiveness.high', 'high')
+                            : t('treatmentResources.effectiveness.moderate', 'moderate')} {t('treatmentResources.effectiveness', 'effectiveness')}
                         </span>
                       </div>
                       <Button 
@@ -315,7 +317,7 @@ const TreatmentResources = () => {
                           } 
                         })}
                       >
-                        Learn More
+                         {t('treatmentResources.learnMore', 'Learn More')}
                       </Button>
                     </div>
                   </div>

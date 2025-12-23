@@ -124,7 +124,7 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({
   minDate,
   maxDate,
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const displayGoals = React.useMemo<EnrichedGoal[]>(() => {
     return goals.map((goal) => {
       const history = Array.isArray(goal.progress_history) ? goal.progress_history : [];
@@ -138,14 +138,28 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({
       const completionRateRaw = calculateRangeCompletionRate(goal, filteredHistory, dateRange);
       const completionRateForRange = Number.isFinite(completionRateRaw) ? completionRateRaw : 0;
 
+      // Translate goal titles and descriptions for mock goals
+      let translatedTitle = goal.title;
+      let translatedDescription = goal.description;
+      
+      if (goal.id === 'goal_1') {
+        translatedTitle = t('goals.goal1.title', goal.title);
+        translatedDescription = goal.description ? t('goals.goal1.description', goal.description) : goal.description;
+      } else if (goal.id === 'goal_2') {
+        translatedTitle = t('goals.goal2.title', goal.title);
+        translatedDescription = goal.description ? t('goals.goal2.description', goal.description) : goal.description;
+      }
+
       return {
         ...goal,
+        title: translatedTitle,
+        description: translatedDescription,
         averageScoreForRange,
         completionRateForRange,
         filteredHistory,
       };
     });
-  }, [goals, dateRange]);
+  }, [goals, dateRange, language, t]);
 
   if (goals.length === 0) {
     return (
@@ -180,6 +194,16 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({
       bg: 'bg-muted/10', 
       icon: Target 
     };
+  };
+
+  const translateCategory = (category: string): string => {
+    const categoryKey = `goals.category.${category}`;
+    const translated = t(categoryKey, category);
+    // If translation key doesn't exist, return formatted category name
+    if (translated === categoryKey) {
+      return category.replace('_', ' ');
+    }
+    return translated;
   };
 
   const totalGoals = displayGoals.length;
@@ -294,7 +318,7 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({
                         <h4 className="font-semibold text-foreground text-base">{goal.title}</h4>
                      <div className="flex items-center gap-2 mt-1">
                        <Badge variant="outline" className="text-xs">
-                         {goal.category.replace('_', ' ')}
+                         {translateCategory(goal.category)}
                        </Badge>
                        <Badge 
                          variant={completionStatus === 'completed' ? 'default' : 

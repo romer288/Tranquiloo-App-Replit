@@ -105,21 +105,21 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('settings.title')}</h1>
-          <p className="text-gray-600">{t('settings.subtitle')}</p>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{t('settings.title')}</h1>
+          <p className="text-sm sm:text-base text-gray-600">{t('settings.subtitle')}</p>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Account Section */}
           <Card>
             <CardHeader>
               <CardTitle>{t('settings.account')}</CardTitle>
               <CardDescription>{t('settings.accountDesc')}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 sm:space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="current-email" className="text-sm font-medium text-gray-900">{t('settings.currentEmail')}</Label>
                 <Input
@@ -133,12 +133,12 @@ const Settings = () => {
               {/* Patient Code Section - Important for therapist connection */}
               <div className="space-y-2">
                 <Label htmlFor="patient-code" className="text-sm font-medium text-gray-900">{t('settings.patientCode')}</Label>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <Input
                     id="patient-code"
                     value={user?.patientCode || 'PT-' + (user?.id?.slice(0, 8) || 'XXXX').toUpperCase()}
                     disabled
-                    className="bg-yellow-50 font-mono font-bold text-lg"
+                    className="bg-yellow-50 font-mono font-bold text-base sm:text-lg flex-1"
                   />
                   <Button
                     variant="outline"
@@ -150,6 +150,7 @@ const Settings = () => {
                         description: t('settings.codeCopied')
                       });
                     }}
+                    className="w-full sm:w-auto"
                   >
                     {t('settings.copy')}
                   </Button>
@@ -207,7 +208,7 @@ const Settings = () => {
               <CardTitle>{t('settings.voiceLanguage')}</CardTitle>
               <CardDescription>{t('settings.voiceLanguageDesc')}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 sm:space-y-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">{t('settings.languageLabel')}</label>
                 <Select defaultValue="english">
@@ -222,25 +223,27 @@ const Settings = () => {
                 </Select>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                <div className="flex-1 pr-0 sm:pr-4">
                   <h4 className="text-sm font-medium text-gray-900">{t('settings.voiceResponses')}</h4>
                   <p className="text-sm text-gray-500">{t('settings.voiceResponsesDesc')}</p>
                 </div>
                 <Switch
                   checked={voiceResponses}
                   onCheckedChange={setVoiceResponses}
+                  className="self-start sm:self-auto"
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                <div className="flex-1 pr-0 sm:pr-4">
                   <h4 className="text-sm font-medium text-gray-900">{t('settings.voiceInterruption')}</h4>
                   <p className="text-sm text-gray-500">{t('settings.voiceInterruptionDesc')}</p>
                 </div>
                 <Switch
                   checked={voiceInterruption}
                   onCheckedChange={setVoiceInterruption}
+                  className="self-start sm:self-auto"
                 />
               </div>
             </CardContent>
@@ -252,26 +255,28 @@ const Settings = () => {
               <CardTitle>{t('settings.privacy')}</CardTitle>
               <CardDescription>{t('settings.privacyDesc')}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
+            <CardContent className="space-y-4 sm:space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                <div className="flex-1 pr-0 sm:pr-4">
                   <h4 className="text-sm font-medium text-gray-900">{t('settings.localStorage')}</h4>
                   <p className="text-sm text-gray-500">{t('settings.localStorageDesc')}</p>
                 </div>
                 <Switch
                   checked={localStorageOnly}
                   onCheckedChange={setLocalStorageOnly}
+                  className="self-start sm:self-auto"
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                <div className="flex-1 pr-0 sm:pr-4">
                   <h4 className="text-sm font-medium text-gray-900">{t('settings.analytics')}</h4>
                   <p className="text-sm text-gray-500">{t('settings.analyticsDesc')}</p>
                 </div>
                 <Switch
                   checked={analytics}
                   onCheckedChange={setAnalytics}
+                  className="self-start sm:self-auto"
                 />
               </div>
 
@@ -279,12 +284,12 @@ const Settings = () => {
                 <Button 
                   variant="destructive" 
                   onClick={handleClearAllData}
-                  className="mb-2"
+                  className="mb-2 w-full sm:w-auto"
                 >
-                  Clear All Data
+                  {t('settings.clearAllData', 'Clear All Data')}
                 </Button>
                 <p className="text-sm text-gray-500">
-                  This will permanently delete all your conversation history and settings.
+                 {t('settings.clearAllDataDesc', 'This will permanently delete all your conversation history and settings.')}
                 </p>
               </div>
             </CardContent>
@@ -292,30 +297,32 @@ const Settings = () => {
 
           {/* Notifications Section */}
           <Card>
-            <CardHeader>
-              <CardTitle>Notifications</CardTitle>
-              <CardDescription>Manage how and when you receive notifications.</CardDescription>
+           <CardHeader>
+              <CardTitle>{t('settings.notifications.title', 'Notifications')}</CardTitle>
+              <CardDescription>{t('settings.notifications.description', 'Manage how and when you receive notifications.')}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
+            <CardContent className="space-y-4 sm:space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                <div className="flex-1 pr-0 sm:pr-4">
                   <h4 className="text-sm font-medium text-gray-900">{t('settings.dailyCheckIns')}</h4>
                   <p className="text-sm text-gray-500">{t('settings.dailyCheckInsDesc')}</p>
                 </div>
                 <Switch
                   checked={dailyCheckIns}
                   onCheckedChange={setDailyCheckIns}
+                  className="self-start sm:self-auto"
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                <div className="flex-1 pr-0 sm:pr-4">
                   <h4 className="text-sm font-medium text-gray-900">{t('settings.breathingReminders')}</h4>
                   <p className="text-sm text-gray-500">{t('settings.breathingRemindersDesc')}</p>
                 </div>
                 <Switch
                   checked={breathingReminders}
                   onCheckedChange={setBreathingReminders}
+                  className="self-start sm:self-auto"
                 />
               </div>
             </CardContent>
@@ -324,42 +331,45 @@ const Settings = () => {
           {/* About Section */}
           <Card>
             <CardHeader>
-              <CardTitle>About</CardTitle>
-              <CardDescription>Information about the application and support.</CardDescription>
+               <CardTitle>{t('settings.about.title', 'About')}</CardTitle>
+              <CardDescription>{t('settings.about.description', 'Information about the application and support.')}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+            <CardContent className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900">Version</h4>
+               <h4 className="text-sm font-medium text-gray-900">{t('settings.about.version', 'Version')}</h4>
                   <p className="text-sm text-gray-500">1.0.0</p>
                 </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900">Last Updated</h4>
-                  <p className="text-sm text-gray-500">Today</p>
+               <div>
+                  <h4 className="text-sm font-medium text-gray-900">{t('settings.about.lastUpdated', 'Last Updated')}</h4>
+                  <p className="text-sm text-gray-500">{t('settings.about.today', 'Today')}</p>
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={() => navigate('/privacy')}
+                  className="w-full sm:w-auto"
                 >
-                  Privacy Policy
+                 {t('settings.about.privacyPolicy', 'Privacy Policy')}
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={() => navigate('/terms-of-service')}
+                  className="w-full sm:w-auto"
                 >
-                  Terms of Service
+                    {t('settings.about.termsOfService', 'Terms of Service')}
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={() => navigate('/support')}
+                  className="w-full sm:w-auto"
                 >
-                  Support
+                 {t('settings.about.support', 'Support')}
                 </Button>
               </div>
             </CardContent>
