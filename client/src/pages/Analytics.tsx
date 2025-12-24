@@ -25,12 +25,14 @@ import {
   filterAnalysesByRange,
   getAnalysisDateBounds,
 } from "@/utils/filterAnalysesByRange";
+import { useLanguage } from "@/context/LanguageContext";
 
 const AnalyticsContent = () => {
   const { data, isLoading, error, getAllAnalyses } = useAnalyticsData();
   const summariesData = useGoalsData();
   const { goals, summaries } = summariesData;
   const { toast } = useToast();
+  const { language, t } = useLanguage();
   const allAnalyses = getAllAnalyses();
 
   // Debug logging for chart order
@@ -145,7 +147,9 @@ const AnalyticsContent = () => {
       );
       downloadSummaryReport(summaries, goals || [], allAnalyses, {
         fileName: "analytics-history",
-        title: "Analytics & Intervention History Report",
+        title: t("reports.analyticsHistoryTitle", "Analytics & Intervention History Report"),
+        language,
+        t,
       });
 
       toast({
@@ -172,7 +176,10 @@ const AnalyticsContent = () => {
       const { downloadSummaryReport } = await import(
         "@/services/summaryReportService"
       );
-      downloadSummaryReport(summaries, goals || [], allAnalyses);
+      downloadSummaryReport(summaries, goals || [], allAnalyses, {
+        language,
+        t,
+      });
 
       toast({
         title: "Success",
@@ -213,7 +220,7 @@ const AnalyticsContent = () => {
   // Check if user is authenticated - if not, show message
   if (!hasData && !isLoading && !error) {
     return (
-      <div className="min-h-screen bg-gray-50 pb-16 md:pb-0 overflow-x-hidden">
+      <div className="min-h-screen bg-gray-50 pb-16 pt-3 md:pb-0 overflow-x-hidden">
         <AnalyticsHeader
           analysesCount={0}
           onDownloadHistory={handleDownloadReport}
@@ -265,7 +272,7 @@ const AnalyticsContent = () => {
         onDownloadSummary={handleDownloadSummary}
       />
 
-      <div className="max-w-screen-sm sm:max-w-screen-md mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 overflow-hidden">
+      <div className="max-w-[390px] sm:max-w-screen-md mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 overflow-hidden">
         {/* Anxiety Analytics Tracker */}
         <div className="w-full overflow-hidden">
           <AnxietyAnalyticsTracker analyses={allAnalyses} />

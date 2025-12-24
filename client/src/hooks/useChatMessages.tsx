@@ -1,12 +1,14 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Message } from '@/types/chat';
+import { useLanguage } from '@/context/LanguageContext';
 
 export const useChatMessages = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -18,11 +20,11 @@ export const useChatMessages = () => {
     const welcomeMessage: Message = {
       id: '1',
       text: companionName === 'vanessa'
-        ? "Hello! I'm Vanessa, your advanced AI anxiety companion. I'm here to provide you with clinically-informed support using the latest therapeutic approaches. How are you feeling today?"
-        : "¡Hola! Soy Mónica, tu compañera de apoyo para la ansiedad. Estoy aquí para brindarte apoyo clínico informado usando los enfoques terapéuticos más avanzados. ¿Cómo te sientes hoy?",
+        ? t('chat.welcome.vanessa')
+        : t('chat.welcome.monica', "¡Hola! Soy Mónica, tu compañera de apoyo para la ansiedad. Estoy aquí para brindarte apoyo clínico informado usando los enfoques terapéuticos más avanzados. ¿Cómo te sientes hoy?"),
       sender: companionName,
       timestamp: new Date(),
-      language: companionName === 'vanessa' ? 'en' : 'es'
+      language
     };
     
     setMessages([welcomeMessage]);

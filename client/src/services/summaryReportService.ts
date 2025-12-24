@@ -3,6 +3,8 @@ import { GoalWithProgress } from '@/types/goals';
 import { ClaudeAnxietyAnalysisWithDate } from '@/services/analyticsService';
 import { processTriggerData, TriggerData, processSeverityDistribution, SeverityDistribution } from '@/utils/analyticsDataProcessor';
 import { buildWeeklyTrendsData, WeeklyTrendData } from '@/utils/buildWeeklyTrendsData';
+import { createTranslator, Language } from '@/context/LanguageContext';
+import { translateInterventionLabel } from '@/utils/anxiety/interventions';
 
 type Period = 'session' | 'week' | 'month' | 'year';
 
@@ -24,18 +26,20 @@ interface PeriodSummary {
   homework: string;
 }
 
-const formatDate = (date: Date) =>
-  new Intl.DateTimeFormat('en-US', {
+const getLocale = (language: Language) => (language === 'es' ? 'es-ES' : 'en-US');
+
+const formatDate = (date: Date, locale: string) =>
+  new Intl.DateTimeFormat(locale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   }).format(date);
 
-const formatRange = (start: Date, end?: Date) => {
+const formatRange = (start: Date, locale: string, end?: Date) => {
   if (!end || start.toDateString() === end.toDateString()) {
-    return formatDate(start);
+    return formatDate(start, locale);
   }
-  return `${formatDate(start)} — ${formatDate(end)}`;
+  return `${formatDate(start, locale)} — ${formatDate(end, locale)}`;
 };
 
 const getPeriodKey = (date: Date, period: Period) => {
@@ -66,7 +70,9 @@ const sortDesc = <T,>(arr: T[], getter: (item: T) => number) =>
 
 const aggregateAnalysesByPeriod = (
   analyses: ClaudeAnxietyAnalysisWithDate[] = [],
-  period: Period
+  period: Period,
+  t: (key: string, fallback?: string) => string,
+  locale: string
 ): PeriodSummary[] => {
   if (!analyses.length) return [];
 
@@ -92,13 +98,18 @@ const aggregateAnalysesByPeriod = (
     const max = Math.max(...values);
 
     const previousKey = orderedKeys[index + 1];
-    let trend = 'No prior period';
+    let trend = t('interventions.noData', 'No prior period');
     if (previousKey) {
       const previousGroup = groups.get(previousKey) ?? [];
       if (previousGroup.length) {
         const previousAverage = previousGroup.reduce((sum, a) => sum + (a.anxietyLevel ?? 0), 0) / previousGroup.length;
         const delta = Number((average - previousAverage).toFixed(1));
-        trend = delta > 0 ? `↑ +${delta} vs prior` : delta < 0 ? `↓ ${delta} vs prior` : 'No change vs prior';
+        trend =
+          delta > 0
+            ? t('interventions.trend.upVsPrior', '↑ {delta} vs prior').replace('{delta}', `+${delta}`)
+            : delta < 0
+              ? t('interventions.trend.downVsPrior', '↓ {delta} vs prior').replace('{delta}', `${delta}`)
+              : t('interventions.progressStable', 'No change vs prior');
       }
     }
 
@@ -161,16 +172,30 @@ const aggregateAnalysesByPeriod = (
       }));
 
     const topTrigger = triggers[0]?.name;
+    const avgLabel = average.toFixed(1);
     const patientProblem = topTrigger
-      ? `Patient experienced significant anxiety around ${topTrigger}. Severity averaged ${average.toFixed(1)}/10.`
-      : `Patient reported anxiety averaging ${average.toFixed(1)}/10 without a specific trigger.`;
+      ? t(
+          'interventions.patientProblem.withTrigger',
+          'Patient experienced heightened anxiety around {trigger}. Severity averaged {avg}/10.'
+        )
+          .replace('{trigger}', topTrigger)
+          .replace('{avg}', avgLabel)
+      : t(
+          'interventions.patientProblem.noTrigger',
+          'Patient reported anxiety averaging {avg}/10 without clear trigger.'
+        ).replace('{avg}', avgLabel);
 
     const progressDirection = trend.startsWith('↓')
-      ? 'Improving'
+      ? t('interventions.progressImproving', 'Improving')
       : trend.startsWith('↑')
-        ? 'Worsening; additional support recommended'
-        : 'Stable';
-    const progress = `${progressDirection}. Trend: ${trend.toLowerCase()}.`;
+        ? t('interventions.progressNeedsSupport', 'Needs support')
+        : t('interventions.progressStable', 'Stable');
+    const progress = t(
+      'interventions.progressSummary',
+      '{direction}: Immediate response {trend}.'
+    )
+      .replace('{direction}', progressDirection)
+      .replace('{trend}', trend);
 
     const notes = ordered
       .map((analysis) => analysis.personalizedResponse?.trim())
@@ -185,17 +210,21 @@ const aggregateAnalysesByPeriod = (
       )
     );
 
-    const homeworkTechnique = therapies[0]?.name || 'Continue agreed coping plan';
-    const homework = `Action: ${homeworkTechnique}. Practice 3×/day or as assigned.`;
+    const homeworkTechniqueRaw = therapies[0]?.name || t('interventions.homeworkFallback', 'Continue agreed coping plan');
+    const homeworkTechnique = translateInterventionLabel(homeworkTechniqueRaw, t);
+    const homework = t(
+      'interventions.homeworkTemplate',
+      'Focus task: {task}. Reinforce practice 3×/day or as assigned.'
+    ).replace('{task}', homeworkTechnique);
 
     return {
-      label: formatRange(start, period === 'session' ? undefined : end),
+      label: formatRange(start, locale, period === 'session' ? undefined : end),
       snapshot: { sessions, average, min, max, trend },
       patientProblem,
       triggers,
       therapies,
       progress,
-      clinicalNotes: notes.length ? notes : ['No clinician notes documented this period.'],
+      clinicalNotes: notes.length ? notes : [t('interventions.noNotes', 'No clinician notes documented this period.')],
       codes,
       homework,
     } satisfies PeriodSummary;
@@ -217,7 +246,10 @@ interface MonthlyActivitySummary {
   averageAnxiety: number;
 }
 
-const calculateTreatmentOutcomesSummary = (analyses: ClaudeAnxietyAnalysisWithDate[] = []): TreatmentOutcomeSummary[] => {
+const calculateTreatmentOutcomesSummary = (
+  analyses: ClaudeAnxietyAnalysisWithDate[] = [],
+  locale: string
+): TreatmentOutcomeSummary[] => {
   if (!analyses.length) return [];
 
   const weeklyMap = new Map<string, number[]>();
@@ -259,7 +291,7 @@ const calculateTreatmentOutcomesSummary = (analyses: ClaudeAnxietyAnalysisWithDa
       else if (improvement < -10) effectiveness = 'declining';
     }
 
-    const periodLabel = new Date(weekKey).toLocaleDateString('en-US', {
+    const periodLabel = new Date(weekKey).toLocaleDateString(locale, {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
@@ -276,7 +308,8 @@ const calculateTreatmentOutcomesSummary = (analyses: ClaudeAnxietyAnalysisWithDa
 
 const buildMonthlySessionActivitySummary = (
   summaries: InterventionSummary[] = [],
-  analyses: ClaudeAnxietyAnalysisWithDate[] = []
+  analyses: ClaudeAnxietyAnalysisWithDate[] = [],
+  locale: string
 ): MonthlyActivitySummary[] => {
   if (!summaries.length && !analyses.length) return [];
 
@@ -285,7 +318,7 @@ const buildMonthlySessionActivitySummary = (
   const registerMonth = (date: Date) => {
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     if (!activityMap.has(key)) {
-      const label = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const label = date.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
       activityMap.set(key, {
         monthKey: key,
         label,
@@ -352,6 +385,8 @@ const ensureArray = (value: any): string[] => {
 
 interface ReportOptions {
   title?: string;
+  language?: Language;
+  t?: (key: string, fallback?: string) => string;
 }
 
 export const generateSummaryReport = (
@@ -360,7 +395,16 @@ export const generateSummaryReport = (
   analyses?: ClaudeAnxietyAnalysisWithDate[],
   options: ReportOptions = {}
 ): string => {
-  const today = new Date().toLocaleDateString('en-US');
+  const language: Language = options.language ?? 'en';
+  const t = options.t ?? createTranslator(language);
+  const locale = getLocale(language);
+
+  // Spanish: generate a localized (concise) report instead of mixing English body text.
+  if (language === 'es') {
+    return generateSummaryReportEs(summaries, goals, analyses ?? [], t, locale, options.title);
+  }
+
+  const today = new Date().toLocaleDateString(locale);
   const reportName = 'Mental Health Medical Data';
   const heading = options.title ?? 'Analytics & Intervention History Report';
 
@@ -375,8 +419,8 @@ export const generateSummaryReport = (
   const escalationCount = analyses?.filter(a => a.escalationDetected).length || 0;
   const severityDistribution: SeverityDistribution[] = processSeverityDistribution((analyses ?? []) as any);
   const weeklyTrendData: WeeklyTrendData[] = buildWeeklyTrendsData(analyses ?? []);
-  const treatmentOutcomeSummary = calculateTreatmentOutcomesSummary(analyses ?? []);
-  const monthlyActivitySummary = buildMonthlySessionActivitySummary(summaries, analyses ?? []);
+  const treatmentOutcomeSummary = calculateTreatmentOutcomesSummary(analyses ?? [], locale);
+  const monthlyActivitySummary = buildMonthlySessionActivitySummary(summaries, analyses ?? [], locale);
 
   const therapyTypeCounts = summaries.reduce((acc, summary) => {
     const key = summary.intervention_type?.toLowerCase() || 'unspecified';
@@ -849,10 +893,10 @@ completionRate >= 50 ?
   }
 
   // Intervention summaries (session/weekly/monthly/yearly)
-  const sessionSummaries = aggregateAnalysesByPeriod(analyses ?? [], 'session');
-  const weeklySummaries = aggregateAnalysesByPeriod(analyses ?? [], 'week');
-  const monthlySummaries = aggregateAnalysesByPeriod(analyses ?? [], 'month');
-  const yearlySummaries = aggregateAnalysesByPeriod(analyses ?? [], 'year');
+  const sessionSummaries = aggregateAnalysesByPeriod(analyses ?? [], 'session', t, locale);
+  const weeklySummaries = aggregateAnalysesByPeriod(analyses ?? [], 'week', t, locale);
+  const monthlySummaries = aggregateAnalysesByPeriod(analyses ?? [], 'month', t, locale);
+  const yearlySummaries = aggregateAnalysesByPeriod(analyses ?? [], 'year', t, locale);
 
   const formatPeriodSummaries = (label: string, summaries: PeriodSummary[]) => {
     if (!summaries.length) {
@@ -964,6 +1008,8 @@ visit the Analytics Dashboard in your application.
 interface DownloadOptions {
   fileName?: string;
   title?: string;
+  language?: Language;
+  t?: (key: string, fallback?: string) => string;
 }
 
 export const downloadSummaryReport = (
@@ -972,10 +1018,14 @@ export const downloadSummaryReport = (
   analyses?: ClaudeAnxietyAnalysisWithDate[],
   options: DownloadOptions = {}
 ) => {
-  const report = generateSummaryReport(summaries, goals, analyses, { title: options.title });
+  const report = generateSummaryReport(summaries, goals, analyses, {
+    title: options.title,
+    language: options.language,
+    t: options.t,
+  });
   
   // Convert to HTML for better formatting (PDF-like)
-  const htmlContent = convertToPDFFormat(report);
+  const htmlContent = convertToPDFFormat(report, options.language);
   
   const blob = new Blob([htmlContent], { type: 'text/html' });
   const url = window.URL.createObjectURL(blob);
@@ -989,7 +1039,7 @@ export const downloadSummaryReport = (
   document.body.removeChild(a);
 };
 
-const convertToPDFFormat = (textContent: string): string => {
+const convertToPDFFormat = (textContent: string, language: Language = 'en'): string => {
   // Enhanced text processing for better HTML structure
   let htmlContent = textContent
     .replace(/\n/g, '<br>')
@@ -1010,7 +1060,7 @@ const convertToPDFFormat = (textContent: string): string => {
 
   return `
     <!DOCTYPE html>
-    <html lang="en">
+    <html lang="${language}">
     <head>
       <title>Mental Health Medical Data</title>
       <meta charset="UTF-8">
@@ -1260,8 +1310,8 @@ const convertToPDFFormat = (textContent: string): string => {
     <body>
       <div class="container">
         <div class="header">
-          <h1>🧠 Mental Health Medical Data</h1>
-          <p>Analytics & Intervention History Report • Generated on ${new Date().toLocaleDateString('en-US', { 
+          <h1>🧠 ${language === 'es' ? 'Datos médicos de salud mental' : 'Mental Health Medical Data'}</h1>
+          <p>${language === 'es' ? 'Informe de analíticas e historial de intervenciones' : 'Analytics & Intervention History Report'} • ${language === 'es' ? 'Generado el' : 'Generated on'} ${new Date().toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { 
             weekday: 'long', 
             year: 'numeric', 
             month: 'long', 
@@ -1275,4 +1325,107 @@ const convertToPDFFormat = (textContent: string): string => {
     </body>
     </html>
   `;
+};
+
+const generateSummaryReportEs = (
+  summaries: InterventionSummary[],
+  goals: GoalWithProgress[],
+  analyses: ClaudeAnxietyAnalysisWithDate[],
+  t: (key: string, fallback?: string) => string,
+  locale: string,
+  titleOverride?: string
+): string => {
+  const today = new Date().toLocaleDateString(locale);
+  const heading = titleOverride ?? 'Informe de analíticas e historial de intervenciones';
+
+  const totalAnalyses = analyses.length;
+  const totalConversations = summaries.reduce((sum, s) => sum + (Number(s.conversation_count) || 0), 0);
+  const avgAnxiety =
+    totalAnalyses > 0 ? analyses.reduce((sum, a) => sum + (a.anxietyLevel ?? 0), 0) / totalAnalyses : 0;
+
+  const sessionSummaries = aggregateAnalysesByPeriod(analyses, 'session', t, locale);
+  const weeklySummaries = aggregateAnalysesByPeriod(analyses, 'week', t, locale);
+  const monthlySummaries = aggregateAnalysesByPeriod(analyses, 'month', t, locale);
+  const yearlySummaries = aggregateAnalysesByPeriod(analyses, 'year', t, locale);
+
+  const formatPeriodSummariesEs = (label: string, periodSummaries: PeriodSummary[]) => {
+    if (!periodSummaries.length) {
+      return `${label}: No hay resúmenes disponibles.\n\n`;
+    }
+
+    return `${label}\n${'-'.repeat(label.length)}\n${periodSummaries
+      .map((summary) => {
+        const triggersText = summary.triggers.length
+          ? summary.triggers.map((tr) => `${tr.name} (${tr.count})`).join(', ')
+          : t('interventions.noTriggers', 'No se documentaron detonantes específicos.');
+
+        const therapiesText = summary.therapies.length
+          ? summary.therapies
+              .map((therapy) => {
+                const name = translateInterventionLabel(therapy.name, t);
+                const adherence =
+                  therapy.adherence === 'Partial'
+                    ? t('interventions.adherence.partial', 'Parcial')
+                    : therapy.adherence;
+                return `${name} ${therapy.count}× (${t('interventions.adherence', 'adherencia')} ${adherence})`;
+              })
+              .join('; ')
+          : t('interventions.noTherapies', 'No se documentaron intervenciones en este periodo.');
+
+        const notes = summary.clinicalNotes.join(' • ');
+        const codes = summary.codes.length ? `${t('interventions.forClinicians', 'Para clínicos')}: ${summary.codes.join(', ')}` : '';
+
+        return `
+${summary.label} — ${t('interventions.avgAnxiety', 'Ansiedad prom.')} ${summary.snapshot.average}/10 (rango ${summary.snapshot.min}–${summary.snapshot.max})
+Qué pasó: ${summary.patientProblem}
+Detonantes principales: ${triggersText}
+Intervenciones/terapia: ${therapiesText}
+Progreso: ${summary.progress}
+Notas clínicas: ${notes}
+Siguiente: ${summary.homework}
+${codes}
+`;
+      })
+      .join('\n')}\n`;
+  };
+
+  let report = `Datos médicos de salud mental
+${heading}
+Generado el: ${today}
+
+==================================================
+RESUMEN
+==================================================
+
+• Sesiones analizadas: ${totalAnalyses}
+• Conversaciones (resúmenes semanales): ${summaries.length}
+• Total de conversaciones registradas: ${totalConversations}
+• Ansiedad promedio: ${avgAnxiety.toFixed(1)}/10
+
+==================================================
+RESÚMENES DE INTERVENCIONES
+==================================================
+
+${formatPeriodSummariesEs('Por sesión', sessionSummaries)}
+${formatPeriodSummariesEs('Semanal', weeklySummaries)}
+${formatPeriodSummariesEs('Mensual', monthlySummaries)}
+${formatPeriodSummariesEs('Anual', yearlySummaries)}
+==================================================
+`;
+
+  if (goals && goals.length > 0) {
+    report += `
+
+==================================================
+METAS TERAPÉUTICAS
+==================================================
+
+• Metas: ${goals.length}
+• Completadas (≥90%): ${goals.filter((g) => (g.completion_rate || 0) >= 90).length}
+• En progreso: ${goals.filter((g) => (g.completion_rate || 0) >= 50 && (g.completion_rate || 0) < 90).length}
+• Requieren atención: ${goals.filter((g) => (g.completion_rate || 0) < 50).length}
+`;
+  }
+
+  return report;
 };

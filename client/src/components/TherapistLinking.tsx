@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,7 +28,7 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
   const [step, setStep] = useState<'question' | 'details' | 'confirmation'>('question');
   const [shareReport, setShareReport] = useState<string>('');
   const { toast } = useToast();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   const handleTherapistResponse = (value: string) => {
     setHasTherapist(value);
@@ -43,8 +42,8 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
   const handleSubmitTherapistInfo = () => {
     if (!therapistInfo.name.trim()) {
       toast({
-        title: "Name Required",
-        description: "Please enter your therapist's name.",
+        title: t('therapistLinking.toast.nameRequired'),
+        description: t('therapistLinking.toast.nameRequiredDesc'),
         variant: "destructive"
       });
       return;
@@ -52,8 +51,8 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
 
     if (!therapistInfo.email.trim()) {
       toast({
-        title: "Email Required",
-        description: "Please enter your therapist's email address.",
+        title: t('therapistLinking.toast.emailRequired'),
+        description: t('therapistLinking.toast.emailRequiredDesc'),
         variant: "destructive"
       });
       return;
@@ -61,8 +60,8 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
 
     if (!shareReport) {
       toast({
-        title: "Report Sharing Required",
-        description: "Please select whether you want to share your Current History Report.",
+        title: t('therapistLinking.toast.reportSharingRequired'),
+        description: t('therapistLinking.toast.reportSharingRequiredDesc'),
         variant: "destructive"
       });
       return;
@@ -149,8 +148,8 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
       if (result.success) {
         console.log('🎉 Connection request sent successfully');
         toast({
-          title: "Connection Request Sent",
-          description: `A connection request has been sent to ${therapistInfo.name}. They will be able to receive your progress reports.`,
+          title: t('therapistLinking.toast.connectionRequestSent'),
+          description: t('therapistLinking.toast.connectionRequestSentDesc', `A connection request has been sent to ${therapistInfo.name}. They will be able to receive your progress reports.`).replace('{name}', therapistInfo.name),
         });
         onComplete(true, therapistInfo);
       } else {
@@ -162,15 +161,15 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
       console.error('Error details:', {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
-        type: error instanceof Error ? error.constructor.name : typeof error
+        type: error instanceof Error ? error.constructor.name : typeof(error)
       });
       
       // Show more detailed error message to help debug
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       
       toast({
-        title: "Error",
-        description: `Failed to send connection request: ${errorMessage}`,
+        title: t('therapistLinking.toast.error'),
+        description: t('therapistLinking.toast.errorDesc', `Failed to send connection request: ${errorMessage}`).replace('{error}', errorMessage),
         variant: "destructive",
       });
     }
@@ -184,11 +183,10 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
             <User className="w-8 h-8 text-blue-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Do you currently have a therapist?
+            {t('contact.question')}
           </h2>
           <p className="text-gray-600">
-            If you have a therapist, we can connect your account so they can track your progress
-            and provide better support.
+            {t('contact.questionDesc')}
           </p>
         </div>
 
@@ -196,13 +194,13 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
           <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
             <RadioGroupItem value="yes" id="yes" />
             <Label htmlFor="yes" className="text-gray-900 cursor-pointer font-medium">
-              Yes, I have a therapist I'd like to connect
+              {t('contact.optionYes')}
             </Label>
           </div>
           <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
             <RadioGroupItem value="no" id="no" />
             <Label htmlFor="no" className="text-gray-900 cursor-pointer font-medium">
-              No, I don't have a therapist
+              {t('contact.optionNo')}
             </Label>
           </div>
         </RadioGroup>
@@ -215,27 +213,26 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
       <Card className="max-w-2xl mx-auto p-8">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Connect Your Therapist
+            {t('therapistLinking.connectYourTherapist')}
           </h2>
           <p className="text-gray-600">
-            Please provide your therapist's information so we can send them an invitation
-            to access your progress data.
+            {t('therapistLinking.provideTherapistInfo')}
           </p>
         </div>
 
         <div className="space-y-6">
           <div>
-            <Label htmlFor="therapist-name">Therapist's Name *</Label>
+            <Label htmlFor="therapist-name">{t('therapistLinking.therapistName')}</Label>
             <Input
               id="therapist-name"
               value={therapistInfo.name}
               onChange={(e) => setTherapistInfo({ ...therapistInfo, name: e.target.value })}
-              placeholder="Dr. Sarah Johnson"
+              placeholder={t('therapistLinking.namePlaceholder')}
             />
           </div>
 
           <div>
-            <Label>Preferred Contact Method *</Label>
+            <Label>{t('therapistLinking.preferredContactMethod')}</Label>
             <RadioGroup 
               value={therapistInfo.contactMethod} 
               onValueChange={(value: 'email' | 'phone') => 
@@ -247,26 +244,26 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
                 <RadioGroupItem value="email" id="email" />
                 <Label htmlFor="email" className="flex items-center cursor-pointer">
                   <Mail className="w-4 h-4 mr-2" />
-                  Email
+                  {t('therapistLinking.email')}
                 </Label>
               </div>
             </RadioGroup>
-            <p className="text-sm text-gray-500 mt-1">Currently only email is supported for therapist communication.</p>
+            <p className="text-sm text-gray-500 mt-1">{t('therapistLinking.emailOnlySupported')}</p>
           </div>
 
           <div>
-            <Label htmlFor="therapist-email">Email Address *</Label>
+            <Label htmlFor="therapist-email">{t('therapistLinking.emailAddress')}</Label>
             <Input
               id="therapist-email"
               type="email"
               value={therapistInfo.email}
               onChange={(e) => setTherapistInfo({ ...therapistInfo, email: e.target.value })}
-              placeholder="sarah.johnson@example.com"
+              placeholder={t('therapistLinking.emailPlaceholder')}
             />
           </div>
 
           <div>
-            <Label>Would you like to share your Current History Report?</Label>
+            <Label>{t('therapistLinking.shareReportQuestion')}</Label>
             <RadioGroup 
               value={shareReport} 
               onValueChange={setShareReport}
@@ -276,8 +273,8 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
                 <RadioGroupItem value="yes" id="share-yes" />
                 <Label htmlFor="share-yes" className="cursor-pointer">
                   <div>
-                    <div className="font-medium">Yes, share my Current History Report</div>
-                    <div className="text-sm text-gray-500">Include Download History Report with anxiety trends and analytics</div>
+                    <div className="font-medium">{t('therapistLinking.shareReportYes')}</div>
+                    <div className="text-sm text-gray-500">{t('therapistLinking.shareReportYesDesc')}</div>
                   </div>
                 </Label>
               </div>
@@ -285,8 +282,8 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
                 <RadioGroupItem value="no" id="share-no" />
                 <Label htmlFor="share-no" className="cursor-pointer">
                   <div>
-                    <div className="font-medium">No, just send connection request</div>
-                    <div className="text-sm text-gray-500">Only notify them about the connection without sharing reports</div>
+                    <div className="font-medium">{t('therapistLinking.shareReportNo')}</div>
+                    <div className="text-sm text-gray-500">{t('therapistLinking.shareReportNoDesc')}</div>
                   </div>
                 </Label>
               </div>
@@ -294,12 +291,12 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
           </div>
 
           <div>
-            <Label htmlFor="therapist-notes">Additional Notes (Optional)</Label>
+            <Label htmlFor="therapist-notes">{t('therapistLinking.additionalNotes')}</Label>
             <Textarea
               id="therapist-notes"
               value={therapistInfo.notes}
               onChange={(e) => setTherapistInfo({ ...therapistInfo, notes: e.target.value })}
-              placeholder="Any additional information about your therapist or treatment..."
+              placeholder={t('therapistLinking.notesPlaceholder')}
               rows={3}
             />
           </div>
@@ -307,10 +304,10 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
 
         <div className="flex justify-between mt-8">
           <Button variant="outline" onClick={() => setStep('question')}>
-            Back
+            {t('contact.back')}
           </Button>
           <Button onClick={handleSubmitTherapistInfo} className="bg-blue-600 hover:bg-blue-700">
-            Continue
+            {t('therapistLinking.continue')}
           </Button>
         </div>
       </Card>
@@ -323,24 +320,24 @@ const TherapistLinking: React.FC<TherapistLinkingProps> = ({ onComplete }) => {
         <CheckCircle className="w-8 h-8 text-green-600" />
       </div>
       <h2 className="text-2xl font-bold text-gray-900 mb-4">
-        Therapist Information Saved
+        {t('therapistLinking.therapistInfoSaved')}
       </h2>
       <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-        <h3 className="font-semibold text-gray-900 mb-2">Review Information:</h3>
-        <p><strong>Name:</strong> {therapistInfo.name}</p>
-        <p><strong>Email:</strong> {therapistInfo.email}</p>
-        <p><strong>Share Report:</strong> {shareReport === 'yes' ? 'Yes, include Current History Report' : 'No, connection request only'}</p>
-        {therapistInfo.notes && <p><strong>Notes:</strong> {therapistInfo.notes}</p>}
+        <h3 className="font-semibold text-gray-900 mb-2">{t('therapistLinking.reviewInformation')}</h3>
+        <p><strong>{t('therapistLinking.name')}</strong> {therapistInfo.name}</p>
+        <p><strong>{t('therapistLinking.emailLabel')}</strong> {therapistInfo.email}</p>
+        <p><strong>{t('therapistLinking.shareReport')}</strong> {shareReport === 'yes' ? t('therapistLinking.shareReportYesValue') : t('therapistLinking.shareReportNoValue')}</p>
+        {therapistInfo.notes && <p><strong>{t('therapistLinking.notes')}</strong> {therapistInfo.notes}</p>}
       </div>
       <p className="text-gray-600 mb-6">
-        Click below to send a connection request to your therapist. They'll receive an email 
+        {t('therapistLinking.clickToSend')} 
         {shareReport === 'yes' 
-          ? ' with your Current History Report including anxiety trends and analytics.' 
-          : ' informing them about the connection request.'
+          ? t('therapistLinking.emailWithReport')
+          : t('therapistLinking.emailWithoutReport')
         }
       </p>
       <Button onClick={handleConfirm} className="bg-blue-600 hover:bg-blue-700">
-        Send Connection Request
+        {t('contact.sendRequest')}
       </Button>
     </Card>
   );

@@ -13,6 +13,7 @@ import {
   FileText, Copy, Mic, Square, Trash, Sparkles, Tag
 } from 'lucide-react';
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Goal {
   id: string;
@@ -96,6 +97,7 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
     linkedGoalId: string;
     notes: string;
   }>({ meetingTitle: '', meetingDate: '', linkedGoalId: '', notes: '' });
+  const { t } = useLanguage();
   const [isRecordingAudioNote, setIsRecordingAudioNote] = useState(false);
   const [sessionAudioPreview, setSessionAudioPreview] = useState<{ url: string; dataUrl: string; mimeType: string } | null>(null);
   const [audioTranscript, setAudioTranscript] = useState<string>('');
@@ -733,12 +735,12 @@ const TreatmentCreation: React.FC<TreatmentCreationProps> = ({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="w-5 h-5" />
-                Create New Goal
+                {t('treatmentCreation.createNewGoal' ,'Create New Goal')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="goal-title">Goal Title *</Label>
+                <Label htmlFor="goal-title">{t('treatmentCreation.goalTitle' ,'Goal Title')} *</Label>
                 <Input
                   id="goal-title"
                   value={newGoal.title || ''}

@@ -87,25 +87,25 @@ const ChatInput = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 md:p-4">
       {/* Auto-speak toggle and Language selector */}
       {(onToggleAutoSpeak || onLanguageChange) && (
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
           {/* Language selector */}
           {onLanguageChange && (
             <button
               onClick={() => onLanguageChange(currentLanguage === 'en' ? 'es' : 'en')}
-              className="flex items-center gap-2 px-3 py-1 rounded-md text-sm transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200"
+              className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-1 rounded-md text-xs sm:text-sm transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200 touch-manipulation"
               title="Switch language"
             >
-              <Languages className="w-4 h-4" />
-              <span>{currentLanguage === 'es' || aiCompanion === 'monica' ? 'Español' : 'English'}</span>
+              <Languages className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="whitespace-nowrap">{currentLanguage === 'es' || aiCompanion === 'monica' ? 'Español' : 'English'}</span>
             </button>
           )}
           {onToggleAutoSpeak && (
           <button
             onClick={onToggleAutoSpeak}
-            className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm transition-colors ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-1 rounded-md text-xs sm:text-sm transition-colors touch-manipulation ${
               autoSpeak
                 ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -114,20 +114,20 @@ const ChatInput = ({
           >
             {autoSpeak ? (
               <>
-                <Volume2 className="w-4 h-4" />
-                <span>Voice ON</span>
+                <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="whitespace-nowrap">Voice ON</span>
               </>
             ) : (
               <>
-                <VolumeX className="w-4 h-4" />
-                <span>Voice OFF</span>
+                <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="whitespace-nowrap">Voice OFF</span>
               </>
             )}
           </button>
           )}
         </div>
       )}
-      <div className="flex space-x-2">
+      <div className="flex items-center gap-1.5 sm:gap-2">
         <Button
           onClick={() => {
             onUserGesture?.(); // Unlock speech on mic toggle
@@ -135,11 +135,11 @@ const ChatInput = ({
           }}
           variant={isListening ? "destructive" : "outline"}
           size="icon"
-          className="shrink-0"
+          className="shrink-0 h-9 w-9 sm:h-10 sm:w-10 touch-manipulation"
           disabled={!speechSupported}
           title={getVoiceButtonTitle()}
         >
-          {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          {isListening ? <MicOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Mic className="w-4 h-4 sm:w-5 sm:h-5" />}
         </Button>
         <input
           type="text"
@@ -162,7 +162,7 @@ const ChatInput = ({
           }}
           onKeyDown={handleKeyDown}
           placeholder={getPlaceholder()}
-          className="flex-1 h-10 px-3 py-2 text-base md:text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="flex-1 min-w-0 h-9 sm:h-10 px-2.5 sm:px-3 py-2 text-sm sm:text-base md:text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           disabled={false}
           autoComplete="off"
           autoCorrect="off"
@@ -174,29 +174,29 @@ const ChatInput = ({
             onClick={onShowCrisisResources}
             variant="outline"
             size="icon"
-            className="shrink-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+            className="shrink-0 h-9 w-9 sm:h-10 sm:w-10 text-red-600 hover:text-red-700 hover:bg-red-50 touch-manipulation"
             title="Crisis Resources - 24/7 Help Available"
             type="button"
           >
-            <AlertTriangle className="w-4 h-4" />
+            <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
         )}
         <Button
           onClick={handleSendClick}
           disabled={!inputText.trim()}
           size="icon"
-          className="shrink-0"
+          className="shrink-0 h-9 w-9 sm:h-10 sm:w-10 touch-manipulation"
           type="button"
         >
-          <Send className="w-4 h-4" />
+          <Send className="w-4 h-4 sm:w-5 sm:h-5" />
         </Button>
       </div>
       {isListening && (
-        <p className={`text-sm mt-2 flex items-center gap-1 pe-none ${
+        <p className={`text-xs sm:text-sm mt-2 flex items-center gap-1.5 pe-none ${
           currentLanguage === 'es' || aiCompanion === 'monica' ? 'text-pink-600' : 'text-blue-600'
         }`}>
-          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-          {getListeningText()}
+          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse shrink-0"></div>
+          <span>{getListeningText()}</span>
         </p>
       )}
     </div>

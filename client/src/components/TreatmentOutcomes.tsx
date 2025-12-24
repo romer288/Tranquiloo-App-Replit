@@ -145,7 +145,7 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
       {/* Anxiety Trend Chart */}
       {(showOnly === 'trends' || showOnly === 'all') && (
         <Card className="bg-gradient-to-br from-background to-muted/20 border-primary/20 shadow-lg">
@@ -172,7 +172,7 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
           </CardHeader>
           <CardContent>
             {weeklyAnxietyData.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[350px]">
+              <ChartContainer config={chartConfig} className=" h-[350px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={weeklyAnxietyData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                     <defs>
@@ -226,7 +226,7 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
                             <div className="bg-white border-2 border-gray-200 rounded-lg shadow-xl p-4">
                               <p className="font-bold text-gray-900 text-lg">{label}</p>
                               <p className="text-sm text-gray-600">
-                                Anxiety Level: <span className="font-bold text-red-600 text-lg">{payload[0]?.value || 0}/10</span>
+                              {t('analytics.outcomes.anxietyLevel', 'Anxiety Level')}: <span className="font-bold text-red-600 text-lg">{payload[0]?.value || 0}/10</span>
                               </p>
                             </div>
                           );
@@ -321,16 +321,20 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
                           <span className="font-bold text-lg text-foreground">{outcome.averageAnxiety}/10</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Change:</span>
+                          <span className="text-sm text-muted-foreground">{t('analytics.outcomes.change', 'Change')}:</span>
                           <span className={`font-bold text-lg ${outcome.improvement > 0 ? 'text-green-600' : outcome.improvement < 0 ? 'text-red-600' : 'text-amber-600'}`}>
                             {outcome.improvement > 0 ? '+' : ''}{outcome.improvement}
                           </span>
                         </div>
                         <div className="mt-3">
-                          <Badge variant={outcome.treatmentEffectiveness === 'improving' ? 'default' : 
+                            <Badge variant={outcome.treatmentEffectiveness === 'improving' ? 'default' : 
                                         outcome.treatmentEffectiveness === 'declining' ? 'destructive' : 'secondary'}
                                 className="w-full justify-center capitalize font-medium">
-                            {outcome.treatmentEffectiveness}
+                            {outcome.treatmentEffectiveness === 'improving' 
+                              ? t('analytics.outcomes.treatmentEffectiveness.improving', 'Improving')
+                              : outcome.treatmentEffectiveness === 'declining'
+                              ? t('analytics.outcomes.treatmentEffectiveness.declining', 'Declining')
+                              : t('analytics.outcomes.treatmentEffectiveness.stable', 'Stable')}
                           </Badge>
                         </div>
                       </div>
@@ -340,7 +344,7 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
               })}
             </div>
 
-            <ChartContainer config={chartConfig} className="h-[280px]">
+            <ChartContainer config={chartConfig} className="h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={outcomes} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
                   <defs>
@@ -364,12 +368,34 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
                     className="stroke-muted/30"
                     vertical={false}
                   />
-                  <XAxis 
+                  {/* <XAxis 
                     dataKey="period" 
                     axisLine={false}
                     tickLine={false}
                     className="text-xs text-muted-foreground"
-                  />
+                  /> */}
+                  <XAxis
+  dataKey="period"
+  axisLine={false}
+  tickLine={false}
+  interval={0}
+  height={60}
+  tickMargin={10}
+  tick={({ x, y, payload }) => (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={16}
+        textAnchor="end"
+        transform="rotate(-35)"
+        className="text-xs fill-muted-foreground"
+      >
+        {payload.value}
+      </text>
+    </g>
+  )}
+/>
                   <YAxis 
                     domain={[0, 10]}
                     axisLine={false}
@@ -382,13 +408,19 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
                       if (active && payload && payload.length) {
                         const data = payload[0].payload;
                         return (
-                          <div className="bg-white border-2 border-gray-200 rounded-lg shadow-xl p-4">
+                           <div className="bg-white border-2 border-gray-200 rounded-lg shadow-xl p-4">
                             <p className="font-bold text-gray-900 text-lg">{label}</p>
                             <p className="text-sm text-gray-600">
-                              Avg Anxiety: <span className="font-bold text-red-600 text-lg">{payload[0]?.value || 0}/10</span>
+                              {t('analytics.outcomes.avgAnxiety', 'Avg Anxiety')}: <span className="font-bold text-red-600 text-lg">{payload[0]?.value || 0}/10</span>
                             </p>
                             <p className="text-sm text-gray-600">
-                              Status: <span className="font-bold text-gray-900 capitalize">{data.treatmentEffectiveness}</span>
+                              {t('analytics.outcomes.status', 'Status')}: <span className="font-bold text-gray-900 capitalize">
+                                {data.treatmentEffectiveness === 'improving' 
+                                  ? t('analytics.outcomes.treatmentEffectiveness.improving', 'Improving')
+                                  : data.treatmentEffectiveness === 'declining'
+                                  ? t('analytics.outcomes.treatmentEffectiveness.declining', 'Declining')
+                                  : t('analytics.outcomes.treatmentEffectiveness.stable', 'Stable')}
+                              </span>
                             </p>
                           </div>
                         );

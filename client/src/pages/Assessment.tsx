@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import ClinicalAssessment from '@/components/ClinicalAssessment';
+import { useLanguage } from '@/context/LanguageContext';
 
 const Assessment = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleAssessmentComplete = () => {
@@ -21,9 +23,9 @@ const Assessment = () => {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">Clinical Assessment</h1>
+              <h1 className="text-xl font-semibold text-gray-900">{t('assessment.title', 'Clinical Assessment')}</h1>
               <p className="text-sm text-gray-600 mt-1">
-                Complete this assessment to help us understand your mental health better
+                {t('assessment.page.description', 'Complete this assessment to help us understand your mental health better')}
               </p>
             </div>
             <Button
@@ -33,7 +35,7 @@ const Assessment = () => {
               data-testid="button-back-dashboard"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
+              {t('assessment.page.backToDashboard', 'Back to Dashboard')}
             </Button>
           </div>
         </div>

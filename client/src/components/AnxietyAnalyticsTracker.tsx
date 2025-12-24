@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { TrendingUp, Calendar, Target, Activity } from 'lucide-react';
 import { ClaudeAnxietyAnalysis } from '@/utils/claudeAnxietyAnalysis';
 import { useLanguage } from '@/context/LanguageContext';
+import { translateInterventionLabel } from '@/utils/anxiety/interventions';
 
 interface AnxietyAnalyticsTrackerProps {
   analyses: ClaudeAnxietyAnalysis[];
@@ -174,7 +175,9 @@ const AnxietyAnalyticsTracker: React.FC<AnxietyAnalyticsTrackerProps> = ({ analy
           <div className="space-y-2">
             {(mostEffectiveInterventions ?? []).slice(0, 4).map((item, index) => (
               <div key={index} className="flex items-center justify-between bg-green-50 px-3 py-2 rounded">
-                <span className="text-sm text-green-800">{item.intervention}</span>
+                <span className="text-sm text-green-800">
+                  {translateInterventionLabel(item.intervention, t)}
+                </span>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-green-600">
                     {(item?.avgEffectiveness !== null && item?.avgEffectiveness !== undefined && !isNaN(Number(item.avgEffectiveness)) ? Number(item.avgEffectiveness).toFixed(1) : '0.0')}/10 {t('analytics.tracker.effectiveness')}

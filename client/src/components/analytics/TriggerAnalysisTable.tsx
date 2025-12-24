@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -48,7 +48,37 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
   maxDate
 }) => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
+  // Helper function to translate patient narrative text
+  const translatePatientNarrative = (text: string): string => {
+    if (!text) return text;
+    
+    // Translate specific patterns
+    if (text.includes('Pattern noted for general anxiety; limited details recorded')) {
+      return t('analytics.triggers.patternNotedGeneral');
+    }
+    if (text.includes('Patient reports anxiety with health concerns, recalling physical symptoms')) {
+      return t('analytics.triggers.healthConcernsNarrative');
+    }
+    
+    return text; // Return original if no pattern matches
+  };
+
+  // Helper function to translate category names - memoized to update when language changes
+  const translateCategory = useMemo(() => {
+    return (category: string): string => {
+      if (!category) return category;
+      
+      const categoryMap: Record<string, string> = {
+        'Social Anxiety': t('analytics.triggers.category.socialAnxiety', 'Social Anxiety'),
+        'General Anxiety': t('analytics.triggers.category.generalAnxiety', 'General Anxiety'),
+        'Health Concerns': t('analytics.triggers.category.healthConcerns', 'Health Concerns'),
+      };
+      
+      return categoryMap[category] || category;
+    };
+  }, [t, language]);
 
   if (!triggerData || triggerData.length === 0) {
     return null;
@@ -78,25 +108,27 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
   };
 
   return (
-    <Card className="p-6 bg-gradient-to-br from-white to-blue-50/30">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <Card className="p-4 sm:p-6 bg-gradient-to-br from-white to-blue-50/30">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3 mb-6">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-100 rounded-lg">
             <Brain className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-gray-900">{t('analytics.triggers.title')}</h3>
-            <p className="text-sm text-gray-600">{t('analytics.triggers.description')}</p>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900">{t('analytics.triggers.title')}</h3>
+            <p className="text-xs sm:text-sm text-gray-600">{t('analytics.triggers.description')}</p>
           </div>
         </div>
         {onDateRangeChange && (
-          <ChartDateRangePicker
-            value={dateRange}
-            onChange={onDateRangeChange}
-            minDate={minDate}
-            maxDate={maxDate}
-            label={t('therapistDashboard.range.label')}
-          />
+          <div className="w-full sm:w-auto">
+            <ChartDateRangePicker
+              value={dateRange}
+              onChange={onDateRangeChange}
+              minDate={minDate}
+              maxDate={maxDate}
+              label={t('therapistDashboard.range.label')}
+            />
+          </div>
         )}
       </div>
 
@@ -112,57 +144,57 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
                 <Collapsible>
                   <CollapsibleTrigger asChild>
                     <div 
-                      className="w-full p-4 cursor-pointer hover:bg-gray-50/50 transition-colors"
+                      className="w-full p-3 sm:p-4 cursor-pointer hover:bg-gray-50/50 transition-colors"
                       onClick={() => toggleRow(trigger.trigger)}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4 flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
                           {/* Trigger Info */}
-                          <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0">
                             <div 
-                              className="w-4 h-4 rounded-full border-2 border-white shadow-md" 
+                              className="w-4 h-4 rounded-full border-2 border-white shadow-md mt-1 sm:mt-0" 
                               style={{ backgroundColor: trigger.color }}
                             />
-                            <div>
-                              <h4 className="font-bold text-gray-900 text-lg">{trigger.trigger}</h4>
+                          </div>
+                          <div>
+                              <h4 className="font-bold text-gray-900 text-lg">{translateCategory(trigger.trigger)}</h4>
                               <p className="text-sm text-gray-600">
-                {trigger.patientNarrative || trigger.description}
+                {translatePatientNarrative(trigger.patientNarrative || trigger.description)}
               </p>
             </div>
-          </div>
+                        </div>
 
-                          {/* Metrics */}
-                          <div className="flex items-center gap-6 ml-auto mr-4">
-                            <div className="text-center">
-                              <div className="text-2xl font-bold text-gray-900">{trigger.count}</div>
-                              <div className="text-xs text-gray-500">{t('analytics.triggers.count')}</div>
-                            </div>
-                            
-                            <div className="text-center">
-                              <div className={`text-2xl font-bold ${
-                                riskLevel === 'high' ? 'text-red-600' : 
-                                riskLevel === 'moderate' ? 'text-orange-600' : 'text-green-600'
-                              }`}>
-                                {(trigger?.avgSeverity !== null && trigger?.avgSeverity !== undefined && !isNaN(Number(trigger.avgSeverity)) ? Number(trigger.avgSeverity).toFixed(1) : '0.0')}
-                              </div>
-                              <div className="text-xs text-gray-500">{t('analytics.triggers.avgSeverity')}</div>
-                            </div>
-                            
-                            <div className="text-center">
-                              <div className="text-2xl font-bold text-blue-600">
-                                {(trigger?.count !== null && trigger?.count !== undefined && totalEntries !== null && totalEntries !== undefined && totalEntries > 0 && !isNaN(Number(trigger.count))) ? ((Number(trigger.count) / Number(totalEntries)) * 100).toFixed(0) : '0'}%
-                              </div>
-                              <div className="text-xs text-gray-500">{t('analytics.triggers.total')}</div>
-                            </div>
-
-                            <Badge variant={riskLevel === 'high' ? 'destructive' : riskLevel === 'moderate' ? 'secondary' : 'outline'}>
-                              {riskLevel} {t('analytics.triggers.trend')}
-                            </Badge>
+                        {/* Metrics - Stack on mobile, horizontal on desktop */}
+                        <div className="flex flex-wrap items-center gap-3 sm:gap-4 sm:ml-auto sm:mr-4">
+                          <div className="text-center min-w-[60px]">
+                            <div className="text-xl sm:text-2xl font-bold text-gray-900">{trigger.count}</div>
+                            <div className="text-xs text-gray-500">{t('analytics.triggers.count')}</div>
                           </div>
+                          
+                          <div className="text-center min-w-[60px]">
+                            <div className={`text-xl sm:text-2xl font-bold ${
+                              riskLevel === 'high' ? 'text-red-600' : 
+                              riskLevel === 'moderate' ? 'text-orange-600' : 'text-green-600'
+                            }`}>
+                              {(trigger?.avgSeverity !== null && trigger?.avgSeverity !== undefined && !isNaN(Number(trigger.avgSeverity)) ? Number(trigger.avgSeverity).toFixed(1) : '0.0')}
+                            </div>
+                            <div className="text-xs text-gray-500">{t('analytics.triggers.avgSeverity')}</div>
+                          </div>
+                          
+                          <div className="text-center min-w-[60px]">
+                            <div className="text-xl sm:text-2xl font-bold text-blue-600">
+                              {(trigger?.count !== null && trigger?.count !== undefined && totalEntries !== null && totalEntries !== undefined && totalEntries > 0 && !isNaN(Number(trigger.count))) ? ((Number(trigger.count) / Number(totalEntries)) * 100).toFixed(0) : '0'}%
+                            </div>
+                            <div className="text-xs text-gray-500">{t('analytics.triggers.total')}</div>
+                          </div>
+
+                          <Badge variant={riskLevel === 'high' ? 'destructive' : riskLevel === 'moderate' ? 'secondary' : 'outline'} className="text-xs">
+                            {riskLevel} {t('analytics.triggers.trend')}
+                          </Badge>
                         </div>
 
                         {/* Expand Icon */}
-                        <div className="flex items-center">
+                        <div className="flex items-center justify-end sm:justify-start flex-shrink-0">
                           {isExpanded ? (
                             <ChevronDown className="w-5 h-5 text-gray-400" />
                           ) : (
@@ -174,71 +206,71 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <div className="px-4 pb-4 border-t border-gray-100 bg-gray-50/50">
-                      <div className="pt-4 space-y-4">
+                    <div className="px-3 sm:px-4 pb-3 sm:pb-4 border-t border-gray-100 bg-gray-50/50">
+                      <div className="pt-3 sm:pt-4 space-y-3 sm:space-y-4">
                         {/* Evidence Line */}
-                        <Card className="p-4 bg-white border-l-4 border-l-blue-500">
-                          <div className="flex items-start gap-3">
-                            <div className="p-2 bg-blue-50 rounded-lg">
+                        <Card className="p-3 sm:p-4 bg-white border-l-4 border-l-blue-500">
+                          <div className="flex items-start gap-2 sm:gap-3">
+                            <div className="p-1.5 sm:p-2 bg-blue-50 rounded-lg flex-shrink-0">
                               <Brain className="w-4 h-4 text-blue-600" />
                             </div>
-                            <div className="flex-1">
-                              <h5 className="font-semibold text-gray-900 mb-2">{t('analytics.triggers.evidence')}</h5>
-                              <p className="text-sm text-gray-700 leading-relaxed">
+                            <div className="flex-1 min-w-0">
+                              <h5 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">{t('analytics.triggers.evidence')}</h5>
+                              <p className="text-xs sm:text-sm text-gray-700 leading-relaxed break-words">
                                 {trigger.evidenceLine || `Last episode ${trigger.lastEpisodeDate || 'recently'} (${trigger.avgSeverity.toFixed(0)}/10); ${trigger.count} episodes recorded; ${trigger.trend || 'stable'} trend.`}
                               </p>
                               {trigger.trend && (
-                                <div className="mt-2 flex items-center gap-2">
+                                <div className="mt-2 flex flex-wrap items-center gap-2">
                                   <span className="text-xs text-gray-500">{t('analytics.triggers.trendLabel')}:</span>
-                          <span className={`text-sm font-medium ${getTrendColor(trigger.trend)}`}>
-                            {getTrendIcon(trigger.trend)} {t('analytics.triggers.trendLabel')}: {trigger.trend}
-                          </span>
-                        </div>
-                      )}
+                                  <span className={`text-xs sm:text-sm font-medium ${getTrendColor(trigger.trend)}`}>
+                                    {getTrendIcon(trigger.trend)} {t('analytics.triggers.trendLabel')}: {trigger.trend}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </Card>
 
                         {/* Trigger Details */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                           {/* Memory Context */}
                           {trigger.memoryContext && (
-                            <Card className="p-4 bg-white">
-                              <h6 className="font-medium text-gray-900 mb-1">{t('analytics.triggers.recalledContext')}</h6>
-                              <p className="text-sm text-gray-600">{trigger.memoryContext}</p>
+                            <Card className="p-3 sm:p-4 bg-white">
+                              <h6 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">{t('analytics.triggers.recalledContext')}</h6>
+                              <p className="text-xs sm:text-sm text-gray-600 break-words">{trigger.memoryContext}</p>
                             </Card>
                           )}
 
                           {/* Aggravators */}
                           {trigger.aggravators && trigger.aggravators.length > 0 && (
-                            <Card className="p-4 bg-white">
-                              <h6 className="font-medium text-gray-900 mb-1">{t('analytics.triggers.aggravators')}</h6>
-                              <p className="text-sm text-gray-600">{trigger.aggravators.join(', ')}</p>
+                            <Card className="p-3 sm:p-4 bg-white">
+                              <h6 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">{t('analytics.triggers.aggravators')}</h6>
+                              <p className="text-xs sm:text-sm text-gray-600 break-words">{trigger.aggravators.join(', ')}</p>
                             </Card>
                           )}
 
                           {/* Impact */}
                           {trigger.impact && (
-                            <Card className="p-4 bg-white">
-                              <h6 className="font-medium text-gray-900 mb-1">{t('analytics.triggers.impact')}</h6>
-                              <p className="text-sm text-gray-600">{trigger.impact}</p>
+                            <Card className="p-3 sm:p-4 bg-white">
+                              <h6 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">{t('analytics.triggers.impact')}</h6>
+                              <p className="text-xs sm:text-sm text-gray-600 break-words">{trigger.impact}</p>
                             </Card>
                           )}
 
                           {/* Last Episode */}
                           {trigger.lastEpisodeDate && (
-                            <Card className="p-4 bg-white">
-                              <h6 className="font-medium text-gray-900 mb-1">{t('analytics.triggers.lastOccurrence')}</h6>
-                              <p className="text-sm text-gray-600">{trigger.lastEpisodeDate}</p>
+                            <Card className="p-3 sm:p-4 bg-white">
+                              <h6 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">{t('analytics.triggers.lastOccurrence')}</h6>
+                              <p className="text-xs sm:text-sm text-gray-600 break-words">{trigger.lastEpisodeDate}</p>
                             </Card>
                           )}
                         </div>
 
                         {/* Related Triggers */}
                         {trigger.relatedTriggers && trigger.relatedTriggers.length > 0 && (
-                          <Card className="p-4 bg-white">
-                            <h5 className="font-semibold text-gray-900 mb-3">{t('analytics.triggers.relatedPatterns')}</h5>
-                            <div className="space-y-3">
+                          <Card className="p-3 sm:p-4 bg-white">
+                            <h5 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">{t('analytics.triggers.relatedPatterns')}</h5>
+                            <div className="space-y-2 sm:space-y-3">
                               {trigger.relatedTriggers.slice(0, 6).map((related, index) => {
                                 // Generate patient-specific narrative for related trigger
                                 const getPatientNarrative = (triggerName: string) => {

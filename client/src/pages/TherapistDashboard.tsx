@@ -50,6 +50,7 @@ import GoalProgressSection from "@/components/analytics/GoalProgressSection";
 import TriggerAnalysisTable from "@/components/analytics/TriggerAnalysisTable";
 import InterventionSummariesSection from "@/components/analytics/InterventionSummariesSection";
 import { downloadSummaryReport, generateSummaryReport } from "@/services/summaryReportService";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   processTriggerData,
   processSeverityDistribution,
@@ -150,6 +151,7 @@ interface TreatmentReportInsights {
 const TherapistDashboard: React.FC = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const { language, t } = useLanguage();
   const navigate = useNavigate();
   const [searchEmail, setSearchEmail] = useState("");
   const [searchCode, setSearchCode] = useState("");
@@ -307,9 +309,11 @@ const TherapistDashboard: React.FC = () => {
   const aiNarrative = React.useMemo(
     () =>
       generateSummaryReport(summaries, goals, analyses, {
-        title: "Treatment Report Analysis",
+        title: t("reports.treatmentReportTitle", "Treatment Report Analysis"),
+        language,
+        t,
       }),
-    [summaries, goals, analyses],
+    [summaries, goals, analyses, language, t],
   );
 
   const treatmentReportInsights = React.useMemo<TreatmentReportInsights | null>(() => {
@@ -1011,7 +1015,7 @@ const TherapistDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200 px-8 py-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 md:gap-0 md:flex-row items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
               Mental Therapist Portal
@@ -1021,7 +1025,7 @@ const TherapistDashboard: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <Badge variant="default" className="bg-green-600">
+            <Badge variant="default" className="bg-green-600 text-center">
               Therapist Dashboard
             </Badge>
             <Button
@@ -1030,7 +1034,7 @@ const TherapistDashboard: React.FC = () => {
               onClick={() => setVanessaOpen(true)}
               className="border-blue-200 text-blue-600 hover:bg-blue-50"
             >
-              Ask Vanessa
+                Ask Vanessa
             </Button>
             <Button
               variant="outline"
@@ -1046,25 +1050,25 @@ const TherapistDashboard: React.FC = () => {
 
       <div className="flex-1 p-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
-            <TabsList className="flex flex-wrap gap-2 bg-white p-3 rounded-xl border border-gray-200 shadow-sm lg:flex-col lg:sticky lg:top-24 lg:h-fit lg:gap-1">
+          <div className="grid gap-8 lg:grid-cols-[260px_1fr] relative">
+          <TabsList className="hidden lg:flex flex-col gap-1 bg-white p-3 rounded-xl border border-gray-200 shadow-sm lg:sticky lg:top-24 lg:h-fit">
               <TabsTrigger
                 value="search"
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 lg:justify-start lg:items-start"
+                className="flex w-full items-center gap-3 justify-start rounded-lg px-4 py-3 text-sm font-medium border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200"
               >
                 <Search className="w-4 h-4" />
                 <span className={navLabelClass}>Find Patient</span>
               </TabsTrigger>
               <TabsTrigger
                 value="directory"
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 lg:justify-start lg:items-start"
-              >
+               className="flex w-full items-center gap-3 justify-start rounded-lg px-4 py-3 text-sm font-medium border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200"
+                >
                 <BookOpen className="w-4 h-4" />
                 <span className={navLabelClass}>Patient Directory</span>
               </TabsTrigger>
               <TabsTrigger
                 value="appointments"
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 lg:justify-start lg:items-start"
+       className="flex w-full items-center gap-3 justify-start rounded-lg px-4 py-3 text-sm font-medium border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200"
               >
                 <Calendar className="w-4 h-4" />
                 <span className={navLabelClass}>Appointments</span>
@@ -1072,7 +1076,7 @@ const TherapistDashboard: React.FC = () => {
               <TabsTrigger
                 value="analytics"
                 disabled={!selectedPatientId}
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start lg:items-start"
+className="flex w-full items-center gap-3 justify-start rounded-lg px-4 py-3 text-sm font-medium border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200"
               >
                 <TrendingUp className="w-4 h-4" />
                 <span className={navLabelClass}>Patient Analytics</span>
@@ -1080,7 +1084,7 @@ const TherapistDashboard: React.FC = () => {
               <TabsTrigger
                 value="interventions"
                 disabled={!selectedPatientId}
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start lg:items-start"
+className="flex w-full items-center gap-3 justify-start rounded-lg px-4 py-3 text-sm font-medium border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200"
               >
                 <ClipboardList className="w-4 h-4" />
                 <span className={navLabelClass}>Patient Intervention Summaries</span>
@@ -1088,7 +1092,7 @@ const TherapistDashboard: React.FC = () => {
               <TabsTrigger
                 value="treatment"
                 disabled={!selectedPatientId}
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start lg:items-start"
+className="flex w-full items-center gap-3 justify-start rounded-lg px-4 py-3 text-sm font-medium border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200"
               >
                 <Clipboard className="w-4 h-4" />
                 <span className={navLabelClass}>
@@ -1098,7 +1102,7 @@ const TherapistDashboard: React.FC = () => {
               <TabsTrigger
                 value="current-plan"
                 disabled={!selectedPatientId}
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start lg:items-start"
+className="flex w-full items-center gap-3 justify-start rounded-lg px-4 py-3 text-sm font-medium border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200"
               >
                 <Target className="w-4 h-4" />
                 <span className={navLabelClass}>Treatment Plan & Notes</span>
@@ -1106,28 +1110,58 @@ const TherapistDashboard: React.FC = () => {
               <TabsTrigger
                 value="medical-report"
                 disabled={!selectedPatientId}
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold text-center border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 disabled:cursor-not-allowed disabled:opacity-60 lg:justify-start lg:items-start"
+className="flex w-full items-center gap-3 justify-start rounded-lg px-4 py-3 text-sm font-medium border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200"
               >
                 <FileText className="w-4 h-4" />
                 <span className={navLabelClass}>Treatment Report Analysis</span>
               </TabsTrigger>
               <TabsTrigger
                 value="chat"
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 lg:justify-start lg:items-start"
+className="flex w-full items-center gap-3 justify-start rounded-lg px-4 py-3 text-sm font-medium border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200"
               >
                 <MessageCircle className="w-4 h-4" />
                 <span className={navLabelClass}>Case Chat</span>
               </TabsTrigger>
               <TabsTrigger
                 value="notifications"
-                className="flex w-full items-center gap-2 justify-center rounded-lg px-4 py-3 text-sm font-semibold border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 lg:justify-start lg:items-start"
+className="flex w-full items-center gap-3 justify-start rounded-lg px-4 py-3 text-sm font-medium border border-transparent transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200"
               >
                 <Bell className="w-4 h-4" />
                 <span className={navLabelClass}>Notifications</span>
               </TabsTrigger>
             </TabsList>
+                          {/* Mobile Bottom Tab Bar - visible only on small screens */}
+                          <div className="fixed inset-x-0 bottom-0 z-50 bg-white border-t border-gray-200 lg:hidden">
+                <div className="grid grid-cols-5">
+                  {[
+                    { value: "search", icon: Search, label: "Find" },
+                    { value: "directory", icon: BookOpen, label: "Directory" },
+                    { value: "appointments", icon: Calendar, label: "Appts" },
+                    { value: "chat", icon: MessageCircle, label: "Chat" },
+                    { value: "notifications", icon: Bell, label: "Alerts" },
+                  ].map(({ value, icon: Icon, label }) => (
+                    <button
+                      key={value}
+                      onClick={() => setActiveTab(value)}
+                      className={`flex flex-col items-center justify-center py-3 text-xs font-medium transition-colors ${
+                        activeTab === value
+                          ? "text-blue-700"
+                          : "text-gray-500"
+                      }`}
+                      disabled={
+                        (value === "analytics" || value === "interventions" || 
+                         value === "treatment" || value === "current-plan" || 
+                         value === "medical-report") && !selectedPatientId
+                      }
+                    >
+                      <Icon className="w-5 h-5 mb-1" />
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            <div className="flex-1 space-y-6">
+              <div className="flex-1 space-y-6 pb-20 lg:pb-0">
               <Card className="border-blue-100 shadow-sm">
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-2 text-blue-900">
@@ -1603,7 +1637,9 @@ const TherapistDashboard: React.FC = () => {
                               variant="outline"
                               onClick={() =>
                                 downloadSummaryReport(summaries, goals, analyses, {
-                                  title: "Treatment Report Analysis",
+                                  title: t("reports.treatmentReportTitle", "Treatment Report Analysis"),
+                                  language,
+                                  t,
                                 })
                               }
                             >
@@ -1855,7 +1891,7 @@ const TherapistDashboard: React.FC = () => {
         </Tabs>
       </div>
       <Sheet open={vanessaOpen} onOpenChange={setVanessaOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-xl">
+        <SheetContent side="right" className="w-full sm:max-w-xl overflow-auto">
           <SheetHeader>
             <SheetTitle>Vanessa – AI Treatment Assistant</SheetTitle>
           </SheetHeader>
@@ -1876,7 +1912,7 @@ const TherapistDashboard: React.FC = () => {
 
       <Button
         onClick={() => setVanessaOpen(true)}
-        className="fixed bottom-6 right-6 bg-blue-600 text-white shadow-lg hover:bg-blue-700"
+        className="fixed z-50 bottom-20 right-6 bg-blue-600 text-white shadow-lg hover:bg-blue-700"
       >
         <MessageCircle className="w-4 h-4 mr-2" /> Ask Vanessa
       </Button>

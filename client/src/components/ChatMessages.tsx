@@ -31,9 +31,9 @@ const ChatMessages = ({
   };
 
   return (
-    <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 mb-4 overflow-hidden">
-      <ScrollArea className="h-full p-4" ref={scrollRef}>
-        <div className="space-y-4">
+    <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-2 sm:mb-4 overflow-hidden w-full h-full">
+      <ScrollArea className="h-full p-2 sm:p-4" ref={scrollRef}>
+        <div className="space-y-2 sm:space-y-4">
         {(messages ?? []).map((message) => (
           <ChatMessage key={message.id} message={message} onEditMessage={onEditMessage} currentLanguage={currentLanguage} />
         ))}

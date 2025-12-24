@@ -4,11 +4,13 @@
  */
 import { useState, useCallback } from 'react';
 import { sendAIMessage, streamAIMessage, detectCrisisKeywords, AIMessage } from '@/services/aiChatService';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function useAIChat() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [researchCited, setResearchCited] = useState<string[]>([]);
   const [crisisDetected, setCrisisDetected] = useState(false);
+  const { t } = useLanguage();
 
   /**
    * Get AI response with research context
@@ -46,11 +48,11 @@ You don't have to face this alone. Professional help is available 24/7.`;
 
     } catch (error: any) {
       console.error('AI response error:', error);
-      return "I'm having trouble responding right now. Please try again in a moment.";
+      return t('chat.error.tryAgain');
     } finally {
       setIsGenerating(false);
     }
-  }, []);
+  }, [t]);
 
   /**
    * Get streaming AI response

@@ -1032,7 +1032,7 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({ therapistEm
             </div>
 
             {/* Legend */}
-            <div className="flex items-center gap-4 mt-4 text-xs text-gray-600">
+            <div className="flex flex-wrap md:flex-row items-center gap-4 mt-4 text-xs text-gray-600">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-blue-600 rounded"></div>
                 <span>Scheduled</span>

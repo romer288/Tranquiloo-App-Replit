@@ -286,7 +286,7 @@ const ChatContainer = ({ sessionId }: ChatContainerProps) => {
 
   return (
     // Use proper viewport height with mobile-safe margins
-    <div className="min-h-screen bg-gray-50 flex flex-col relative" style={{ zIndex: 1 }}>
+    <div className="min-h-screen bg-gray-50 flex flex-col relative overflow-hidden" style={{ zIndex: 1 }}>
       {/* Header - Fixed height */}
       <div className="flex-shrink-0">
         <ChatHeader
@@ -299,11 +299,11 @@ const ChatContainer = ({ sessionId }: ChatContainerProps) => {
       </div>
 
       {/* Main content - Responsive layout */}
-      <div className="flex-1 w-full">
-        {/* Desktop Layout */}
-        <div className="hidden lg:flex h-full max-w-7xl mx-auto p-4 gap-4">
+      <div className="flex-1 w-full min-h-0 overflow-hidden">
+        {/* Desktop Layout - lg and above (1024px+) */}
+        <div className="hidden lg:flex h-full max-w-7xl mx-auto p-3 md:p-4 lg:p-5 xl:p-6 gap-3 md:gap-4 lg:gap-5 xl:gap-6">
           {/* Left Column: Avatar + Chat History */}
-          <div className="flex flex-col gap-4 w-80 flex-shrink-0 h-[calc(100vh-140px)]">
+          <div className="flex flex-col gap-3 md:gap-4 lg:gap-5 w-72 md:w-80 lg:w-80 xl:w-80 flex-shrink-0 h-full">
             {/* Avatar Section - Fixed height */}
             <div className="flex-shrink-0">
               <AvatarSection
@@ -323,7 +323,7 @@ const ChatContainer = ({ sessionId }: ChatContainerProps) => {
             </div>
 
             {/* Chat History - Takes remaining height */}
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-hidden">
               <ChatHistorySidebar
                 currentSessionId={sessionId}
                 onSessionSelect={handleSessionSelect}
@@ -334,7 +334,7 @@ const ChatContainer = ({ sessionId }: ChatContainerProps) => {
           </div>
 
           {/* Right Column: Chat Section */}
-          <div className="flex-1 min-w-0 h-[calc(100vh-140px)]">
+          <div className="flex-1 min-w-0 h-full overflow-hidden">
             <ChatSection
               messages={messages}
               inputText={inputText}
@@ -371,10 +371,10 @@ const ChatContainer = ({ sessionId }: ChatContainerProps) => {
           </div>
         </div>
 
-        {/* Mobile Layout */}
-        <div className="lg:hidden flex flex-col h-[calc(100vh-80px)]">
-          {/* Mobile Avatar - Compact version */}
-          <div className="flex-shrink-0 p-4 pb-2">
+        {/* Tablet Layout - md to lg (768px - 1023px) */}
+        <div className="hidden md:flex lg:hidden flex-col h-full max-w-5xl mx-auto p-3 md:p-4 gap-3 md:gap-4">
+          {/* Top: Avatar Section */}
+          <div className="flex-shrink-0 px-2 md:px-4">
             <AvatarSection
               aiCompanion={aiCompanion}
               isAnimating={avatarIsSpeaking || isAnimating}
@@ -382,12 +382,74 @@ const ChatContainer = ({ sessionId }: ChatContainerProps) => {
               currentEmotion={currentEmotion}
               useReadyPlayerMe={useReadyPlayerMe}
               setUseReadyPlayerMe={setUseReadyPlayerMe}
-              onStoppedSpeaking={() => { setAvatarIsSpeaking(false); stopSpeaking(); }}
+              onStoppedSpeaking={() => {
+                console.log('🛑 Avatar stopped speaking - resetting avatar state');
+                setAvatarIsSpeaking(false);
+                stopSpeaking();
+                enhancedTTS.stopSpeaking();
+              }}
+            />
+          </div>
+
+          {/* Bottom: Chat Section - Takes remaining height */}
+          <div className="flex-1 min-h-0 overflow-hidden px-2 md:px-4 pb-3 md:pb-4">
+            <ChatSection
+              messages={messages}
+              inputText={inputText}
+              setInputText={setInputText}
+              isTyping={isTyping}
+              isAnalyzing={isAnalyzing}
+              isListening={isListening}
+              speechSupported={speechSupported}
+              aiCompanion={aiCompanion}
+              currentLanguage={effectiveLanguage}
+              scrollRef={scrollRef}
+              latestAnalysis={latestAnalysis}
+              allAnalyses={allAnalyses}
+              onToggleListening={handleToggleListening}
+              onSendMessage={handleSendMessage}
+              onKeyPress={handleKeyPress}
+              onEditMessage={editMessage}
+              onStopSpeaking={() => {
+                console.log('🛑 Manual stop speaking - resetting avatar state');
+                stopSpeaking();
+                enhancedTTS.stopSpeaking();
+                setAvatarIsSpeaking(false);
+              }}
+              isSpeaking={isSpeaking || enhancedTTS.isSpeaking}
+              onShowCrisisResources={() => setShowCrisisModal(true)}
+              autoSpeak={autoSpeak}
+              onToggleAutoSpeak={() => {
+                const newValue = !autoSpeak;
+                setAutoSpeak(newValue);
+                localStorage.setItem('autoSpeak', String(newValue));
+              }}
+              onLanguageChange={handleLanguageChange}
+            />
+          </div>
+        </div>
+
+        {/* Mobile Layout - below md (< 768px) */}
+        <div className="flex md:hidden flex-col h-full overflow-hidden">
+          {/* Mobile Avatar - Compact version */}
+          <div className="flex-shrink-0 p-2 sm:p-3 pb-1 sm:pb-2">
+            <AvatarSection
+              aiCompanion={aiCompanion}
+              isAnimating={avatarIsSpeaking || isAnimating}
+              isTyping={isTyping}
+              currentEmotion={currentEmotion}
+              useReadyPlayerMe={useReadyPlayerMe}
+              setUseReadyPlayerMe={setUseReadyPlayerMe}
+              onStoppedSpeaking={() => { 
+                setAvatarIsSpeaking(false); 
+                stopSpeaking(); 
+                enhancedTTS.stopSpeaking();
+              }}
             />
           </div>
 
           {/* Mobile Chat Section - Takes remaining height */}
-          <div className="flex-1 min-h-0 px-4 pb-4">
+          <div className="flex-1 min-h-0 overflow-hidden px-2 sm:px-3 pb-2 sm:pb-3 md:pb-4">
             <ChatSection
               messages={messages}
               inputText={inputText}
@@ -443,22 +505,26 @@ const ChatContainer = ({ sessionId }: ChatContainerProps) => {
 
       {/* Mobile Chat History Modal */}
       {showMobileChatHistory && (
-        <div className="fixed inset-0 bg-black/50 z-50 lg:hidden">
-          <div className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white h-full flex flex-col">
-            <div className="flex-shrink-0 p-4 border-b border-gray-200">
+        <div className="fixed inset-0 bg-black/50 z-50 lg:hidden" onClick={() => setShowMobileChatHistory(false)}>
+          <div 
+            className="fixed inset-y-0 left-0 w-full sm:w-80 max-w-[90vw] sm:max-w-[85vw] bg-white h-full flex flex-col shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex-shrink-0 p-3 sm:p-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Chat History</h2>
+                <h2 className="text-base sm:text-lg font-semibold">Chat History</h2>
                 <button
                   onClick={() => setShowMobileChatHistory(false)}
-                  className="p-2 rounded-md hover:bg-gray-100"
+                  className="p-1.5 sm:p-2 rounded-md hover:bg-gray-100 active:bg-gray-200 touch-manipulation transition-colors"
+                  aria-label="Close chat history"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
             </div>
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-hidden">
               <ChatHistorySidebar
                 currentSessionId={sessionId}
                 onSessionSelect={handleSessionSelect}

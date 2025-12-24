@@ -1,26 +1,27 @@
 //Author: Harsh Dugar
 // This file is about the chat history sidebar on the chat page with loading all the chat sessions of the user
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   MessageSquare,
   Plus,
   Trash2,
   Edit3,
   Search,
-  MoreVertical
-} from 'lucide-react';
-import { format, isToday, isYesterday, isThisWeek } from 'date-fns';
+  MoreVertical,
+} from "lucide-react";
+import { format, isToday, isYesterday, isThisWeek } from "date-fns";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ChatSession {
   id: string;
   userId: string;
   title?: string;
-  aiCompanion: 'vanessa' | 'monica';
-  language: 'english' | 'spanish';
+  aiCompanion: "vanessa" | "monica";
+  language: "english" | "spanish";
   createdAt: string;
   updatedAt: string;
 }
@@ -36,13 +37,19 @@ const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
   currentSessionId,
   onSessionSelect,
   onNewChat,
-  className = ""
+  className = "",
 }) => {
   const { user } = useAuth();
-  const [searchTerm, setSearchTerm] = useState('');
+  const { t } = useLanguage();
+  const [searchTerm, setSearchTerm] = useState("");
   const [hoveredSession, setHoveredSession] = useState<string | null>(null);
 
-  const { data: sessions = [], isLoading, refetch, error } = useQuery({
+  const {
+    data: sessions = [],
+    isLoading,
+    refetch,
+    error,
+  } = useQuery({
     queryKey: [`/api/users/${user?.id}/chat-sessions`],
     queryFn: async () => {
       const response = await fetch(`/api/users/${user?.id}/chat-sessions`);
@@ -57,15 +64,18 @@ const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-
   // Filter and sort sessions
   const filteredSessions = (sessions as ChatSession[])
-    .filter(session =>
-      !searchTerm ||
-      session.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.aiCompanion.toLowerCase().includes(searchTerm.toLowerCase())
+    .filter(
+      (session) =>
+        !searchTerm ||
+        session.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        session.aiCompanion.toLowerCase().includes(searchTerm.toLowerCase())
     )
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    .sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
 
   // Group sessions by time period
   const groupSessionsByTime = (sessions: ChatSession[]) => {
@@ -73,10 +83,10 @@ const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
       today: [],
       yesterday: [],
       thisWeek: [],
-      older: []
+      older: [],
     };
 
-    sessions.forEach(session => {
+    sessions.forEach((session) => {
       const date = new Date(session.updatedAt);
       if (isToday(date)) {
         groups.today.push(session);
@@ -95,25 +105,32 @@ const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
   const sessionGroups = groupSessionsByTime(filteredSessions);
 
   const getSessionTitle = (session: ChatSession) => {
-    if (session.title && session.title !== 'New Chat Session') {
+    if (session.title && session.title !== "New Chat Session") {
       return session.title;
     }
-    const date = format(new Date(session.createdAt), 'MMM d');
-    const companion = session.aiCompanion === 'vanessa' ? 'Vanessa' : 'Mónica';
+    const date = format(new Date(session.createdAt), "MMM d");
+    const companion = session.aiCompanion === "vanessa" ? "Vanessa" : "Mónica";
     return `${companion} - ${date}`;
   };
 
-  const getCompanionColor = (companion: 'vanessa' | 'monica') => {
-    return companion === 'vanessa' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700';
+  const getCompanionColor = (companion: "vanessa" | "monica") => {
+    return companion === "vanessa"
+      ? "bg-blue-100 text-blue-700"
+      : "bg-pink-100 text-pink-700";
   };
 
   const formatTimeGroup = (groupKey: string) => {
     switch (groupKey) {
-      case 'today': return 'Today';
-      case 'yesterday': return 'Yesterday';
-      case 'thisWeek': return 'This Week';
-      case 'older': return 'Older';
-      default: return groupKey;
+      case "today":
+        return "Today";
+      case "yesterday":
+        return "Yesterday";
+      case "thisWeek":
+        return "This Week";
+      case "older":
+        return "Older";
+      default:
+        return groupKey;
     }
   };
 
@@ -136,8 +153,8 @@ const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
       <div
         className={`group relative rounded-lg p-3 mx-2 cursor-pointer transition-all duration-200 select-none border-2 border-transparent hover:border-blue-200 ${
           isActive
-            ? 'bg-gray-100 text-gray-900 border-blue-300'
-            : 'hover:bg-gray-50 text-gray-700'
+            ? "bg-gray-100 text-gray-900 border-blue-300"
+            : "hover:bg-gray-50 text-gray-700"
         }`}
         onClick={handleSessionClick}
         onMouseDown={handleSessionClick} // Add mousedown as backup
@@ -155,21 +172,23 @@ const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             handleSessionClick(e as any);
           }
         }}
         style={{
-          minHeight: '60px',
+          minHeight: "60px",
           zIndex: 100, // Increased z-index
-          position: 'relative',
-          pointerEvents: 'auto', // Explicitly ensure pointer events
-          touchAction: 'manipulation' // Improve touch handling
+          position: "relative",
+          pointerEvents: "auto", // Explicitly ensure pointer events
+          touchAction: "manipulation", // Improve touch handling
         }}
       >
         <div className="flex items-center justify-between w-full">
-          <div className="flex-1 min-w-0 pointer-events-none"> {/* Only the content is pointer-events-none */}
+          <div className="flex-1 min-w-0 pointer-events-none">
+            {" "}
+            {/* Only the content is pointer-events-none */}
             <div className="flex items-center gap-3">
               <MessageSquare className="w-4 h-4 text-gray-400 flex-shrink-0" />
               <div className="flex-1 min-w-0">
@@ -177,7 +196,7 @@ const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
                   {getSessionTitle(session)}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
-                  {format(new Date(session.updatedAt), 'MMM d, h:mm a')}
+                  {format(new Date(session.updatedAt), "MMM d, h:mm a")}
                 </p>
               </div>
             </div>
@@ -197,7 +216,10 @@ const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
     );
   };
 
-  const GroupSection: React.FC<{ title: string; sessions: ChatSession[] }> = ({ title, sessions }) => {
+  const GroupSection: React.FC<{ title: string; sessions: ChatSession[] }> = ({
+    title,
+    sessions,
+  }) => {
     if (sessions.length === 0) return null;
 
     return (
@@ -206,7 +228,7 @@ const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
           {title}
         </h3>
         <div className="space-y-1">
-          {sessions.map(session => (
+          {sessions.map((session) => (
             <SessionItem key={session.id} session={session} />
           ))}
         </div>
@@ -215,29 +237,35 @@ const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
   };
 
   return (
-    <div 
+    <div
       className={`h-full max-h-full flex flex-col bg-white rounded-lg border border-gray-200 ${className}`}
-      style={{ 
-        position: 'relative', 
+      style={{
+        position: "relative",
         zIndex: 50,
-        isolation: 'isolate', // Creates a new stacking context
-        minHeight: 0 // Allow flex shrinking
+        isolation: "isolate", // Creates a new stacking context
+        minHeight: 0, // Allow flex shrinking
       }}
     >
       {/* Header */}
-      <div className="p-4 border-b border-gray-200" style={{ position: 'relative', zIndex: 51 }}>
+      <div
+        className="p-4 border-b border-gray-200"
+        style={{ position: "relative", zIndex: 51 }}
+      >
         <Button
           onClick={onNewChat}
           className="w-full justify-start text-left font-normal"
           variant="outline"
         >
           <Plus className="w-4 h-4 mr-2" />
-          New chat
+          {t("chatHistorySidebar.newChat", "New chat")}
         </Button>
       </div>
 
       {/* Search */}
-      <div className="p-4 border-b border-gray-200" style={{ position: 'relative', zIndex: 51 }}>
+      <div
+        className="p-4 border-b border-gray-200"
+        style={{ position: "relative", zIndex: 51 }}
+      >
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
@@ -251,8 +279,14 @@ const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
       </div>
 
       {/* Chat List */}
-      <div className="flex-1 overflow-hidden" style={{ position: 'relative', zIndex: 51 }}>
-        <ScrollArea className="h-full" style={{ position: 'relative', zIndex: 52 }}>
+      <div
+        className="flex-1 overflow-hidden"
+        style={{ position: "relative", zIndex: 51 }}
+      >
+        <ScrollArea
+          className="h-full"
+          style={{ position: "relative", zIndex: 52 }}
+        >
           <div className="p-2">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
@@ -262,18 +296,26 @@ const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
               <div className="text-center py-12 px-4 text-gray-500">
                 <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                 <p className="text-sm font-medium mb-1">
-                  {searchTerm ? 'No chats found' : 'No conversations yet'}
+                  {searchTerm ? t('chatHistorySidebar.noChatsFound', 'No chats found') : t('chatHistorySidebar.noConversationsYet', 'No conversations yet')}
                 </p>
                 <p className="text-xs text-gray-400">
-                  {searchTerm ? 'Try a different search term' : 'Start chatting to see your history here'}
+                  {searchTerm
+                    ? t('chatHistorySidebar.tryDifferentSearch', "Try a different search term")
+                    : t('chatHistorySidebar.startChatting', "Start chatting to see your history here")}
                 </p>
               </div>
             ) : (
               <div className="space-y-1">
                 <GroupSection title="Today" sessions={sessionGroups.today} />
-                <GroupSection title="Yesterday" sessions={sessionGroups.yesterday} />
-                <GroupSection title="This Week" sessions={sessionGroups.thisWeek} />
-                <GroupSection title="Older" sessions={sessionGroups.older} />
+                <GroupSection
+                  title={t("chatHistorySidebar.yesterday","Yesterday")}
+                  sessions={sessionGroups.yesterday}
+                />
+                <GroupSection
+                  title={t("chatHistorySidebar.thisWeek","This Week")}
+                  sessions={sessionGroups.thisWeek}
+                />
+                <GroupSection title={t("chatHistorySidebar.older","Older")} sessions={sessionGroups.older} />
               </div>
             )}
           </div>
