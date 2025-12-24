@@ -384,6 +384,39 @@ export const translationMap: Record<Language, Translations> = {
     "support.sunday": "Sunday:",
     "support.emergencyResources":
       "*Emergency resources are available 24/7 through the crisis hotlines listed above",
+    // Crisis resources modal
+    "crisisModal.title": "Crisis Support Resources",
+    "crisisModal.subtitle": "Available 24/7 when you need immediate support",
+    "crisisModal.hotlinesTitle": "24/7 Crisis Hotlines",
+    "crisisModal.strategiesTitle": "Right Now: Things You Can Do",
+    "crisisModal.rememberLabel": "Remember:",
+    "crisisModal.rememberText":
+      "If you're in immediate danger, call 911 or go to your nearest emergency room. These intense feelings will pass - you've survived difficult moments before, and you can get through this one too. You matter, and there are people who want to help you.",
+    "crisisModal.close": "Close",
+    "crisisModal.resources.988.name": "988 Suicide & Crisis Lifeline",
+    "crisisModal.resources.988.description": "24/7 crisis support and suicide prevention",
+    "crisisModal.resources.textLine.name": "Crisis Text Line",
+    "crisisModal.resources.textLine.phone": "Text HOME to 741741",
+    "crisisModal.resources.textLine.description": "24/7 crisis support via text messaging",
+    "crisisModal.resources.dvHotline.name": "National Domestic Violence Hotline",
+    "crisisModal.resources.dvHotline.description": "24/7 support for domestic violence situations",
+    "crisisModal.resources.samhsa.name": "SAMHSA National Helpline",
+    "crisisModal.resources.samhsa.description": "24/7 treatment referral and information service",
+    "crisisModal.strategies.grounding54321.title": "5-4-3-2-1 Grounding",
+    "crisisModal.strategies.grounding54321.description":
+      "Name 5 things you see, 4 you can touch, 3 you hear, 2 you smell, 1 you taste",
+    "crisisModal.strategies.breathing446.title": "4-4-6 Breathing",
+    "crisisModal.strategies.breathing446.description":
+      "Breathe in for 4 counts, hold for 4, breathe out for 6. Repeat 10 times.",
+    "crisisModal.strategies.coldWater.title": "Cold Water Reset",
+    "crisisModal.strategies.coldWater.description":
+      "Splash cold water on your face or hold ice cubes to reset your nervous system",
+    "crisisModal.strategies.movement.title": "Physical Movement",
+    "crisisModal.strategies.movement.description":
+      "Do jumping jacks, push-ups, or go for a walk to release tension",
+    "crisisModal.strategies.safePerson.title": "Safe Person",
+    "crisisModal.strategies.safePerson.description":
+      "Call or text one person who makes you feel safe and supported",
     "support.responseTimes": "Response Times",
     "support.phone": "Phone:",
     "support.immediateDuringBusinessHours": "Immediate during business hours",
@@ -1871,6 +1904,40 @@ export const translationMap: Record<Language, Translations> = {
     "support.sunday": "Domingo:",
     "support.emergencyResources":
       "*Los recursos de emergencia están disponibles las 24 horas, los 7 días de la semana a través de las líneas de crisis mencionadas anteriormente",
+    // Crisis resources modal
+    "crisisModal.title": "Recursos de apoyo en crisis",
+    "crisisModal.subtitle": "Disponible 24/7 cuando necesites apoyo inmediato",
+    "crisisModal.hotlinesTitle": "Líneas de crisis 24/7",
+    "crisisModal.strategiesTitle": "Ahora mismo: cosas que puedes hacer",
+    "crisisModal.rememberLabel": "Recuerda:",
+    "crisisModal.rememberText":
+      "Si estás en peligro inmediato, llama al 911 o ve a la sala de emergencias más cercana. Estas sensaciones intensas pasarán; ya has superado momentos difíciles antes y también podrás superar este. Importas, y hay personas que quieren ayudarte.",
+    "crisisModal.close": "Cerrar",
+    "crisisModal.resources.988.name": "Línea 988 de suicidio y crisis",
+    "crisisModal.resources.988.description": "Apoyo en crisis 24/7 y prevención del suicidio",
+    "crisisModal.resources.textLine.name": "Línea de texto de crisis",
+    "crisisModal.resources.textLine.phone": "Envía HOME al 741741",
+    "crisisModal.resources.textLine.description": "Apoyo en crisis 24/7 por mensajes de texto",
+    "crisisModal.resources.dvHotline.name": "Línea nacional contra la violencia doméstica",
+    "crisisModal.resources.dvHotline.description": "Apoyo 24/7 para situaciones de violencia doméstica",
+    "crisisModal.resources.samhsa.name": "Línea nacional de ayuda de SAMHSA",
+    "crisisModal.resources.samhsa.description":
+      "Servicio 24/7 de derivación a tratamiento e información",
+    "crisisModal.strategies.grounding54321.title": "Anclaje 5-4-3-2-1",
+    "crisisModal.strategies.grounding54321.description":
+      "Nombra 5 cosas que ves, 4 que puedes tocar, 3 que oyes, 2 que hueles y 1 que saboreas",
+    "crisisModal.strategies.breathing446.title": "Respiración 4-4-6",
+    "crisisModal.strategies.breathing446.description":
+      "Inhala contando 4, sostén 4 y exhala 6. Repite 10 veces.",
+    "crisisModal.strategies.coldWater.title": "Reinicio con agua fría",
+    "crisisModal.strategies.coldWater.description":
+      "Salpica agua fría en tu cara o sostén cubos de hielo para reiniciar tu sistema nervioso",
+    "crisisModal.strategies.movement.title": "Movimiento físico",
+    "crisisModal.strategies.movement.description":
+      "Haz saltos, flexiones o sal a caminar para liberar tensión",
+    "crisisModal.strategies.safePerson.title": "Persona segura",
+    "crisisModal.strategies.safePerson.description":
+      "Llama o envía un mensaje a una persona que te haga sentir seguro y acompañado",
     "support.responseTimes": "Tiempos de Respuesta",
     "support.phone": "Teléfono:",
     "support.immediateDuringBusinessHours":

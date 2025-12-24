@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Phone, MessageSquare, Clock, Heart, AlertTriangle } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface CrisisResourcesModalProps {
   isOpen: boolean;
@@ -19,32 +20,33 @@ export const CrisisResourcesModal: React.FC<CrisisResourcesModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { t } = useLanguage();
   const crisisResources = [
     {
-      name: '988 Suicide & Crisis Lifeline',
+      name: t('crisisModal.resources.988.name'),
       phone: '988',
-      description: '24/7 crisis support and suicide prevention',
+      description: t('crisisModal.resources.988.description'),
       icon: Phone,
       action: () => window.open('tel:988'),
     },
     {
-      name: 'Crisis Text Line',
-      phone: 'Text HOME to 741741',
-      description: '24/7 crisis support via text messaging',
+      name: t('crisisModal.resources.textLine.name'),
+      phone: t('crisisModal.resources.textLine.phone', 'Text HOME to 741741'),
+      description: t('crisisModal.resources.textLine.description'),
       icon: MessageSquare,
       action: () => window.open('sms:741741?body=HOME'),
     },
     {
-      name: 'National Domestic Violence Hotline',
+      name: t('crisisModal.resources.dvHotline.name'),
       phone: '1-800-799-7233',
-      description: '24/7 support for domestic violence situations',
+      description: t('crisisModal.resources.dvHotline.description'),
       icon: Heart,
       action: () => window.open('tel:18007997233'),
     },
     {
-      name: 'SAMHSA National Helpline',
+      name: t('crisisModal.resources.samhsa.name'),
       phone: '1-800-662-4357',
-      description: '24/7 treatment referral and information service',
+      description: t('crisisModal.resources.samhsa.description'),
       icon: Clock,
       action: () => window.open('tel:18006624357'),
     },
@@ -52,24 +54,24 @@ export const CrisisResourcesModal: React.FC<CrisisResourcesModalProps> = ({
 
   const immediateCopingStrategies = [
     {
-      title: '5-4-3-2-1 Grounding',
-      description: 'Name 5 things you see, 4 you can touch, 3 you hear, 2 you smell, 1 you taste',
+      title: t('crisisModal.strategies.grounding54321.title'),
+      description: t('crisisModal.strategies.grounding54321.description'),
     },
     {
-      title: '4-4-6 Breathing',
-      description: 'Breathe in for 4 counts, hold for 4, breathe out for 6. Repeat 10 times.',
+      title: t('crisisModal.strategies.breathing446.title'),
+      description: t('crisisModal.strategies.breathing446.description'),
     },
     {
-      title: 'Cold Water Reset',
-      description: 'Splash cold water on your face or hold ice cubes to reset your nervous system',
+      title: t('crisisModal.strategies.coldWater.title'),
+      description: t('crisisModal.strategies.coldWater.description'),
     },
     {
-      title: 'Physical Movement',
-      description: 'Do jumping jacks, push-ups, or go for a walk to release tension',
+      title: t('crisisModal.strategies.movement.title'),
+      description: t('crisisModal.strategies.movement.description'),
     },
     {
-      title: 'Safe Person',
-      description: 'Call or text one person who makes you feel safe and supported',
+      title: t('crisisModal.strategies.safePerson.title'),
+      description: t('crisisModal.strategies.safePerson.description'),
     },
   ];
 
@@ -79,17 +81,17 @@ export const CrisisResourcesModal: React.FC<CrisisResourcesModalProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2 text-xl">
             <AlertTriangle className="h-6 w-6 text-red-500" />
-            <span>Crisis Support Resources</span>
+            <span>{t('crisisModal.title')}</span>
           </DialogTitle>
           <DialogDescription>
-            Available 24/7 when you need immediate support
+            {t('crisisModal.subtitle')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Crisis Hotlines */}
           <div>
-            <h3 className="text-lg font-semibold mb-3">24/7 Crisis Hotlines</h3>
+            <h3 className="text-lg font-semibold mb-3">{t('crisisModal.hotlinesTitle')}</h3>
             <div className="grid gap-3">
               {crisisResources.map((resource, index) => {
                 const IconComponent = resource.icon;
@@ -117,7 +119,7 @@ export const CrisisResourcesModal: React.FC<CrisisResourcesModalProps> = ({
 
           {/* Immediate Coping Strategies */}
           <div>
-            <h3 className="text-lg font-semibold mb-3">Right Now: Things You Can Do</h3>
+            <h3 className="text-lg font-semibold mb-3">{t('crisisModal.strategiesTitle')}</h3>
             <div className="grid gap-3">
               {immediateCopingStrategies.map((strategy, index) => (
                 <Card key={index}>
@@ -136,9 +138,8 @@ export const CrisisResourcesModal: React.FC<CrisisResourcesModalProps> = ({
           <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
             <CardContent className="pt-6">
               <p className="text-sm">
-                <strong>Remember:</strong> If you're in immediate danger, call 911 or go to your nearest emergency room. 
-                These intense feelings will pass - you've survived difficult moments before, and you can get through this one too.
-                You matter, and there are people who want to help you.
+                <strong>{t('crisisModal.rememberLabel')}</strong>{' '}
+                {t('crisisModal.rememberText')}
               </p>
             </CardContent>
           </Card>
@@ -146,7 +147,7 @@ export const CrisisResourcesModal: React.FC<CrisisResourcesModalProps> = ({
 
         <div className="flex justify-end space-x-2 pt-4">
           <Button onClick={onClose} variant="outline">
-            Close
+            {t('crisisModal.close')}
           </Button>
         </div>
       </DialogContent>
