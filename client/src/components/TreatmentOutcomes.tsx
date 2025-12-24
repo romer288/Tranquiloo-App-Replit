@@ -368,12 +368,34 @@ const TreatmentOutcomes: React.FC<TreatmentOutcomesProps> = ({
                     className="stroke-muted/30"
                     vertical={false}
                   />
-                  <XAxis 
+                  {/* <XAxis 
                     dataKey="period" 
                     axisLine={false}
                     tickLine={false}
                     className="text-xs text-muted-foreground"
-                  />
+                  /> */}
+                  <XAxis
+  dataKey="period"
+  axisLine={false}
+  tickLine={false}
+  interval={0}
+  height={60}
+  tickMargin={10}
+  tick={({ x, y, payload }) => (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={16}
+        textAnchor="end"
+        transform="rotate(-35)"
+        className="text-xs fill-muted-foreground"
+      >
+        {payload.value}
+      </text>
+    </g>
+  )}
+/>
                   <YAxis 
                     domain={[0, 10]}
                     axisLine={false}

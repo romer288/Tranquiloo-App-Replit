@@ -162,7 +162,9 @@ const TreatmentResources = () => {
       const { downloadSummaryReport } = await import('@/services/summaryReportService');
       downloadSummaryReport(summaries, summariesData.goals || [], allAnalyses, {
         fileName: 'conversation-summary',
-        title: 'Conversation Summary & Intervention Report'
+        title: t('reports.conversationSummaryTitle', 'Conversation Summary & Intervention Report'),
+        language,
+        t,
       });
       
       toast({
@@ -180,7 +182,7 @@ const TreatmentResources = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16 md:pb-0 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 pb-16 pt-3 md:pb-0 overflow-x-hidden">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-6">
         <div className="max-w-screen-sm sm:max-w-screen-md mx-auto w-full">
@@ -205,7 +207,7 @@ const TreatmentResources = () => {
         </div>
       </div>
 
-      <div className="max-w-[390px] sm:max-w-screen-md mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 overflow-hidden">
+      <div className="max-w-[390px] sm:max-w-screen-lg mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 overflow-hidden">
         {/* Treatment Status */}
         <Card className="p-6 mb-8 w-full overflow-hidden">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full">

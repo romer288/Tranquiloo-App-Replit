@@ -115,7 +115,7 @@ const FindTherapist = () => {
   if (step === 'therapist-check') {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="bg-white border-b border-gray-200 px-8 py-4">
+        <div className="bg-white border-b border-gray-200 px-8 pt-6 pb-3">
           <h1 className="text-xl font-semibold text-gray-900">{t('therapist.connectTherapist')}</h1>
         </div>
         <div className="max-w-4xl mx-auto px-8 py-12">

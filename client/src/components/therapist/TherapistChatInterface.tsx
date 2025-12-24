@@ -140,7 +140,7 @@ const TherapistChatInterface: React.FC<TherapistChatInterfaceProps> = ({
                   message.sender === 'therapist' ? 'justify-end' : 'justify-start'
                 }`}
               >
-                <div className={`flex gap-3 max-w-[80%] ${
+                <div className={`flex gap-3 max-w-full ${
                   message.sender === 'therapist' ? 'flex-row-reverse' : 'flex-row'
                 }`}>
                   <div className="flex-shrink-0">

@@ -36,7 +36,9 @@ const ContactTherapist = () => {
 
       downloadSummaryReport([], [], [], {
         fileName: 'anxiety-data-package',
-        title: 'Anxiety Data & Intervention Summary'
+        title: t('reports.anxietyDataTitle', 'Anxiety Data & Intervention Summary'),
+        language,
+        t,
       });
     } catch (error) {
       toast({

@@ -252,7 +252,7 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
                     className="stroke-muted/50"
                     vertical={false}
                   />
-                  <XAxis
+                  {/* <XAxis
                     dataKey="date"
                     height={80}
                     interval="preserveStartEnd"
@@ -260,7 +260,31 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
                     axisLine={false}
                     tickLine={false}
                     className="text-xs text-muted-foreground"
-                  />
+                  /> */}
+<XAxis
+  dataKey="date"
+  axisLine={false}
+  tickLine={false}
+  className="text-xs text-muted-foreground"
+  interval={0}
+  height={60}
+  tickMargin={10}
+  tick={({ x, y, payload }) => {
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text
+          dy={16}
+          textAnchor={isMobile ? "end" : "middle"}
+          transform={isMobile ? "rotate(-35)" : undefined}
+          className="text-xs fill-muted-foreground"
+        >
+          {payload.value}
+        </text>
+      </g>
+    );
+  }}
+    />
                   <YAxis 
                     axisLine={false}
                     tickLine={false}
@@ -417,13 +441,35 @@ const MonthlyChartsSection: React.FC<MonthlyChartsSectionProps> = ({
                      className="stroke-muted/30"
                      vertical={false}
                    />
-                   <XAxis 
+                   {/* <XAxis 
                      dataKey="date" 
                      axisLine={false}
                      tickLine={false}
                      className="text-xs text-muted-foreground"
                      interval={0}
-                   />
+                   /> */}
+                   <XAxis
+  dataKey="date"
+  axisLine={false}
+  tickLine={false}
+  interval={0}
+  height={60}
+  tickMargin={10}
+  tick={({ x, y, payload }) => (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={16}
+        textAnchor="end"
+        transform="rotate(-35)"
+        className="text-xs fill-muted-foreground"
+      >
+        {payload.value}
+      </text>
+    </g>
+  )}
+/>
                    <YAxis 
                      axisLine={false}
                      tickLine={false}

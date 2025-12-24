@@ -6,6 +6,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Button } from '@/components/ui/button';
 import { ensureTriggersArray } from '@/utils/analyticsDataProcessor';
 import { useLanguage } from '@/context/LanguageContext';
+import { translateInterventionLabel } from '@/utils/anxiety/interventions';
 
 interface Analysis {
   created_at: string;
@@ -27,6 +28,25 @@ interface Props {
 type TriggerStat = { name: string; count: number };
 type TherapyStat = { name: string; count: number; adherence: '✔' | 'Partial' | '✖' };
 
+const normalizeTriggerToken = (raw: string): string => {
+  const trimmed = String(raw ?? '').trim();
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
+};
+
+const renderTriggerLabel = (
+  raw: string,
+  t: (key: string, fallback?: string) => string
+): string => {
+  const token = normalizeTriggerToken(raw);
+  if (token.startsWith('trigger.')) {
+    return t(token, token);
+  }
+  return token;
+};
+
 interface SummaryContent {
   id: string;
   scale: Period;
@@ -47,18 +67,18 @@ interface SummaryContent {
   homework: string;
 }
 
-const formatDate = (date: Date) =>
-  new Intl.DateTimeFormat('en-US', {
+const formatDate = (date: Date, locale: string) =>
+  new Intl.DateTimeFormat(locale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
   }).format(date);
 
-const formatRange = (start: Date, end?: Date) => {
+const formatRange = (start: Date, locale: string, end?: Date) => {
   if (!end || start.toDateString() === end.toDateString()) {
-    return formatDate(start);
+    return formatDate(start, locale);
   }
-  return `${formatDate(start)} — ${formatDate(end)}`;
+  return `${formatDate(start, locale)} — ${formatDate(end, locale)}`;
 };
 
 const getPeriodKey = (date: Date, period: Period) => {
@@ -90,7 +110,8 @@ const sortDesc = <T,>(arr: T[], getter: (item: T) => number) =>
 const buildSummaries = (
   analyses: Analysis[],
   period: Period,
-  t: (key: string, fallback?: string) => string
+  t: (key: string, fallback?: string) => string,
+  locale: string
 ): SummaryContent[] => {
   if (!Array.isArray(analyses) || analyses.length === 0) return [];
 
@@ -128,9 +149,9 @@ const buildSummaries = (
         const previousAverage = previousGroup.reduce((sum, a) => sum + (a.anxietyLevel ?? 0), 0) / previousGroup.length;
         const delta = Number((average - previousAverage).toFixed(1));
         if (delta > 0) {
-          trendLabel = `↑ +${delta} vs prior`;
+          trendLabel = t('interventions.trend.upVsPrior', '↑ {delta} vs prior').replace('{delta}', `+${delta}`);
         } else if (delta < 0) {
-          trendLabel = `↓ ${delta} vs prior`;
+          trendLabel = t('interventions.trend.downVsPrior', '↓ {delta} vs prior').replace('{delta}', `${delta}`);
         } else {
           trendLabel = t('interventions.progressStable', 'No change vs prior');
         }
@@ -142,7 +163,7 @@ const buildSummaries = (
       const normalizedTriggers = ensureTriggersArray(analysis.triggers);
       normalizedTriggers.forEach((trigger) => {
         if (!trigger) return;
-        const normalized = trigger.trim();
+        const normalized = normalizeTriggerToken(trigger);
         if (!normalized) return;
         triggerCounts.set(normalized, (triggerCounts.get(normalized) ?? 0) + 1);
       });
@@ -175,18 +196,32 @@ const buildSummaries = (
       }));
 
     const topTrigger = triggers[0]?.name;
+    const topTriggerLabel = topTrigger ? renderTriggerLabel(topTrigger, t) : undefined;
     const avgSeverity = average.toFixed(1);
 
-    const patientProblem = topTrigger
-      ? `Patient experienced heightened anxiety around ${topTrigger}. Severity averaged ${avgSeverity}/10.`
-      : `Patient reported anxiety averaging ${avgSeverity}/10 without clear trigger.`;
+    const patientProblem = topTriggerLabel
+      ? t(
+          'interventions.patientProblem.withTrigger',
+          'Patient experienced heightened anxiety around {trigger}. Severity averaged {avg}/10.'
+        )
+          .replace('{trigger}', topTriggerLabel)
+          .replace('{avg}', avgSeverity)
+      : t(
+          'interventions.patientProblem.noTrigger',
+          'Patient reported anxiety averaging {avg}/10 without clear trigger.'
+        ).replace('{avg}', avgSeverity);
 
     const progressDirection = trendLabel.startsWith('↓')
       ? t('interventions.progressImproving', 'Improving')
       : trendLabel.startsWith('↑')
         ? t('interventions.progressNeedsSupport', 'Needs support')
         : t('interventions.progressStable', 'Stable');
-    const progress = `${progressDirection}: Immediate response ${trendLabel.toLowerCase()}.`;
+    const progress = t(
+      'interventions.progressSummary',
+      '{direction}: Immediate response {trend}.'
+    )
+      .replace('{direction}', progressDirection)
+      .replace('{trend}', trendLabel);
 
     const clinicalNotes = ordered
       .map((analysis) => analysis.personalizedResponse?.trim())
@@ -201,13 +236,17 @@ const buildSummaries = (
       )
     );
 
-    const homeworkFromTherapy = therapies[0]?.name || t('interventions.homeworkFallback');
-    const homework = `Focus task: ${homeworkFromTherapy}. Reinforce practice 3×/day or as assigned.`;
+    const homeworkFromTherapyRaw = therapies[0]?.name || t('interventions.homeworkFallback');
+    const homeworkFromTherapy = translateInterventionLabel(homeworkFromTherapyRaw, t);
+    const homework = t(
+      'interventions.homeworkTemplate',
+      'Focus task: {task}. Reinforce practice 3×/day or as assigned.'
+    ).replace('{task}', homeworkFromTherapy);
 
     return {
       id: `${period}-${key}`,
       scale: period,
-      rangeLabel: formatRange(startDate, period === 'session' ? undefined : endDate),
+      rangeLabel: formatRange(startDate, locale, period === 'session' ? undefined : endDate),
       snapshot: {
         sessions,
         average,
@@ -227,7 +266,8 @@ const buildSummaries = (
 };
 
 const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const locale = language === 'es' ? 'es-ES' : 'en-US';
   const sortedAnalyses = useMemo(
     () =>
       Array.isArray(analyses)
@@ -240,10 +280,22 @@ const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
 
   const [view, setView] = useState<'overview' | 'session' | 'week' | 'month' | 'year'>('overview');
 
-  const sessionSummaries = useMemo(() => buildSummaries(sortedAnalyses, 'session', t).slice(0, 5), [sortedAnalyses, t]);
-  const weeklySummaries = useMemo(() => buildSummaries(sortedAnalyses, 'week', t).slice(0, 4), [sortedAnalyses, t]);
-  const monthlySummaries = useMemo(() => buildSummaries(sortedAnalyses, 'month', t).slice(0, 4), [sortedAnalyses, t]);
-  const yearlySummaries = useMemo(() => buildSummaries(sortedAnalyses, 'year', t).slice(0, 3), [sortedAnalyses, t]);
+  const sessionSummaries = useMemo(
+    () => buildSummaries(sortedAnalyses, 'session', t, locale).slice(0, 5),
+    [sortedAnalyses, t, locale]
+  );
+  const weeklySummaries = useMemo(
+    () => buildSummaries(sortedAnalyses, 'week', t, locale).slice(0, 4),
+    [sortedAnalyses, t, locale]
+  );
+  const monthlySummaries = useMemo(
+    () => buildSummaries(sortedAnalyses, 'month', t, locale).slice(0, 4),
+    [sortedAnalyses, t, locale]
+  );
+  const yearlySummaries = useMemo(
+    () => buildSummaries(sortedAnalyses, 'year', t, locale).slice(0, 3),
+    [sortedAnalyses, t, locale]
+  );
 
   const renderSummary = (summary: SummaryContent) => (
     <div key={summary.id} className="border rounded-lg p-4 bg-white space-y-3">
@@ -264,7 +316,11 @@ const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
           <p className="font-medium text-gray-900">{t('interventions.snapshot')}</p>
           <p>{summary.patientProblem}</p>
           <p className="mt-1 text-gray-600">
-            {t('interventions.avgAnxiety')} {summary.snapshot.average}/10 (range {summary.snapshot.min}–{summary.snapshot.max}).
+            {t('interventions.avgAnxietyRange', '{label} {avg}/10 (range {min}–{max}).')
+              .replace('{label}', t('interventions.avgAnxiety'))
+              .replace('{avg}', String(summary.snapshot.average))
+              .replace('{min}', String(summary.snapshot.min))
+              .replace('{max}', String(summary.snapshot.max))}
           </p>
         </div>
         <div>
@@ -280,7 +336,7 @@ const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
             <ul className="list-disc ml-6">
               {summary.triggers.map((trigger) => (
                 <li key={trigger.name}>
-                  {trigger.name} ({trigger.count})
+                  {renderTriggerLabel(trigger.name, t)} ({trigger.count})
                 </li>
               ))}
             </ul>
@@ -294,7 +350,10 @@ const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
             <ul className="list-disc ml-6">
               {summary.therapies.map((therapy) => (
                 <li key={therapy.name}>
-                  {therapy.name} ({therapy.count}×) — {t('interventions.adherence')} {therapy.adherence}
+                  {translateInterventionLabel(therapy.name, t)} ({therapy.count}×) — {t('interventions.adherence')}{' '}
+                  {therapy.adherence === 'Partial'
+                    ? t('interventions.adherence.partial', 'Partial')
+                    : therapy.adherence}
                 </li>
               ))}
             </ul>

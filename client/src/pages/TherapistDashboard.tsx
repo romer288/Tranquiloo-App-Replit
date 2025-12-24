@@ -50,6 +50,7 @@ import GoalProgressSection from "@/components/analytics/GoalProgressSection";
 import TriggerAnalysisTable from "@/components/analytics/TriggerAnalysisTable";
 import InterventionSummariesSection from "@/components/analytics/InterventionSummariesSection";
 import { downloadSummaryReport, generateSummaryReport } from "@/services/summaryReportService";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   processTriggerData,
   processSeverityDistribution,
@@ -150,6 +151,7 @@ interface TreatmentReportInsights {
 const TherapistDashboard: React.FC = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const { language, t } = useLanguage();
   const navigate = useNavigate();
   const [searchEmail, setSearchEmail] = useState("");
   const [searchCode, setSearchCode] = useState("");
@@ -307,9 +309,11 @@ const TherapistDashboard: React.FC = () => {
   const aiNarrative = React.useMemo(
     () =>
       generateSummaryReport(summaries, goals, analyses, {
-        title: "Treatment Report Analysis",
+        title: t("reports.treatmentReportTitle", "Treatment Report Analysis"),
+        language,
+        t,
       }),
-    [summaries, goals, analyses],
+    [summaries, goals, analyses, language, t],
   );
 
   const treatmentReportInsights = React.useMemo<TreatmentReportInsights | null>(() => {
@@ -1633,7 +1637,9 @@ className="flex w-full items-center gap-3 justify-start rounded-lg px-4 py-3 tex
                               variant="outline"
                               onClick={() =>
                                 downloadSummaryReport(summaries, goals, analyses, {
-                                  title: "Treatment Report Analysis",
+                                  title: t("reports.treatmentReportTitle", "Treatment Report Analysis"),
+                                  language,
+                                  t,
                                 })
                               }
                             >
@@ -1885,7 +1891,7 @@ className="flex w-full items-center gap-3 justify-start rounded-lg px-4 py-3 tex
         </Tabs>
       </div>
       <Sheet open={vanessaOpen} onOpenChange={setVanessaOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-xl">
+        <SheetContent side="right" className="w-full sm:max-w-xl overflow-auto">
           <SheetHeader>
             <SheetTitle>Vanessa – AI Treatment Assistant</SheetTitle>
           </SheetHeader>

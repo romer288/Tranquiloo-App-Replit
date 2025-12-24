@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 
-type Language = "en" | "es";
+export type Language = "en" | "es";
 
 type Translations = Record<string, string>;
 
@@ -44,6 +44,12 @@ export const translationMap: Record<Language, Translations> = {
     "lang.switch": "Language",
     "main.LookingForPatientSupport":
       "Looking for patient support? Sign in here",
+    // Trigger labels (token-style triggers)
+    "trigger.generalWorry": "General worry",
+    "trigger.panicAttack": "Panic attack",
+    "trigger.physicalSymptoms": "Physical symptoms",
+    "trigger.publicSpeaking": "Public speaking",
+    "trigger.socialSituations": "Social situations",
     "analytics.monthly.sampleData.june": "June 2025",
     "analytics.monthly.sampleData.july": "July 2025",
     // Auth common
@@ -575,6 +581,11 @@ export const translationMap: Record<Language, Translations> = {
       "Voice features not available in this browser. You can still chat by typing.",
     "chat.header.mobileHistory": "History",
     "chat.header.badge.es": "Español",
+    "chat.welcome.vanessa":
+      "Hello! I'm Vanessa, your advanced AI anxiety companion. I'm here to provide you with clinically-informed support using the latest therapeutic approaches. How are you feeling today?",
+    "chat.error.tryAgain":
+      "I'm having trouble responding right now. Please try again in a moment",
+
     // Appointments
     "appointments.back": "Back",
     "appointments.title": "My Appointments",
@@ -780,6 +791,17 @@ export const translationMap: Record<Language, Translations> = {
     "interventions.progressImproving": "Improving",
     "interventions.progressNeedsSupport": "Needs support",
     "interventions.progressStable": "Stable",
+    "interventions.trend.upVsPrior": "↑ {delta} vs prior",
+    "interventions.trend.downVsPrior": "↓ {delta} vs prior",
+    "interventions.patientProblem.withTrigger":
+      "Patient experienced heightened anxiety around {trigger}. Severity averaged {avg}/10.",
+    "interventions.patientProblem.noTrigger":
+      "Patient reported anxiety averaging {avg}/10 without clear trigger.",
+    "interventions.progressSummary": "{direction}: Immediate response {trend}.",
+    "interventions.avgAnxietyRange": "{label} {avg}/10 (range {min}–{max}).",
+    "interventions.homeworkTemplate":
+      "Focus task: {task}. Reinforce practice 3×/day or as assigned.",
+    "interventions.adherence.partial": "Partial",
     // Treatment insights blocks
     "treatment.insights.title": "Treatment Insights for Therapists",
     "treatment.insights.currentTrend": "Current Trend",
@@ -978,6 +1000,19 @@ export const translationMap: Record<Language, Translations> = {
       "Contact crisis hotline immediately",
     "anxietyAnalysis.interventions.emergencyServices":
       "Reach out to emergency services if needed",
+    "anxietyAnalysis.interventions.boxBreathing": "Box breathing",
+    "anxietyAnalysis.interventions.scriptedOpeners": "Scripted openers",
+    "anxietyAnalysis.interventions.twoMinuteGroundReframe":
+      "2-minute ground + reframe",
+    "anxietyAnalysis.interventions.sensory54321": "5-4-3-2-1 sensory",
+    "anxietyAnalysis.interventions.outcomeLaddering": "Outcome laddering",
+    "anxietyAnalysis.interventions.imperfectReps": "Imperfect reps",
+    "anxietyAnalysis.interventions.worryTimeBlocks": "Worry time blocks",
+    "anxietyAnalysis.interventions.sleepWindDown": "Sleep wind-down",
+    "anxietyAnalysis.interventions.bodyScan": "Body scan",
+    "anxietyAnalysis.interventions.scheduledWorryTime": "Scheduled worry time",
+    "anxietyAnalysis.interventions.thoughtDefusion": "Thought defusion",
+    "anxietyAnalysis.interventions.stimulusControl": "Stimulus control",
     // Avatar
     "avatar.loadingDisabled":
       "3D Avatar Loading Temporarily Disabled During Migration",
@@ -1452,6 +1487,12 @@ export const translationMap: Record<Language, Translations> = {
 "therapistLinking.toast.errorDesc": "Error al enviar solicitud de conexión: {error}",
     "main.LookingForPatientSupport":
       "¿Buscas apoyo para pacientes? Inicia sesión aquí",
+    // Trigger labels (token-style triggers)
+    "trigger.generalWorry": "Preocupación general",
+    "trigger.panicAttack": "Ataque de pánico",
+    "trigger.physicalSymptoms": "Síntomas físicos",
+    "trigger.publicSpeaking": "Hablar en público",
+    "trigger.socialSituations": "Situaciones sociales",
     "brand.title": "Compañero de Ansiedad",
     "brand.appName": "Tranquiloo",
     "nav.dashboard": "Panel",
@@ -2012,6 +2053,11 @@ export const translationMap: Record<Language, Translations> = {
       "Las funciones de voz no están disponibles en este navegador. Aún puedes chatear escribiendo.",
     "chat.header.mobileHistory": "Historial",
     "chat.header.badge.es": "Español",
+    "chat.welcome.vanessa":
+      "¡Hola! Soy Vanessa, tu compañera avanzada de IA para la ansiedad. Estoy aquí para brindarte apoyo con base clínica usando enfoques terapéuticos actualizados. ¿Cómo te sientes hoy?",
+    "chat.error.tryAgain":
+      "Estoy teniendo problemas para responder en este momento. Por favor inténtalo de nuevo en un momento",
+
     // Appointments
     "appointments.back": "Volver",
     "appointments.title": "Mis citas",
@@ -2218,6 +2264,17 @@ export const translationMap: Record<Language, Translations> = {
     "interventions.progressImproving": "Mejorando",
     "interventions.progressNeedsSupport": "Requiere apoyo",
     "interventions.progressStable": "Estable",
+    "interventions.trend.upVsPrior": "↑ {delta} vs periodo anterior",
+    "interventions.trend.downVsPrior": "↓ {delta} vs periodo anterior",
+    "interventions.patientProblem.withTrigger":
+      "El paciente experimentó ansiedad elevada alrededor de {trigger}. La severidad promedió {avg}/10.",
+    "interventions.patientProblem.noTrigger":
+      "El paciente reportó ansiedad promedio de {avg}/10 sin un detonante claro.",
+    "interventions.progressSummary": "{direction}: Respuesta inmediata {trend}.",
+    "interventions.avgAnxietyRange": "{label} {avg}/10 (rango {min}–{max}).",
+    "interventions.homeworkTemplate":
+      "Tarea principal: {task}. Refuerza la práctica 3×/día o según lo indicado.",
+    "interventions.adherence.partial": "Parcial",
     // Treatment insights blocks
     "treatment.insights.title": "Perspectivas de tratamiento para terapeutas",
     "treatment.insights.currentTrend": "Tendencia actual",
@@ -2419,6 +2476,19 @@ export const translationMap: Record<Language, Translations> = {
       "Contacta la línea de crisis inmediatamente",
     "anxietyAnalysis.interventions.emergencyServices":
       "Contacta los servicios de emergencia si es necesario",
+    "anxietyAnalysis.interventions.boxBreathing": "Respiración en caja",
+    "anxietyAnalysis.interventions.scriptedOpeners": "Frases de apertura preparadas",
+    "anxietyAnalysis.interventions.twoMinuteGroundReframe":
+      "Anclaje de 2 minutos + replanteamiento",
+    "anxietyAnalysis.interventions.sensory54321": "Técnica sensorial 5-4-3-2-1",
+    "anxietyAnalysis.interventions.outcomeLaddering": "Escalera de resultados",
+    "anxietyAnalysis.interventions.imperfectReps": "Repeticiones imperfectas",
+    "anxietyAnalysis.interventions.worryTimeBlocks": "Bloques de tiempo para preocuparse",
+    "anxietyAnalysis.interventions.sleepWindDown": "Rutina de relajación antes de dormir",
+    "anxietyAnalysis.interventions.bodyScan": "Escaneo corporal",
+    "anxietyAnalysis.interventions.scheduledWorryTime": "Tiempo de preocupación programado",
+    "anxietyAnalysis.interventions.thoughtDefusion": "Defusión de pensamientos",
+    "anxietyAnalysis.interventions.stimulusControl": "Control de estímulos",
     // Avatar
     "avatar.loadingDisabled":
       "Carga de Avatar 3D Temporalmente Deshabilitada Durante la Migración",
@@ -2736,6 +2806,15 @@ export const translationMap: Record<Language, Translations> = {
     "goalForm.weekly": "Semanal",
     "goalForm.monthly": "Mensual",
   },
+};
+
+export const createTranslator = (language: Language) => {
+  return (key: string, fallback?: string) => {
+    const value = translationMap[language]?.[key];
+    if (value) return value;
+    const defaultVal = translationMap.en[key];
+    return defaultVal || fallback || key;
+  };
 };
 
 interface LanguageContextValue {
