@@ -1633,15 +1633,10 @@ Key therapeutic themes addressed:
             });
           }
           
-          // Check if email is verified (enforce for all roles)
+          // Auto-verify legacy accounts to remove email verification requirement
           if (!existingProfile.emailVerified) {
-            return res.status(403).json({
-              success: false,
-              error: { 
-                code: 'EMAIL_NOT_VERIFIED', 
-                message: 'Please verify your email address before signing in. Check your email for verification link.' 
-              }
-            });
+            await storage.updateProfileVerification(existingProfile.id, null, true);
+            existingProfile.emailVerified = true;
           }
           
           // Enforce role match; do not allow cross-role sign-in
@@ -1722,104 +1717,13 @@ Key therapeutic themes addressed:
         role: role,
         hashedPassword: hashedPassword,
         patientCode: patientCode,
-        emailVerified: false,
+        emailVerified: true,
         authMethod: 'email'
       };
       
       try {
         const createdProfile = await storage.createProfile(newUser);
         console.log('Created new user profile:', createdProfile.id);
-        
-        // Generate email verification token
-        const verificationToken = randomBytes(32).toString('hex');
-        await storage.updateProfileVerification(createdProfile.id, verificationToken);
-        console.log('[Auth] Verification token generated/ stored');
-        
-        // Send verification email for both therapists and patients
-        // Get correct protocol/host from proxy headers for public URL
-        const forwardedProto = (req.headers['x-forwarded-proto'] as string)?.split(',')[0];
-        const forwardedHost = req.headers['x-forwarded-host'] as string;
-        const protocol = forwardedProto || req.protocol;
-        const host = forwardedHost || req.get('host');
-        const verificationUrl = `${protocol}://${host}/verify-email?token=${verificationToken}`;
-        console.log('[Auth] Verification URL:', verificationUrl);
-        
-        if (role === 'therapist') {
-          // Send therapist verification email with dashboard access instructions
-          console.log('[Auth] Sending therapist verification email');
-          await emailService.sendTherapistVerificationEmail(
-            createdProfile.email!,
-            req.body.firstName || 'Therapist',
-            verificationToken,
-            verificationUrl
-          );
-          
-          // Return message that verification is required
-          return res.json({
-            success: true,
-            message: 'Therapist account created successfully. Please check your email to verify your account before signing in.'
-          });
-        } else {
-          // Create verification email for patients
-          console.log('[Auth] Queuing patient verification email notification');
-          const verificationUrl = `${req.protocol}://${req.get('host')}/verify-email?token=${verificationToken}`;
-          const emailContent = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #10b981; margin: 0;">Welcome to Tranquiloo</h1>
-                <p style="color: #6b7280; font-size: 16px;">Your mental health companion</p>
-              </div>
-              
-              <div style="background: #f9fafb; padding: 25px; border-radius: 8px; margin-bottom: 25px;">
-                <h2 style="color: #374151; margin-top: 0;">Please verify your email address</h2>
-                <p style="color: #6b7280; line-height: 1.6;">
-                  Thank you for creating an account with Tranquil Support. To ensure the security of your account 
-                  and enable all features, please verify your email address by clicking the button below.
-                </p>
-                
-                <div style="text-align: center; margin: 25px 0;">
-                  <a href="${verificationUrl}" 
-                     style="display: inline-block; background: #10b981; color: white; padding: 12px 30px; 
-                            text-decoration: none; border-radius: 6px; font-weight: 600;">
-                    Verify Email Address
-                  </a>
-                </div>
-                
-                <p style="color: #9ca3af; font-size: 14px;">
-                  If the button doesn't work, copy and paste this link into your browser:<br>
-                  <span style="word-break: break-all;">${verificationUrl}</span>
-                </p>
-              </div>
-              
-              <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; color: #6b7280; font-size: 14px;">
-                <p><strong>What's next?</strong></p>
-                <ul style="line-height: 1.6;">
-                  <li>Complete your profile setup</li>
-                  <li>Start tracking your anxiety and mood</li>
-                  <li>Connect with AI companions for support</li>
-                  <li>Access therapeutic resources and tools</li>
-                </ul>
-                
-                <p style="margin-top: 20px;">
-                  <small>This email was sent to ${createdProfile.email}. If you didn't create this account, 
-                  please ignore this email.</small>
-                </p>
-              </div>
-            </div>
-          `;
-
-          await storage.createEmailNotification({
-            toEmail: createdProfile.email!,
-            subject: 'Please verify your email - Tranquiloo',
-            htmlContent: emailContent,
-            emailType: 'email_verification',
-            metadata: JSON.stringify({
-              userId: createdProfile.id,
-              verificationToken: verificationToken
-            })
-          });
-          console.log('[Auth] Email notification queued');
-        }
         
         return res.json({
           success: true,
@@ -1828,10 +1732,10 @@ Key therapeutic themes addressed:
             email: createdProfile.email,
             username: createdProfile.email?.split('@')[0],
             role: createdProfile.role,
-            emailVerified: false,
+            emailVerified: true,
             patientCode: createdProfile.patientCode
           },
-          message: 'Account created successfully. Please check your email to verify your account.'
+          message: 'Account created successfully.'
         });
       } catch (err) {
         console.error('Profile creation failed:', err);
@@ -2240,10 +2144,14 @@ Key therapeutic themes addressed:
       // origin already computed above
 
       if (existingProfile) {
-        // Check if email is verified
+        // Auto-verify existing profiles to avoid verification gate
         if (!existingProfile.emailVerified) {
-          // Redirect to login with verification needed message
-          return res.redirect(`${origin}/login?error=verification_required&email=${encodeURIComponent(googleUser.email)}`);
+          const verifiedProfile = await storage.updateProfileVerification(existingProfile.id, null, true);
+          if (verifiedProfile) {
+            existingProfile = verifiedProfile;
+          } else {
+            existingProfile.emailVerified = true;
+          }
         }
 
         // Enforce stored role; if mismatch, prefer profile role but do not error

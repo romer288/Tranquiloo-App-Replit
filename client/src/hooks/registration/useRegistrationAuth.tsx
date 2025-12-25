@@ -64,19 +64,10 @@ export const useRegistrationAuth = () => {
         formData.lastName
       );
       
-      // Check if email verification is needed (patients always need verification)
-      if (result.needsVerification) {
-        toast({
-          title: "Check Your Email",
-          description: `We sent a verification link to ${formData.email}. Please verify your email before signing in.`,
-        });
-        return { success: false, needsVerification: true };
-      }
-      
       if (result.success) {
         toast({
           title: "Registration Successful",
-          description: result.message || "Welcome! Please verify your email to finish setup.",
+          description: result.message || "Welcome! Your account is ready.",
         });
         return { success: true, user: result.user };
       } else {
@@ -107,17 +98,6 @@ export const useRegistrationAuth = () => {
       
       const result = await AuthService.signInWithEmail(email, password);
       console.log('Email signin result:', result);
-
-      // Check if email verification is needed
-      if (result.needsVerification) {
-        toast({
-          title: "Email Verification Required",
-          description: "Please check your email and click the verification link before signing in.",
-          variant: "destructive"
-        });
-        setIsLoading(false);
-        return { success: false, needsVerification: true };
-      }
 
       if (result.success && result.user) {
         console.log('🎉 AUTHENTICATION SUCCESS! User data received:', result.user);

@@ -75,7 +75,7 @@ const handleEmailSubmit = async (e: React.FormEvent) => {
 
       if (result.success) {
         if (isSignUp) {
-          alert('✅ Therapist account created! Please check your email and click the verification link before signing in.');
+          alert('✅ Therapist account created! You can sign in now.');
           setIsSignUp(false); // Switch to sign-in mode
           return;
         }
