@@ -99,7 +99,7 @@ const handleSignIn = async (e: React.FormEvent) => {
       console.log('Sign in response:', response.status, result);
       
       if (result.error && result.error.code === 'EMAIL_NOT_VERIFIED') {
-        navigate('/verify?redirect=/dashboard');
+        setSignInError(t('auth.verifyEmailFirst'));
         return;
       }
 

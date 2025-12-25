@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -22,10 +23,12 @@ const TherapistLogin: React.FC = () => {
     yearsExperience: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
   const { t } = useLanguage();
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
+    setAuthError('');
     
     try {
       // Redirect to Google OAuth with therapist role
@@ -95,7 +98,7 @@ const handleEmailSubmit = async (e: React.FormEvent) => {
         window.location.href = '/therapist-dashboard';
       } else {
         if (result.error?.code === 'EMAIL_NOT_VERIFIED') {
-          window.location.href = `/verify?redirect=${encodeURIComponent('/therapist-dashboard')}`;
+          setAuthError(t('auth.verifyEmailFirst'));
         } else if (result.error?.code === 'USER_NOT_FOUND') {
           alert('No therapist account found with this email. Please sign up first by clicking "Don\'t have a professional account? Apply now" below to create your therapist account.');
         } else if (result.error?.code === 'INVALID_CREDENTIALS') {
@@ -160,6 +163,11 @@ const handleEmailSubmit = async (e: React.FormEvent) => {
                   </div>
                 </div>
               </div>
+            )}
+            {authError && (
+              <Alert variant="destructive">
+                <AlertDescription>{authError}</AlertDescription>
+              </Alert>
             )}
 
             <Button
