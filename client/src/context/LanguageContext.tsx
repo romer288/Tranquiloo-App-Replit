@@ -644,6 +644,8 @@ export const translationMap: Record<Language, Translations> = {
     "analytics.triggers.relatedTrigger.healthConcerns": "health concerns",
     "analytics.triggers.relatedTrigger.financialStress": "financial stress",
     "analytics.triggers.relatedTrigger.relationshipIssues": "relationship issues",
+    // More triggers message
+    "analytics.triggers.moreTriggers": "more triggers requiring analysis",
     // Evidence line translations
     "analytics.triggers.evidenceLabel": "Evidence: Last episode",
     "analytics.triggers.severityScale": "/10",
@@ -669,6 +671,9 @@ export const translationMap: Record<Language, Translations> = {
     // Anxiety tracker
     "analytics.tracker.title": "Your Anxiety Analytics & Tracking",
     "analytics.tracker.emptyTitle": "Anxiety Analytics & Tracking",
+    "analytics.tracker.improving": "IMPROVING",
+    "analytics.tracker.worsening": "WORSENING",
+    "analytics.tracker.stable": "STABLE",
     "analytics.tracker.emptyDesc":
       "Start chatting to see your anxiety analytics and intervention tracking.",
     "analytics.tracker.startChat": "Start Chat Session",
@@ -2289,6 +2294,8 @@ export const translationMap: Record<Language, Translations> = {
     "analytics.triggers.relatedTrigger.healthConcerns": "preocupaciones de salud",
     "analytics.triggers.relatedTrigger.financialStress": "estrés financiero",
     "analytics.triggers.relatedTrigger.relationshipIssues": "problemas de relación",
+    // More triggers message
+    "analytics.triggers.moreTriggers": "más detonantes que requieren análisis",
     // Evidence line translations
     "analytics.triggers.evidenceLabel": "Evidencia: Último episodio",
     "analytics.triggers.severityScale": "/10",
@@ -2314,6 +2321,9 @@ export const translationMap: Record<Language, Translations> = {
     // Anxiety tracker
     "analytics.tracker.title": "Tus analíticas y seguimiento de ansiedad",
     "analytics.tracker.emptyTitle": "Analítica y seguimiento de ansiedad",
+    "analytics.tracker.improving": "MEJORANDO",
+    "analytics.tracker.worsening": "EMPEORANDO",
+    "analytics.tracker.stable": "ESTABLE",
     "analytics.tracker.emptyDesc":
       "Comienza a chatear para ver analíticas y seguimiento de intervenciones.",
     "analytics.tracker.startChat": "Iniciar sesión de chat",
