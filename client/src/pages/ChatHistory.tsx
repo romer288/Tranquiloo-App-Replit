@@ -72,23 +72,33 @@ const ChatHistory = () => {
 
   // Translation mapping for personalized responses from API
   const translatePersonalizedResponse = (response: string) => {
-    // For personalized responses, we handle common patterns that appear in AI-generated content
-    let translatedResponse = response;
+    // Check if this matches the "Noted pattern" format
+    const PATTERN_NOTE_REGEX =
+      /^Noted pattern: (.+?)\. Prioritize short nervous-system resets, then exposure with safety behaviors reduced by 20%\.$/i;
 
-    // Replace common patterns that appear in responses
-    const patternMappings: Record<string, string> = {
-      "Social + performance anxiety": "Ansiedad social y de rendimiento",
-      "Prioritize short nervous-system resets": "Priorizar restablecimientos cortos del sistema nervioso",
-      "exposure with safety behaviors reduced by 20%": "exposición con comportamientos de seguridad reducidos en un 20%",
-      "presentations, group settings": "presentaciones, entornos grupales",
-      "then exposure with safety behaviors reduced by 20%": "luego exposición con comportamientos de seguridad reducidos en un 20%",
-    };
+    const match = response.match(PATTERN_NOTE_REGEX);
+    if (match) {
+      const pattern = match[1] ?? '';
 
-    Object.entries(patternMappings).forEach(([english, translated]) => {
-      translatedResponse = translatedResponse.replace(new RegExp(english, 'g'), translated);
-    });
+      // Translate known trigger patterns
+      const translatePatternTriggers = (patternText: string): string => {
+        if (patternText === 'Social + performance anxiety (presentations, group settings)') {
+          return t('pattern.socialPerformanceAnxiety', patternText);
+        }
 
-    return translatedResponse;
+        // For other patterns, return as-is for now
+        // This can be expanded to handle more trigger translations
+        return patternText;
+      };
+
+      const translatedPattern = translatePatternTriggers(pattern);
+      const template = t('pattern.noteWithFocus', response);
+      return template.replace('{pattern}', translatedPattern);
+    }
+
+    // For other response types, return as-is
+    // This can be expanded to handle other AI-generated response patterns
+    return response;
   };
 
   const { data: sessionsData = [], isLoading: sessionsLoading, error: sessionsError } = useQuery({
