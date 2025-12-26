@@ -42,6 +42,55 @@ const ChatHistory = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
 
+  // Translation mapping for coping strategies from API
+  const translateCopingStrategy = (strategy: string) => {
+    const strategyMappings: Record<string, string> = {
+      "Box breathing": "anxietyAnalysis.interventions.boxBreathing",
+      "scripted openers": "anxietyAnalysis.interventions.scriptedOpeners",
+      "2-minute ground + reframe": "anxietyAnalysis.interventions.twoMinuteGroundReframe",
+      "5-4-3-2-1 sensory": "anxietyAnalysis.interventions.sensory54321",
+      "outcome laddering": "anxietyAnalysis.interventions.outcomeLaddering",
+      "imperfect reps": "anxietyAnalysis.interventions.imperfectReps",
+      "Worry time blocks": "anxietyAnalysis.interventions.worryTimeBlocks",
+      "sleep wind-down": "anxietyAnalysis.interventions.sleepWindDown",
+      "body scan": "anxietyAnalysis.interventions.bodyScan",
+      "Scheduled worry time": "anxietyAnalysis.interventions.scheduledWorryTime",
+      "thought defusion": "anxietyAnalysis.interventions.thoughtDefusion",
+      "stimulus control": "anxietyAnalysis.interventions.stimulusControl",
+    };
+
+    const translationKey = strategyMappings[strategy];
+    return translationKey ? t(translationKey) : strategy;
+  };
+
+  // Translation mapping for anxiety triggers from API
+  const translateAnxietyTrigger = (trigger: string) => {
+    // For now, return the trigger as-is since we don't have specific trigger translations
+    // This can be expanded if trigger translations are added to LanguageContext
+    return trigger;
+  };
+
+  // Translation mapping for personalized responses from API
+  const translatePersonalizedResponse = (response: string) => {
+    // For personalized responses, we handle common patterns that appear in AI-generated content
+    let translatedResponse = response;
+
+    // Replace common patterns that appear in responses
+    const patternMappings: Record<string, string> = {
+      "Social + performance anxiety": "Ansiedad social y de rendimiento",
+      "Prioritize short nervous-system resets": "Priorizar restablecimientos cortos del sistema nervioso",
+      "exposure with safety behaviors reduced by 20%": "exposición con comportamientos de seguridad reducidos en un 20%",
+      "presentations, group settings": "presentaciones, entornos grupales",
+      "then exposure with safety behaviors reduced by 20%": "luego exposición con comportamientos de seguridad reducidos en un 20%",
+    };
+
+    Object.entries(patternMappings).forEach(([english, translated]) => {
+      translatedResponse = translatedResponse.replace(new RegExp(english, 'g'), translated);
+    });
+
+    return translatedResponse;
+  };
+
   const { data: sessionsData = [], isLoading: sessionsLoading, error: sessionsError } = useQuery({
     queryKey: [`/api/users/${user?.id}/chat-sessions`],
     queryFn: async () => {
@@ -254,7 +303,7 @@ const ChatHistory = () => {
                           <div className="flex flex-wrap gap-1" data-testid={`triggers-${analysis.id}`}>
                             {(analysis.anxietyTriggers ?? []).map((trigger, index) => (
                               <Badge key={index} variant="outline" className="text-xs">
-                                {trigger}
+                                {translateAnxietyTrigger(trigger)}
                               </Badge>
                             ))}
                           </div>
@@ -267,7 +316,7 @@ const ChatHistory = () => {
                           <div className="flex flex-wrap gap-1" data-testid={`strategies-${analysis.id}`}>
                             {analysis.copingStrategies.map((strategy, index) => (
                               <Badge key={index} variant="secondary" className="text-xs">
-                                {strategy}
+                                {translateCopingStrategy(strategy)}
                               </Badge>
                             ))}
                           </div>
@@ -278,7 +327,7 @@ const ChatHistory = () => {
                         <div>
                           <h4 className="text-sm font-medium mb-2">{t('chatHistory.aiResponse')}:</h4>
                           <p className="text-sm text-muted-foreground bg-muted p-2 rounded" data-testid={`text-personalized-response-${analysis.id}`}>
-                            {analysis.personalizedResponse}
+                            {translatePersonalizedResponse(analysis.personalizedResponse)}
                           </p>
                         </div>
                       )}
