@@ -28,6 +28,24 @@ interface Props {
 type TriggerStat = { name: string; count: number };
 type TherapyStat = { name: string; count: number; adherence: '✔' | 'Partial' | '✖' };
 
+const TRIGGER_TRANSLATION_KEYS: Record<string, string> = {
+  'crowded rooms': 'trigger.crowdedRooms',
+  'group introductions': 'trigger.groupIntroductions',
+  'eye contact during presentations': 'trigger.eyeContactDuringPresentations',
+  'heart racing before meetings': 'trigger.heartRacingBeforeMeetings',
+  'fear of judgment': 'trigger.fearOfJudgment',
+  'sunday scaries': 'trigger.sundayScaries',
+  'upcoming deadlines': 'trigger.upcomingDeadlines',
+  'sleep disruption': 'trigger.sleepDisruption',
+  'late-night rumination': 'trigger.lateNightRumination',
+  'catastrophic thinking': 'trigger.catastrophicThinking',
+  'sleep onset': 'trigger.sleepOnset',
+  'perfectionism': 'trigger.perfectionism',
+};
+
+const PATTERN_NOTE_REGEX =
+  /^Noted pattern: (.+?)\. Prioritize short nervous-system resets, then exposure with safety behaviors reduced by 20%\.$/i;
+
 const normalizeTriggerToken = (raw: string): string => {
   const trimmed = String(raw ?? '').trim();
   if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
@@ -41,6 +59,10 @@ const renderTriggerLabel = (
   t: (key: string, fallback?: string) => string
 ): string => {
   const token = normalizeTriggerToken(raw);
+  const overrideKey = TRIGGER_TRANSLATION_KEYS[token.toLowerCase()];
+  if (overrideKey) {
+    return t(overrideKey, token);
+  }
   if (token.startsWith('trigger.')) {
     return t(token, token);
   }
@@ -297,6 +319,14 @@ const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
     [sortedAnalyses, t, locale]
   );
 
+  const translateClinicalNote = (note: string) => {
+    const match = note.match(PATTERN_NOTE_REGEX);
+    if (!match) return note;
+    const pattern = match[1] ?? '';
+    const template = t('pattern.noteWithFocus', note);
+    return template.replace('{pattern}', pattern);
+  };
+
   const renderSummary = (summary: SummaryContent) => (
     <div key={summary.id} className="border rounded-lg p-4 bg-white space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -367,7 +397,7 @@ const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
         <p className="font-medium text-gray-900">{t('interventions.clinicalNotes')}</p>
         <ul className="list-disc ml-6 text-sm text-gray-700">
           {summary.clinicalNotes.map((note, idx) => (
-            <li key={idx}>{note}</li>
+            <li key={idx}>{translateClinicalNote(note)}</li>
           ))}
         </ul>
       </div>

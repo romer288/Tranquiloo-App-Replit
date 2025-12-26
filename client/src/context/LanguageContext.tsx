@@ -50,6 +50,18 @@ export const translationMap: Record<Language, Translations> = {
     "trigger.physicalSymptoms": "Physical symptoms",
     "trigger.publicSpeaking": "Public speaking",
     "trigger.socialSituations": "Social situations",
+    "trigger.crowdedRooms": "Crowded rooms",
+    "trigger.groupIntroductions": "Group introductions",
+    "trigger.eyeContactDuringPresentations": "Eye contact during presentations",
+    "trigger.heartRacingBeforeMeetings": "Heart racing before meetings",
+    "trigger.fearOfJudgment": "Fear of judgment",
+    "trigger.sundayScaries": "Sunday scaries",
+    "trigger.upcomingDeadlines": "Upcoming deadlines",
+    "trigger.sleepDisruption": "Sleep disruption",
+    "trigger.lateNightRumination": "Late-night rumination",
+    "trigger.catastrophicThinking": "Catastrophic thinking",
+    "trigger.sleepOnset": "Sleep onset",
+    "trigger.perfectionism": "Perfectionism",
     "analytics.monthly.sampleData.june": "June 2025",
     "analytics.monthly.sampleData.july": "July 2025",
     // Auth common
@@ -835,6 +847,8 @@ export const translationMap: Record<Language, Translations> = {
     "interventions.homeworkTemplate":
       "Focus task: {task}. Reinforce practice 3×/day or as assigned.",
     "interventions.adherence.partial": "Partial",
+    "pattern.noteWithFocus":
+      "Noted pattern: {pattern}. Prioritize short nervous-system resets, then exposure with safety behaviors reduced by 20%.",
     // Treatment insights blocks
     "treatment.insights.title": "Treatment Insights for Therapists",
     "treatment.insights.currentTrend": "Current Trend",
@@ -1526,6 +1540,18 @@ export const translationMap: Record<Language, Translations> = {
     "trigger.physicalSymptoms": "Síntomas físicos",
     "trigger.publicSpeaking": "Hablar en público",
     "trigger.socialSituations": "Situaciones sociales",
+    "trigger.crowdedRooms": "Salas abarrotadas",
+    "trigger.groupIntroductions": "Presentaciones grupales",
+    "trigger.eyeContactDuringPresentations": "Contacto visual durante presentaciones",
+    "trigger.heartRacingBeforeMeetings": "Corazón acelerado antes de reuniones",
+    "trigger.fearOfJudgment": "Miedo al juicio",
+    "trigger.sundayScaries": "Angustias dominicales",
+    "trigger.upcomingDeadlines": "Plazos próximos",
+    "trigger.sleepDisruption": "Interrupciones del sueño",
+    "trigger.lateNightRumination": "Rumiaciones nocturnas",
+    "trigger.catastrophicThinking": "Pensamiento catastrófico",
+    "trigger.sleepOnset": "Inicio del sueño",
+    "trigger.perfectionism": "Perfeccionismo",
     "brand.title": "Compañero de Ansiedad",
     "brand.appName": "Tranquiloo",
     "nav.dashboard": "Panel",
@@ -2342,6 +2368,8 @@ export const translationMap: Record<Language, Translations> = {
     "interventions.homeworkTemplate":
       "Tarea principal: {task}. Refuerza la práctica 3×/día o según lo indicado.",
     "interventions.adherence.partial": "Parcial",
+    "pattern.noteWithFocus":
+      "Patrón observado: {pattern}. Prioriza reinicios cortos del sistema nervioso, luego la exposición reduciendo los comportamientos de seguridad en un 20%.",
     // Treatment insights blocks
     "treatment.insights.title": "Perspectivas de tratamiento para terapeutas",
     "treatment.insights.currentTrend": "Tendencia actual",
