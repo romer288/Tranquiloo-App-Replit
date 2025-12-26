@@ -59,14 +59,17 @@ const renderTriggerLabel = (
   t: (key: string, fallback?: string) => string
 ): string => {
   const token = normalizeTriggerToken(raw);
-  const overrideKey = TRIGGER_TRANSLATION_KEYS[token.toLowerCase()];
+  const lowerToken = token.toLowerCase();
+  const overrideKey = TRIGGER_TRANSLATION_KEYS[lowerToken];
   if (overrideKey) {
-    return t(overrideKey, token);
+    const translated = t(overrideKey, token);
+    // If translation is the same as fallback, it means translation failed
+    return translated !== token ? translated : `[${token}]`;
   }
   if (token.startsWith('trigger.')) {
     return t(token, token);
   }
-  return token;
+  return `[${token}]`;
 };
 
 interface SummaryContent {
@@ -326,15 +329,26 @@ const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
 
     // Translate trigger names within the pattern
     const translatePatternTriggers = (patternText: string): string => {
-      // Split by common separators and translate individual trigger phrases
-      const parts = patternText.split(/(\s*\([^)]*\)\s*|\s*,\s*|\s*\+\s*)/);
-      return parts.map(part => {
-        const trimmed = part.trim();
-        if (trimmed) {
-          return renderTriggerLabel(trimmed, t);
-        }
-        return part;
-      }).join('');
+      // Handle known anxiety focus patterns
+      if (patternText === 'Social + performance anxiety (presentations, group settings)') {
+        return t('pattern.socialPerformanceAnxiety', patternText);
+      }
+
+      let result = patternText;
+
+      // Sort trigger keys by length (longest first) to avoid partial matches
+      const sortedTriggerKeys = Object.keys(TRIGGER_TRANSLATION_KEYS).sort((a, b) => b.length - a.length);
+
+      // Try to translate known trigger phrases within the pattern
+      sortedTriggerKeys.forEach(triggerKey => {
+        const translationKey = TRIGGER_TRANSLATION_KEYS[triggerKey];
+        const translated = t(translationKey, triggerKey);
+        // Use word boundaries to avoid partial matches
+        const regex = new RegExp(`\\b${triggerKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+        result = result.replace(regex, translated);
+      });
+
+      return result;
     };
 
     const translatedPattern = translatePatternTriggers(pattern);
