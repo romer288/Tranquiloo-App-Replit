@@ -967,6 +967,7 @@ export const translationMap: Record<Language, Translations> = {
     "interventions.adherence.partial": "Partial",
     "pattern.noteWithFocus":
       "Noted pattern: {pattern}. Prioritize short nervous-system resets, then exposure with safety behaviors reduced by 20%.",
+    "pattern.socialPerformanceAnxiety": "Social + performance anxiety (presentations, group settings)",
     // Treatment insights blocks
     "treatment.insights.title": "Treatment Insights for Therapists",
     "treatment.insights.currentTrend": "Current Trend",
@@ -2622,6 +2623,7 @@ export const translationMap: Record<Language, Translations> = {
     "interventions.adherence.partial": "Parcial",
     "pattern.noteWithFocus":
       "Patrón observado: {pattern}. Prioriza reinicios cortos del sistema nervioso, luego la exposición reduciendo los comportamientos de seguridad en un 20%.",
+    "pattern.socialPerformanceAnxiety": "Ansiedad social + de rendimiento (presentaciones, entornos grupales)",
     // Treatment insights blocks
     "treatment.insights.title": "Perspectivas de tratamiento para terapeutas",
     "treatment.insights.currentTrend": "Tendencia actual",
