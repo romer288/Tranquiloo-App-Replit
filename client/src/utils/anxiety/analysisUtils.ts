@@ -39,14 +39,14 @@ export const generateBeckAnxietyCategories = (emotions: string[], lowerMessage: 
 
 export const generateDsm5Indicators = (anxietyLevel: number, triggers: string[]): string[] => {
   const indicators = [];
-  
+
   if (anxietyLevel >= 6) {
-    indicators.push('Excessive anxiety present');
+    indicators.push('dsm5.excessiveAnxiety');
   }
   if (triggers.length > 1) {
-    indicators.push('Multiple anxiety triggers identified');
+    indicators.push('dsm5.multipleTriggers');
   }
-  
+
   return indicators;
 };
 

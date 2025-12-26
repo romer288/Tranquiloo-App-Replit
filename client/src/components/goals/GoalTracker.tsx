@@ -399,14 +399,18 @@ export const GoalTracker: React.FC = () => {
         />
       )}
 
-      {showProgressForm && (
-        <GoalProgressForm
-          goalId={showProgressForm}
-          goalTitle={goals.find(g => g.id === showProgressForm)?.title || ''}
-          onSubmit={handleRecordProgress}
-          onCancel={() => setShowProgressForm(null)}
-        />
-      )}
+      {showProgressForm && (() => {
+        const goal = goals.find(g => g.id === showProgressForm);
+        const { title: translatedTitle } = goal ? getTranslatedGoalFields(goal) : { title: '' };
+        return (
+          <GoalProgressForm
+            goalId={showProgressForm}
+            goalTitle={translatedTitle}
+            onSubmit={handleRecordProgress}
+            onCancel={() => setShowProgressForm(null)}
+          />
+        );
+      })()}
     </div>
   );
 };

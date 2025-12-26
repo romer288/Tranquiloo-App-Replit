@@ -1134,6 +1134,8 @@ export const translationMap: Record<Language, Translations> = {
     "anxietyAnalysis.crisis.warning":
       "Please consider reaching out to a mental health professional or crisis hotline immediately.",
     "anxietyAnalysis.dsm5Indicators": "DSM-5 Indicators:",
+    "dsm5.excessiveAnxiety": "Excessive anxiety present",
+    "dsm5.multipleTriggers": "Multiple anxiety triggers identified",
     "anxietyAnalysis.beckCategories": "Beck Categories:",
     "anxietyAnalysis.cognitivePatterns": "Cognitive Patterns Detected:",
     "anxietyAnalysis.currentTriggers": "Current Triggers:",
@@ -2790,6 +2792,8 @@ export const translationMap: Record<Language, Translations> = {
     "anxietyAnalysis.crisis.warning":
       "Por favor considera contactar a un profesional de salud mental o línea de crisis inmediatamente.",
     "anxietyAnalysis.dsm5Indicators": "Indicadores DSM-5:",
+    "dsm5.excessiveAnxiety": "Ansiedad excesiva presente",
+    "dsm5.multipleTriggers": "Múltiples desencadenantes de ansiedad identificados",
     "anxietyAnalysis.beckCategories": "Categorías de Beck:",
     "anxietyAnalysis.cognitivePatterns": "Patrones Cognitivos Detectados:",
     "anxietyAnalysis.currentTriggers": "Desencadenantes Actuales:",
