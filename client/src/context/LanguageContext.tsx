@@ -718,6 +718,9 @@ export const translationMap: Record<Language, Translations> = {
     "chatHistory.interventions": "Anxiety Interventions",
     "chatHistory.interventionsDesc":
       "AI-powered anxiety analysis and coping strategies",
+    "chatHistory.identifiedTriggers": "Identified Triggers",
+    "chatHistory.copingStrategies": "Coping Strategies",
+    "chatHistory.aiResponse": "AI Response",
     "chatHistory.noAnalyses": "No anxiety analyses yet",
     "chatHistory.noAnalysesDesc":
       "Chat with our AI companions to receive personalized support",
@@ -2373,6 +2376,9 @@ export const translationMap: Record<Language, Translations> = {
     "chatHistory.interventions": "Intervenciones de ansiedad",
     "chatHistory.interventionsDesc":
       "Análisis de ansiedad y estrategias de afrontamiento impulsadas por IA",
+    "chatHistory.identifiedTriggers": "Disparadores identificados",
+    "chatHistory.copingStrategies": "Estrategias de afrontamiento",
+    "chatHistory.aiResponse": "Respuesta de IA",
     "chatHistory.noAnalyses": "Aún no hay análisis de ansiedad",
     "chatHistory.noAnalysesDesc":
       "Chatea con nuestras compañeras de IA para recibir apoyo personalizado",

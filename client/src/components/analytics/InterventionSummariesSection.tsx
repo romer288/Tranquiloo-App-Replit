@@ -59,17 +59,14 @@ const renderTriggerLabel = (
   t: (key: string, fallback?: string) => string
 ): string => {
   const token = normalizeTriggerToken(raw);
-  const lowerToken = token.toLowerCase();
-  const overrideKey = TRIGGER_TRANSLATION_KEYS[lowerToken];
+  const overrideKey = TRIGGER_TRANSLATION_KEYS[token.toLowerCase()];
   if (overrideKey) {
-    const translated = t(overrideKey, token);
-    // If translation is the same as fallback, it means translation failed
-    return translated !== token ? translated : `[${token}]`;
+    return t(overrideKey, token);
   }
   if (token.startsWith('trigger.')) {
     return t(token, token);
   }
-  return `[${token}]`;
+  return token;
 };
 
 interface SummaryContent {
@@ -256,7 +253,7 @@ const buildSummaries = (
     const codes = Array.from(
       new Set(
         ordered
-          .flatMap((analysis) => ensureTriggersArray(analysis.dsm5Indicators))
+          .flatMap((analysis) => ensureTriggersArray(analysis.triggers))
           .filter((code): code is string => Boolean(code))
       )
     );
@@ -441,7 +438,7 @@ const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
           <AccordionItem value="codes">
             <AccordionTrigger className="px-4 text-sm">{t('interventions.forClinicians')}</AccordionTrigger>
             <AccordionContent className="px-4 pb-4 text-sm text-gray-700">
-              {summary.codes.map(code => t(code, code)).join(', ')}
+              {summary.codes.map(code => renderTriggerLabel(code, t)).join(', ')}
             </AccordionContent>
           </AccordionItem>
         </Accordion>
