@@ -644,6 +644,8 @@ export const translationMap: Record<Language, Translations> = {
     "analytics.triggers.relatedTrigger.healthConcerns": "health concerns",
     "analytics.triggers.relatedTrigger.financialStress": "financial stress",
     "analytics.triggers.relatedTrigger.relationshipIssues": "relationship issues",
+    // More triggers message
+    "analytics.triggers.moreTriggers": "more triggers requiring analysis",
     // Evidence line translations
     "analytics.triggers.evidenceLabel": "Evidence: Last episode",
     "analytics.triggers.severityScale": "/10",
@@ -2289,6 +2291,8 @@ export const translationMap: Record<Language, Translations> = {
     "analytics.triggers.relatedTrigger.healthConcerns": "preocupaciones de salud",
     "analytics.triggers.relatedTrigger.financialStress": "estrés financiero",
     "analytics.triggers.relatedTrigger.relationshipIssues": "problemas de relación",
+    // More triggers message
+    "analytics.triggers.moreTriggers": "más detonantes que requieren análisis",
     // Evidence line translations
     "analytics.triggers.evidenceLabel": "Evidencia: Último episodio",
     "analytics.triggers.severityScale": "/10",

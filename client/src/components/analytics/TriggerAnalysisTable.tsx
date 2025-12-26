@@ -564,13 +564,13 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
                             <div className="flex-1 min-w-0">
                               <h5 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">{t('analytics.triggers.evidence')}</h5>
                                 <p className="text-xs sm:text-sm text-gray-700 leading-relaxed break-words">
-                                {trigger.evidenceLine ? translateEvidenceLine(trigger.evidenceLine) : `Last episode ${trigger.lastEpisodeDate || 'recently'} (${trigger.avgSeverity.toFixed(0)}/10); ${trigger.count} episodes recorded; ${trigger.trend || 'stable'} trend.`}
+                                {trigger.evidenceLine ? translateEvidenceLine(trigger.evidenceLine) : `Last episode ${translateLastEpisode(trigger.lastEpisodeDate || 'recently')} (${trigger.avgSeverity.toFixed(0)}/10); ${trigger.count} episodes recorded; ${translateTrend(trigger.trend || 'stable')} trend.`}
                               </p>
                               {trigger.trend && (
                                 <div className="mt-2 flex flex-wrap items-center gap-2">
                                   <span className="text-xs text-gray-500">{t('analytics.triggers.trendLabel')}:</span>
                                   <span className={`text-xs sm:text-sm font-medium ${getTrendColor(trigger.trend)}`}>
-                                    {getTrendIcon(trigger.trend)} {t('analytics.triggers.trendLabel')}: {trigger.trend}
+                                    {getTrendIcon(trigger.trend)} {t('analytics.triggers.trendLabel')}: {translateTrend(trigger.trend)}
                                   </span>
                                 </div>
                               )}
@@ -737,7 +737,7 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
                                 return (
                                   <div key={index} className="flex flex-col gap-2">
                                     <Badge variant="outline" className="text-xs w-fit font-medium">
-                                      {related}
+                                      {translateRelatedTriggerName(related)}
                                     </Badge>
                                     <p className="text-xs text-gray-600 leading-relaxed pl-2 border-l-2 border-gray-200">
                                       {getPatientNarrative(related)}
@@ -747,7 +747,7 @@ const TriggerAnalysisTable: React.FC<TriggerAnalysisTableProps> = ({
                               })}
                               {trigger.relatedTriggers.length > 6 && (
                                 <Badge variant="secondary" className="text-xs">
-                                  +{trigger.relatedTriggers.length - 6} more triggers requiring analysis
+                                  +{trigger.relatedTriggers.length - 6} {t('analytics.triggers.moreTriggers', 'more triggers requiring analysis')}
                                 </Badge>
                               )}
                             </div>
