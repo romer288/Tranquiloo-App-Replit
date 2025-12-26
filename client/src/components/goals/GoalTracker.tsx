@@ -52,16 +52,15 @@ export const GoalTracker: React.FC = () => {
   useEffect(() => {
     loadGoals();
   }, [language]); // Re-load when language changes
-
-  const loadGoals = async () => {
+const loadGoals = async () => {
     try {
       const userGoals = await goalsService.getUserGoals();
       setGoals(userGoals);
     } catch (error) {
       console.error('Error loading goals:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to load goals',
+        title: t('goals.toast.load.error.title', 'Error'),
+        description: t('goals.toast.load.error.description', 'Failed to load goals'),
         variant: 'destructive'
       });
     } finally {
@@ -75,14 +74,14 @@ export const GoalTracker: React.FC = () => {
       await loadGoals();
       setShowCreateForm(false);
       toast({
-        title: 'Success',
-        description: 'Goal created successfully'
+        title: t('goals.toast.create.success.title', 'Success'),
+        description: t('goals.toast.create.success.description', 'Goal created successfully')
       });
     } catch (error) {
       console.error('Error creating goal:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to create goal',
+        title: t('goals.toast.create.error.title', 'Error'),
+        description: t('goals.toast.create.error.description', 'Failed to create goal'),
         variant: 'destructive'
       });
     }
@@ -94,14 +93,14 @@ export const GoalTracker: React.FC = () => {
       await loadGoals();
       setShowProgressForm(null);
       toast({
-        title: 'Success',
-        description: 'Progress recorded successfully'
+        title: t('goals.toast.record.success.title', 'Success'),
+        description: t('goals.toast.record.success.description', 'Progress recorded successfully')
       });
     } catch (error) {
       console.error('Error recording progress:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to record progress',
+        title: t('goals.toast.record.error.title', 'Error'),
+        description: t('goals.toast.record.error.description', 'Failed to record progress'),
         variant: 'destructive'
       });
     }
@@ -114,14 +113,14 @@ export const GoalTracker: React.FC = () => {
       await loadGoals();
       setEditingGoal(null);
       toast({
-        title: 'Success',
-        description: 'Goal updated successfully'
+        title: t('goals.toast.update.success.title', 'Success'),
+        description: t('goals.toast.update.success.description', 'Goal updated successfully')
       });
     } catch (error) {
       console.error('Error updating goal:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to update goal',
+        title: t('goals.toast.update.error.title', 'Error'),
+        description: t('goals.toast.update.error.description', 'Failed to update goal'),
         variant: 'destructive'
       });
     }
@@ -132,18 +131,19 @@ export const GoalTracker: React.FC = () => {
       await goalsService.deleteGoal(goalId);
       await loadGoals();
       toast({
-        title: 'Success',
-        description: 'Goal deleted successfully'
+        title: t('goals.toast.delete.success.title', 'Success'),
+        description: t('goals.toast.delete.success.description', 'Goal deleted successfully')
       });
     } catch (error) {
       console.error('Error deleting goal:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to delete goal',
+        title: t('goals.toast.delete.error.title', 'Error'),
+        description: t('goals.toast.delete.error.description', 'Failed to delete goal'),
         variant: 'destructive'
       });
     }
   };
+
 
   const getProgressColor = (score: number) => {
     if (score >= 8) return 'bg-green-500';
