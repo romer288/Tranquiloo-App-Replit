@@ -155,11 +155,13 @@ const AnxietyAnalyticsTracker: React.FC<AnxietyAnalyticsTrackerProps> = ({ analy
         
           <div className="text-center p-3 bg-orange-50 rounded-lg">
             <div className={`text-lg font-bold ${
-              progressTrend === 'improving' ? 'text-green-600' : 
-              progressTrend === 'worsening' ? 'text-red-600' : 
+              progressTrend === 'improving' ? 'text-green-600' :
+              progressTrend === 'worsening' ? 'text-red-600' :
               'text-gray-600'
             }`}>
-              {progressTrend.toUpperCase()}
+              {progressTrend === 'improving' ? t('analytics.tracker.improving', 'IMPROVING') :
+               progressTrend === 'worsening' ? t('analytics.tracker.worsening', 'WORSENING') :
+               t('analytics.tracker.stable', 'STABLE')}
             </div>
             <div className="text-sm text-gray-600">{t('analytics.tracker.trend')}</div>
           </div>

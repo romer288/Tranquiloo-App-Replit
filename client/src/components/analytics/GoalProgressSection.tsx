@@ -138,16 +138,22 @@ const GoalProgressSection: React.FC<GoalProgressSectionProps> = ({
       const completionRateRaw = calculateRangeCompletionRate(goal, filteredHistory, dateRange);
       const completionRateForRange = Number.isFinite(completionRateRaw) ? completionRateRaw : 0;
 
-      // Translate goal titles and descriptions for mock goals
+      // Translate goal titles and descriptions for mock goals and seed goals
       let translatedTitle = goal.title;
       let translatedDescription = goal.description;
-      
+
       if (goal.id === 'goal_1') {
         translatedTitle = t('goals.goal1.title', goal.title);
         translatedDescription = goal.description ? t('goals.goal1.description', goal.description) : goal.description;
       } else if (goal.id === 'goal_2') {
         translatedTitle = t('goals.goal2.title', goal.title);
         translatedDescription = goal.description ? t('goals.goal2.description', goal.description) : goal.description;
+      } else if (goal.title === 'Daily grounding practice') {
+        translatedTitle = t('goals.seed.dailyGrounding.title', goal.title);
+        translatedDescription = goal.description ? t('goals.seed.dailyGrounding.description', goal.description) : goal.description;
+      } else if (goal.title === 'Exposure reps') {
+        translatedTitle = t('goals.seed.exposure.title', goal.title);
+        translatedDescription = goal.description ? t('goals.seed.exposure.description', goal.description) : goal.description;
       }
 
       return {

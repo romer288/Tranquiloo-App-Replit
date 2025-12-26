@@ -23,6 +23,24 @@ const AnalyticsMetrics: React.FC<AnalyticsMetricsProps> = ({
   mostCommonTrigger
 }) => {
   const { t } = useLanguage();
+
+  // Helper function to translate trigger category names
+  const translateTriggerCategory = (triggerName: string): string => {
+    if (!triggerName) return triggerName;
+
+    const categoryMap: Record<string, string> = {
+      'Social Anxiety': t('analytics.triggers.category.socialAnxiety', 'Social Anxiety'),
+      'General Anxiety': t('analytics.triggers.category.generalAnxiety', 'General Anxiety'),
+      'Health Concerns': t('analytics.triggers.category.healthConcerns', 'Health Concerns'),
+      'Work/Academic Stress': t('analytics.triggers.category.workStress', 'Work/Academic Stress'),
+      'Financial Stress': t('analytics.triggers.category.financialStress', 'Financial Stress'),
+      'Relationships': t('analytics.triggers.category.relationships', 'Relationships'),
+      'Future/Uncertainty': t('analytics.triggers.category.futureUncertainty', 'Future/Uncertainty'),
+    };
+
+    return categoryMap[triggerName] || triggerName;
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       <Card className="p-6">
@@ -53,7 +71,7 @@ const AnalyticsMetrics: React.FC<AnalyticsMetricsProps> = ({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-600">{t('analytics.metrics.mostCommonTrigger')}</p>
-            <p className="text-lg font-bold text-gray-900">{mostCommonTrigger?.trigger || t('analytics.metrics.noTriggers')}</p>
+            <p className="text-lg font-bold text-gray-900">{translateTriggerCategory(mostCommonTrigger?.trigger || '') || t('analytics.metrics.noTriggers')}</p>
           </div>
           <div className="p-3 bg-red-100 rounded-full">
             <Target className="w-6 h-6 text-red-600" />

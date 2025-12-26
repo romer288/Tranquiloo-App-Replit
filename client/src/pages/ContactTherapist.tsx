@@ -359,13 +359,13 @@ const ContactTherapist = () => {
                 </div>
                 <Badge variant="secondary">988</Badge>
               </div>
-              <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
-                <div>
-                  <p className="font-semibold">{t('contact.emergency2')}</p>
-                  <p className="text-sm text-gray-600">{t('contact.emergency2Desc')}</p>
+                <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                  <div>
+                    <p className="font-semibold">{t('contact.emergency2')}</p>
+                    <p className="text-sm text-gray-600">{t('contact.emergency2Desc')}</p>
+                  </div>
+                  <Badge variant="secondary">{t('crisisFooter.text', 'Text HOME to 741741')}</Badge>
                 </div>
-                <Badge variant="secondary">Text HOME to 741741</Badge>
-              </div>
               <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
                 <div>
                   <p className="font-semibold">{t('contact.emergency3')}</p>
