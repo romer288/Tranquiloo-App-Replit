@@ -323,8 +323,23 @@ const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
     const match = note.match(PATTERN_NOTE_REGEX);
     if (!match) return note;
     const pattern = match[1] ?? '';
+
+    // Translate trigger names within the pattern
+    const translatePatternTriggers = (patternText: string): string => {
+      // Split by common separators and translate individual trigger phrases
+      const parts = patternText.split(/(\s*\([^)]*\)\s*|\s*,\s*|\s*\+\s*)/);
+      return parts.map(part => {
+        const trimmed = part.trim();
+        if (trimmed) {
+          return renderTriggerLabel(trimmed, t);
+        }
+        return part;
+      }).join('');
+    };
+
+    const translatedPattern = translatePatternTriggers(pattern);
     const template = t('pattern.noteWithFocus', note);
-    return template.replace('{pattern}', pattern);
+    return template.replace('{pattern}', translatedPattern);
   };
 
   const renderSummary = (summary: SummaryContent) => (
@@ -412,7 +427,7 @@ const InterventionSummariesSection: React.FC<Props> = ({ analyses = [] }) => {
           <AccordionItem value="codes">
             <AccordionTrigger className="px-4 text-sm">{t('interventions.forClinicians')}</AccordionTrigger>
             <AccordionContent className="px-4 pb-4 text-sm text-gray-700">
-              {summary.codes.join(', ')}
+              {summary.codes.map(code => t(code, code)).join(', ')}
             </AccordionContent>
           </AccordionItem>
         </Accordion>
