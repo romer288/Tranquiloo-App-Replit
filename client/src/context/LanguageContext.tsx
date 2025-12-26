@@ -662,14 +662,26 @@ export const translationMap: Record<Language, Translations> = {
     "goals.goal2.title": "Exercise 3 times per week",
     "goals.goal2.description": "Go for a 30-minute walk or jog",
     "goals.goal2.notes.progress3": "Good walk in the park",
+    "goals.seed.dailyGrounding.title": "Daily grounding practice",
+    "goals.seed.dailyGrounding.description": "5-10 minutes of breathing/body scan after lunch",
+    "goals.seed.exposure.title": "Exposure reps",
+    "goals.seed.exposure.description": "Intentional exposures with reduced safety behaviors",
     // Goal frequency translations
     "goals.frequency.daily": "daily",
     "goals.frequency.weekly": "weekly",
     "goals.frequency.monthly": "monthly",
+    "goals.frequency.3x/week": "3x/week",
     // Goal unit translations
     "goals.unit.minutes": "minutes",
     "goals.unit.times": "times",
+    "goals.unit.sessions/week": "sessions/week",
+    "goals.unit.exposures/week": "exposures/week",
     // Goal tracker UI translations
+    "goals.tracker.loading": "Loading goals...",
+    "goals.tracker.emptyTitle": "No Goals Set",
+    "goals.tracker.emptyDesc":
+      "Create your first goal to start tracking your progress toward better mental health.",
+    "goals.tracker.emptyCta": "Create Your First Goal",
     "goals.tracker.title": "Your Goals",
     "goals.tracker.description":
       "Track your progress toward better mental health",
@@ -1338,7 +1350,8 @@ export const translationMap: Record<Language, Translations> = {
     "chatHistorySidebar.newChat": "New chat",
     "treatmentCreation.createNewGoal": "Create New Goal",
     "treatmentCreation.goalTitle": "Goal Title",
-    //'goalForm.goalTitle': 'Goal Title',
+    'goalForm.goalTitle': 'Goal Title',
+    "goalForm.placeholder": "e.g., Daily meditation practice",
     "goalForm.editGoal": "Edit Goal",
     "goalForm.createNewGoal": "Create New Goal",
     "goalForm.description": "Description (Optional)",
@@ -2182,14 +2195,26 @@ export const translationMap: Record<Language, Translations> = {
     "goals.goal2.title": "Ejercítate 3 veces por semana",
     "goals.goal2.description": "Sal a caminar o trotar durante 30 minutos",
     "goals.goal2.notes.progress3": "Buen paseo en el parque",
+    "goals.seed.dailyGrounding.title": "Práctica diaria de grounding",
+    "goals.seed.dailyGrounding.description": "5-10 minutos de respiración/escaneo corporal después del almuerzo",
+    "goals.seed.exposure.title": "Repeticiones de exposición",
+    "goals.seed.exposure.description": "Exposiciones intencionales con comportamientos de seguridad reducidos",
     // Goal frequency translations
     "goals.frequency.daily": "diario",
     "goals.frequency.weekly": "semanal",
     "goals.frequency.monthly": "mensual",
+    "goals.frequency.3x/week": "3 veces por semana",
     // Goal unit translations
     "goals.unit.minutes": "minutos",
     "goals.unit.times": "veces",
+    "goals.unit.sessions/week": "sesiones/semana",
+    "goals.unit.exposures/week": "exposiciones/semana",
     // Goal tracker UI translations
+    "goals.tracker.loading": "Cargando metas...",
+    "goals.tracker.emptyTitle": "Aún no hay metas",
+    "goals.tracker.emptyDesc":
+      "Crea tu primera meta para comenzar a seguir tu progreso hacia una mejor salud mental.",
+    "goals.tracker.emptyCta": "Crea tu primera meta",
     "goals.tracker.title": "Tus Metas",
     "goals.tracker.description":
       "Rastrea tu progreso hacia una mejor salud mental",
@@ -2870,7 +2895,8 @@ export const translationMap: Record<Language, Translations> = {
     "chatHistorySidebar.newChat": "Nuevo chat",
     "treatmentCreation.createNewGoal": "Crear Nuevo Objetivo",
     "treatmentCreation.goalTitle": "Título del Objetivo",
-    //  "goalForm.goalTitle": "Título de la meta",
+    "goalForm.goalTitle": "Título de la meta",
+    "goalForm.placeholder": "ej: práctica diaria de meditación",
     "goalForm.editGoal": "Editar meta",
     "goalForm.createNewGoal": "Crear nueva meta",
     "goalForm.description": "Descripción (Opcional)",

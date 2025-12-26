@@ -11,6 +11,35 @@ import { GoalProgressForm } from './GoalProgressForm';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/context/LanguageContext';
 
+type GoalTranslationEntry = {
+  matches: (goal: GoalWithProgress) => boolean;
+  titleKey: string;
+  descriptionKey?: string;
+};
+
+const seededGoalTranslations: GoalTranslationEntry[] = [
+  {
+    matches: (goal) => goal.id === 'goal_1',
+    titleKey: 'goals.goal1.title',
+    descriptionKey: 'goals.goal1.description',
+  },
+  {
+    matches: (goal) => goal.id === 'goal_2',
+    titleKey: 'goals.goal2.title',
+    descriptionKey: 'goals.goal2.description',
+  },
+  {
+    matches: (goal) => goal.title === 'Daily grounding practice',
+    titleKey: 'goals.seed.dailyGrounding.title',
+    descriptionKey: 'goals.seed.dailyGrounding.description',
+  },
+  {
+    matches: (goal) => goal.title === 'Exposure reps',
+    titleKey: 'goals.seed.exposure.title',
+    descriptionKey: 'goals.seed.exposure.description',
+  },
+];
+
 export const GoalTracker: React.FC = () => {
   const [goals, setGoals] = useState<GoalWithProgress[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -174,8 +203,23 @@ export const GoalTracker: React.FC = () => {
     return note;
   };
 
+  const getTranslatedGoalFields = (goal: GoalWithProgress) => {
+    const translationEntry = seededGoalTranslations.find((entry) => entry.matches(goal));
+    if (!translationEntry) {
+      return { title: goal.title, description: goal.description };
+    }
+
+    return {
+      title: t(translationEntry.titleKey, goal.title),
+      description:
+        goal.description && translationEntry.descriptionKey
+          ? t(translationEntry.descriptionKey, goal.description)
+          : goal.description,
+    };
+  };
+
   if (loading) {
-    return <div className="p-6">Loading goals...</div>;
+    return <div className="p-6">{t('goals.tracker.loading', 'Loading goals...')}</div>;
   }
 
   if (goals.length === 0) {
@@ -183,13 +227,18 @@ export const GoalTracker: React.FC = () => {
       <Card className="p-6">
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Goals Set</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            {t('goals.tracker.emptyTitle', 'No Goals Set')}
+          </h3>
           <p className="text-gray-600 mb-4">
-            Create your first goal to start tracking your progress toward better mental health.
+            {t(
+              'goals.tracker.emptyDesc',
+              'Create your first goal to start tracking your progress toward better mental health.'
+            )}
           </p>
           <Button onClick={() => setShowCreateForm(true)}>
             <Plus className="w-4 h-4 mr-2" />
-            Create Your First Goal
+            {t('goals.tracker.emptyCta', 'Create Your First Goal')}
           </Button>
         </div>
         
@@ -218,20 +267,10 @@ export const GoalTracker: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {goals.map((goal, index) => {
-          // Translate goal titles and descriptions for mock goals
-          let translatedTitle = goal.title;
-          let translatedDescription = goal.description;
-          
-          if (goal.id === 'goal_1') {
-            translatedTitle = t('goals.goal1.title', goal.title);
-            translatedDescription = goal.description ? t('goals.goal1.description', goal.description) : goal.description;
-          } else if (goal.id === 'goal_2') {
-            translatedTitle = t('goals.goal2.title', goal.title);
-            translatedDescription = goal.description ? t('goals.goal2.description', goal.description) : goal.description;
-          }
-          
+          const { title: translatedTitle, description: translatedDescription } = getTranslatedGoalFields(goal);
+
           return (
-          <Card key={goal.id ?? `${goal.title}-${index}`} className="p-6">
+            <Card key={goal.id ?? `${goal.title}-${index}`} className="p-6">
             {goal.source === 'treatment-plan' && (
               <div className="mb-2 flex items-center justify-end">
                 <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">Assigned by Therapist</Badge>
@@ -340,7 +379,7 @@ export const GoalTracker: React.FC = () => {
                 </>
               )}
             </div>
-          </Card>
+            </Card>
           );
         })}
       </div>
