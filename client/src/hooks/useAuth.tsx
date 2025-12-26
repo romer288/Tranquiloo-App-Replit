@@ -2,6 +2,7 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthService, AuthUser } from '@/services/authService';
 import { safeStorage } from '@/services/safeStorage';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -18,6 +19,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     // MIGRATE_LEGACY_USER_KEY
@@ -80,12 +82,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setSession(null);
       toast({
-        title: "Signed out",
-        description: "You have been signed out successfully.",
+        title: t("auth.signedOut"),
+        description: t("auth.signOutSuccess"),
       });
     } else if (result.error) {
       toast({
-        title: "Error signing out",
+        title: t("auth.signOutError"),
         description: result.error.message,
         variant: "destructive"
       });
