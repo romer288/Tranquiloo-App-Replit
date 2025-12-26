@@ -1609,8 +1609,14 @@ export const translationMap: Record<Language, Translations> = {
     "pwa.desktopDescription": "Install for quick access, offline support, and a native app experience.",
     "pwa.installNow": "Install Now",
     "pwa.maybeLater": "Maybe Later",
+    "auth.signedOut": "Signed out",
+    "auth.signOutSuccess": "You have been signed out successfully.",
+    "auth.signOutError": "Error signing out",
   },
   es: {
+      "auth.signedOut": "Sesión cerrada",
+    "auth.signOutSuccess": "Has cerrado sesión exitosamente.",
+    "auth.signOutError": "Error al cerrar sesión",
     // PWA Install Prompt
     "pwa.installTitle": "Instalar Tranquiloo",
     "pwa.iosDescription": "Instala para acceso rápido y soporte sin conexión:",
