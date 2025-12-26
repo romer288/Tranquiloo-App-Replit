@@ -85,9 +85,9 @@ const ChatHistory = () => {
   };
 
   const getAnxietyLevelText = (level: number) => {
-    if (level <= 3) return 'Low';
-    if (level <= 6) return 'Moderate';
-    return 'High';
+    if (level <= 3) return t('chatHistory.low');
+    if (level <= 6) return t('chatHistory.moderate');
+    return t('chatHistory.high');
   };
 
   if (sessionsLoading) {
@@ -250,7 +250,7 @@ const ChatHistory = () => {
 
                       {(analysis.anxietyTriggers ?? []).length > 0 && (
                         <div>
-                          <h4 className="text-sm font-medium mb-2">Identified Triggers:</h4>
+                          <h4 className="text-sm font-medium mb-2">{t('chatHistory.identifiedTriggers')}:</h4>
                           <div className="flex flex-wrap gap-1" data-testid={`triggers-${analysis.id}`}>
                             {(analysis.anxietyTriggers ?? []).map((trigger, index) => (
                               <Badge key={index} variant="outline" className="text-xs">
@@ -263,7 +263,7 @@ const ChatHistory = () => {
 
                       {analysis.copingStrategies.length > 0 && (
                         <div>
-                          <h4 className="text-sm font-medium mb-2">Coping Strategies:</h4>
+                          <h4 className="text-sm font-medium mb-2">{t('chatHistory.copingStrategies')}:</h4>
                           <div className="flex flex-wrap gap-1" data-testid={`strategies-${analysis.id}`}>
                             {analysis.copingStrategies.map((strategy, index) => (
                               <Badge key={index} variant="secondary" className="text-xs">
@@ -276,7 +276,7 @@ const ChatHistory = () => {
 
                       {analysis.personalizedResponse && (
                         <div>
-                          <h4 className="text-sm font-medium mb-2">AI Response:</h4>
+                          <h4 className="text-sm font-medium mb-2">{t('chatHistory.aiResponse')}:</h4>
                           <p className="text-sm text-muted-foreground bg-muted p-2 rounded" data-testid={`text-personalized-response-${analysis.id}`}>
                             {analysis.personalizedResponse}
                           </p>
@@ -285,7 +285,7 @@ const ChatHistory = () => {
 
                       <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
                         <span data-testid={`text-analysis-source-${analysis.id}`}>
-                          Source: {analysis.analysisSource}
+                          {t('chatHistory.sourceLabel')}: {analysis.analysisSource}
                         </span>
                       </div>
                     </div>
